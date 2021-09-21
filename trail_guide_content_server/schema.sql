@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS sections (
     id VARCHAR(15) PRIMARY KEY,
     title TEXT NOT NULL,
-    rank INTEGER NOT NULL CHECK (rank >= 0),
+    rank INTEGER NOT NULL CHECK (rank >= 0)
 );
 
 -- Pre-populate sections
@@ -14,14 +14,14 @@ INSERT OR REPLACE INTO sections VALUES
 
 
 CREATE TABLE IF NOT EXISTS categories (
-    id VARCHAR(15) PRIMARY KEY,
+    id VARCHAR(15) PRIMARY KEY
 );
 
 -- Pre-populate categories
 INSERT OR REPLACE INTO categories VALUES
-    ("culture",),
-    ("environment",),
-    ("research",);
+    ("culture"),
+    ("environment"),
+    ("research");
 
 
 CREATE TABLE IF NOT EXISTS stations (
@@ -43,28 +43,28 @@ CREATE TABLE IF NOT EXISTS stations (
     enabled INTEGER NOT NULL CHECK (enabled in (0, 1)),
     rank INTEGER NOT NULL CHECK (rank >= 0),
 
-    FOREIGN KEY (list_section) REFERENCES sections,
+    FOREIGN KEY (list_section) REFERENCES sections
 );
 
 
 CREATE TABLE IF NOT EXISTS asset_types (
-    id VARCHAR(15) PRIMARY KEY,
+    id VARCHAR(15) PRIMARY KEY
 );
 
 -- Pre-populate asset types
 INSERT OR REPLACE INTO asset_types VALUES
-    ("image",),
-    ("audio",),
-    ("video",);
+    ("image"),
+    ("audio"),
+    ("video");
 
 
 CREATE TABLE IF NOT EXISTS assets (
-    id VARCHAR(127)
+    id VARCHAR(127),
     asset_type VARCHAR(15) NOT NULL,
     file_name TEXT NOT NULL,
     file_size INTEGER NOT NULL CHECK (file_size > 0),
 
-    FOREIGN KEY (asset_type) REFERENCES asset_types,
+    FOREIGN KEY (asset_type) REFERENCES asset_types
 );
 
 
@@ -79,25 +79,25 @@ CREATE TABLE IF NOT EXISTS pages (
     content TEXT NOT NULL,  -- HTML
 
     enabled INTEGER NOT NULL CHECK (enabled in (0, 1)),
-    rank INTEGER NOT NULL CHECK (rank >= 0),
+    rank INTEGER NOT NULL CHECK (rank >= 0)
 );
 
 -- Pre-populate pages with about page
 INSERT OR REPLACE INTO pages VALUES
-    ("about", "About", "Introduction to the Elbow Lake Interpretive App", "help-circle-outline", "", 0);
+    ("about", "About", "Introduction to the Elbow Lake Interpretive App", "help-circle-outline", "", 0, 1, 0);
 
 
 CREATE TABLE IF NOT EXISTS modals (
     id VARCHAR(15) PRIMARY KEY,
     title TEXT NOT NULL,
     content TEXT NOT NULL,  -- HTML
-    close_text TEXT NOT NULL DEFAULT "Close",
+    close_text TEXT NOT NULL DEFAULT "Close"
 );
 
 
 CREATE TABLE IF NOT EXISTS settings (
     setting_key VARCHAR(63) PRIMARY KEY,
-    setting_value TEXT,
+    setting_value TEXT
 );
 
 -- Pre-populate settings
