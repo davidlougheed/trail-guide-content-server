@@ -10,7 +10,7 @@ setup(
 
     python_requires="~=3.8",
     install_requires=[
-	    "Flask>=2.0.1,<2.1",
+        "Flask>=2.0.1,<2.1",
     ],
 
     description="A server for storing content for a trail guide app.",

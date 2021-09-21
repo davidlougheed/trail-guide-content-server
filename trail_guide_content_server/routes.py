@@ -48,7 +48,7 @@ def stations():
 
 
 @api_v1.route("/asset_types", methods=["GET"])
-def assets():
+def asset_types():
     return jsonify(get_asset_types())
 
 
@@ -61,7 +61,7 @@ def assets():
     return jsonify(get_assets())
 
 
-@api_v1.route("/assets/<asset_id:str>", methods=["GET", "PUT", "DELETE"])
+@api_v1.route("/assets/<string:asset_id>", methods=["GET", "PUT", "DELETE"])
 def assets_detail(asset_id):
     a = get_asset(asset_id)
 
@@ -81,8 +81,8 @@ def assets_detail(asset_id):
     return jsonify(a)  # TODO
 
 
-@api_v1.route("/assets/<id:str>/bytes", methods=["GET", "PUT"])
-def assets_bytes():
+@api_v1.route("/assets/<string:asset_id>/bytes", methods=["GET", "PUT"])
+def assets_bytes(asset_id: str):
     if request.method == "PUT":
         # TODO
         pass
@@ -97,8 +97,8 @@ def pages():
 
 
 # TODO: Delete page functionality when create page is done
-@api_v1.route("/pages/<id:str>", methods=["GET", "PUT"])
-def pages_detail():
+@api_v1.route("/pages/<string:page_id>", methods=["GET", "PUT"])
+def pages_detail(page_id: str):
     if request.method == "PUT":
         # TODO
         return
@@ -115,7 +115,7 @@ def modals():
     return jsonify(get_modals())
 
 
-@api_v1.route("/modals/<modal_id:str>", methods=["DELETE", "GET", "PUT"])
+@api_v1.route("/modals/<string:modal_id>", methods=["DELETE", "GET", "PUT"])
 def modals_detail(modal_id: str):
     m = get_modal(modal_id)
 
@@ -135,7 +135,7 @@ def modals_detail(modal_id: str):
 
 
 @api_v1.route("/settings", methods=["GET", "PUT"])
-def modals():
+def settings():
     s = get_settings()
 
     if request.method == "PUT":

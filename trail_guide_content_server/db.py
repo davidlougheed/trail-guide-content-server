@@ -25,21 +25,12 @@ __all__ = [
     "get_settings",
 ]
 
-DB_ATTR = "_database"
-
 
 def get_db() -> sqlite3.Connection:
-    db = getattr(g, DB_ATTR, None)
+    db = getattr(g, "_database", None)
     if db is None:
         db = g._database = sqlite3.connect(current_app.config["DATABASE"])
     return db
-
-
-@current_app.teardown_appcontext
-def close_db(_exception):
-    db = getattr(g, DB_ATTR, None)
-    if db is not None:
-        db.close()
 
 
 # Access methods

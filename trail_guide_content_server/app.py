@@ -1,4 +1,6 @@
-from flask import Flask
+import pathlib
+
+from flask import Flask, g
 
 from .config import Config
 from .db import get_db
@@ -9,8 +11,19 @@ application.config.from_object(Config)
 
 application.register_blueprint(api_v1, url_prefix="/api/v1")
 
+
+@application.teardown_appcontext
+def close_db(_exception):
+    db = getattr(g, "_database", None)
+    if db is not None:
+        db.close()
+
+
+SCHEMA_PATH = pathlib.Path(__file__).parent.resolve() / "schema.sql"
+
+
 # Initialize the DB on startup
-with application.app_context(), open("./schema.sql", "r") as sf:
+with application.app_context(), open(SCHEMA_PATH, "r") as sf:
     application.logger.info(f"Initializing database at {application.config['DATABASE']}")
-    db = get_db()
-    db.executescript(sf.read())
+    application.logger.info(f"    Schema location: {SCHEMA_PATH}")
+    get_db().executescript(sf.read())
