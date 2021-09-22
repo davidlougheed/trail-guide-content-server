@@ -23,6 +23,7 @@ __all__ = [
     "get_asset_types",
     "get_assets",
     "get_asset",
+    "set_asset",
 
     "get_pages",
     "get_page",
@@ -246,6 +247,15 @@ def get_asset(asset_id: str) -> Optional[dict]:
     q = c.execute("SELECT id, asset_type, file_name, file_size FROM assets WHERE id = ?", (asset_id,))
     r = q.fetchone()
     return _tuple_to_asset(r) if r else None
+
+
+def set_asset(asset_id: str, data: dict) -> dict:
+    db = get_db()
+    c = db.cursor()
+    c.execute("INSERT OR REPLACE INTO assets (id, asset_type, file_name, file_size) VALUES (?, ?, ?, ?)",
+              (asset_id, data["asset_type"], data["file_name"], data["file_size"]))
+    db.commit()
+    return get_asset(asset_id)
 
 
 def _tuple_to_page(r: tuple) -> dict:

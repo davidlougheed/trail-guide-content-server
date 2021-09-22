@@ -1,8 +1,14 @@
+import os
+import pathlib
 import uuid
 
+from datetime import datetime
 from flask import Blueprint, jsonify, current_app, request
+from werkzeug.utils import secure_filename
 
 from .db import (
+    get_db,
+
     get_categories,
 
     get_sections,
@@ -18,6 +24,7 @@ from .db import (
     get_asset_types,
     get_assets,
     get_asset,
+    set_asset,
 
     get_pages,
     get_page,
@@ -31,7 +38,7 @@ from .db import (
     get_settings,
     set_settings,
 )
-from .object_schemas import section_validator, station_validator, modal_validator
+from .object_schemas import section_validator, station_validator, asset_validator, modal_validator
 
 __all__ = ["api_v1"]
 
@@ -39,6 +46,7 @@ api_v1 = Blueprint("api", __name__)
 
 err_must_be_object = current_app.response_class(jsonify({"message": "Request body must be an object"}), status=400)
 err_cannot_alter_id = current_app.response_class(jsonify({"message": "Cannot alter object ID"}), status=400)
+err_no_file = current_app.response_class(jsonify({"message", "No file provided"}), status=400)
 
 
 def err_validation_failed(errs):
@@ -75,7 +83,7 @@ def sections_detail(section_id: str):
 
         errs = list(section_validator.iter_errors(s))
         if errs:
-            return current_app.response_class(jsonify({"message": "Object validation failed", "errors": errs}))
+            return err_validation_failed(errs)
 
         s = set_section(section_id, s)
 
@@ -137,13 +145,59 @@ def asset_types():
     return jsonify(get_asset_types())
 
 
+def _detect_asset_type(file_name: str) -> tuple[str, str]:
+    file_ext = os.path.splitext(file_name)[1].lower()
+
+    # TODO: py3.10: match
+    if file_ext in {"jpg", "jpeg", "png", "gif"}:
+        asset_type = "image"
+    elif file_ext in {"mp4", "mov"}:
+        asset_type = "video"
+    elif file_ext in {"mp3"}:
+        asset_type = "audio"
+    else:
+        if "asset_type" not in request.form:
+            return "", "No asset_type provided, and could not figure it out automatically"
+
+        asset_type = request.form["asset_type"]
+
+    return asset_type, ""
+
+
 @api_v1.route("/assets", methods=["GET", "POST"])
 def assets():
     if request.method == "POST":
-        # TODO
-        # multipart form data, since we need to allow file uploads
-        # TODO: maximum upload size
-        return
+        if "file" not in request.files:
+            return err_no_file
+
+        file = request.files["file"]
+
+        if "id" not in request.form:
+            return current_app.response_class(jsonify({"message", "No ID provided"}), status=400)
+
+        asset_type, err = _detect_asset_type(file.filename)
+        if err:
+            return current_app.response_class(jsonify({"message": err}), status=400)
+
+        file_name = f"{int(datetime.now().timestamp() * 1000)}-{secure_filename(file.filename)}"
+        file_path = pathlib.Path(current_app.config["ASSET_DIR"]) / file_name
+
+        get_db()  # Make sure the DB can be initialized before we start doing file stuff
+
+        file.save(file_path)
+
+        a = {
+            "id": request.form["id"],
+            "asset_type": asset_type,
+            "file_name": file_name,
+            "file_size": os.path.getsize(file_path),
+        }
+
+        errs = list(asset_validator.iter_errors(a))
+        if errs:
+            return err_validation_failed(errs)
+
+        return jsonify(set_asset(a["id"], a))
 
     return jsonify(get_assets())
 
@@ -167,20 +221,64 @@ def assets_detail(asset_id):
         if request.json.get("id") != a["id"]:
             return err_cannot_alter_id
 
-        # TODO: Validate resulting object
         a = {**a, **request.json}
-        # TODO: Put to DB
+
+        errs = list(asset_validator.iter_errors(a))
+        if errs:
+            return err_validation_failed(errs)
+
+        a = set_asset(asset_id, a)
 
     return jsonify(a)
 
 
 @api_v1.route("/assets/<string:asset_id>/bytes", methods=["GET", "PUT"])
 def assets_bytes(asset_id: str):
-    if request.method == "PUT":
-        # TODO
-        pass
+    a = get_asset(asset_id)
 
-    return b""  # TODO: Streaming response
+    if a is None:
+        return current_app.response_class(jsonify(
+            {"message": f"Could not find asset with ID {asset_id}"}), status=404)
+
+    if request.method == "PUT":
+        if "file" not in request.files:
+            return err_no_file
+
+        file = request.files["file"]
+
+        asset_type, err = _detect_asset_type(file.filename)
+        if err:
+            return current_app.response_class(jsonify({"message": err}), status=400)
+
+        asset_dir = pathlib.Path(current_app.config["ASSET_DIR"])
+        file_name = f"{int(datetime.now().timestamp() * 1000)}-{secure_filename(file.filename)}"
+        file_path = asset_dir / file_name
+
+        get_db()  # Make sure the DB can be initialized before we start doing file stuff
+
+        old_file_name = a["file_name"]
+        file.save(file_path)
+        os.remove(asset_dir / old_file_name)
+
+        a = {
+            **a,
+            "asset_type": asset_type,
+            "file_name": file_name,
+            "file_size": os.path.getsize(file_path),
+        }
+
+        errs = list(asset_validator.iter_errors(a))
+        if errs:
+            os.remove(file_path)
+            return err_validation_failed(errs)
+
+        return jsonify(set_asset(a["id"], a))
+
+    with open(pathlib.Path(current_app.config["ASSET_DIR"] / a["file_name"]), "rb") as fh:
+        r = current_app.response_class(fh.read())
+        r.headers.set("Content-Type", "application/octet-stream")
+        r.headers.set("Content-Disposition", f"attachment; filename={a['file_name']}")
+        return r
 
 
 # TODO: Create page functionality

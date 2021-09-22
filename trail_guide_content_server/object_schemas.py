@@ -7,6 +7,9 @@ __all__ = [
     "SECTION_SCHEMA",
     "section_validator",
 
+    "ASSET_SCHEMA",
+    "asset_validator",
+
     "MODAL_SCHEMA",
     "modal_validator",
 ]
@@ -126,6 +129,29 @@ SECTION_SCHEMA = {
 
 section_validator = jsonschema.Draft7Validator(SECTION_SCHEMA)
 
+ASSET_SCHEMA = {
+    "type": "object",
+    "required": ["id", "asset_type", "file_name", "file_size"],
+    "properties": {
+        "id": {
+            "type": "string",
+        },
+        "asset_type": {
+            "type": "string",
+            "enum": ["image", "audio", "video"],
+        },
+        "file_name": {
+            "type": "string",
+        },
+        "file_size": {
+            "type": "integer",
+            "minimum": 0,
+        },
+    },
+}
+
+asset_validator = jsonschema.Draft7Validator(ASSET_SCHEMA)
+
 MODAL_SCHEMA = {
     "type": "object",
     "required": ["id", "title", "content", "close_text"],
@@ -146,3 +172,10 @@ MODAL_SCHEMA = {
 }
 
 modal_validator = jsonschema.Draft7Validator(MODAL_SCHEMA)
+
+SETTINGS_SCHEMA = {
+    "type": "object",
+    "additionalProperties": {
+        "type": "string",
+    },
+}

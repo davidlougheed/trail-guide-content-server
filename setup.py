@@ -12,6 +12,7 @@ setup(
     install_requires=[
         "Flask>=2.0.1,<2.1",
         "jsonschema==3.2.0",
+        "Werkzeug>=2.0.1,<2.1",
     ],
 
     description="A server for storing content for a trail guide app.",
