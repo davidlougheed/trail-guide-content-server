@@ -25,25 +25,25 @@ INSERT OR REPLACE INTO categories VALUES
 
 
 CREATE TABLE IF NOT EXISTS stations (
-    id INTEGER PRIMARY KEY,
+    id VARCHAR(63) PRIMARY KEY,
 
     title TEXT UNIQUE NOT NULL,
-    long_title TEXT NOT NULL,
+    long_title TEXT NOT NULL DEFAULT "",
     subtitle TEXT NOT NULL,
 
     coordinates_utm_zone TEXT NOT NULL DEFAULT "18N",
     coordinates_utm_ew TEXT NOT NULL,
     coordinates_utm_ns TEXT NOT NULL,
 
+    section TEXT NOT NULL,
     category TEXT CHECK(category in ("culture", "environment", "research")),
-    list_section TEXT NOT NULL,
 
     contents TEXT NOT NULL DEFAULT "[]",  -- JSON list of content objects
 
     enabled INTEGER NOT NULL CHECK (enabled in (0, 1)),
     rank INTEGER NOT NULL CHECK (rank >= 0),
 
-    FOREIGN KEY (list_section) REFERENCES sections
+    FOREIGN KEY (section) REFERENCES sections
 );
 
 
