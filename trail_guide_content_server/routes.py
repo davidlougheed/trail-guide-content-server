@@ -1,9 +1,10 @@
+import json
 import os
 import pathlib
 import uuid
 
 from datetime import datetime
-from flask import Blueprint, jsonify, current_app, request
+from flask import Blueprint, jsonify, current_app, request, Response
 from werkzeug.utils import secure_filename
 
 from .db import (
@@ -44,9 +45,9 @@ __all__ = ["api_v1"]
 
 api_v1 = Blueprint("api", __name__)
 
-err_must_be_object = current_app.response_class(jsonify({"message": "Request body must be an object"}), status=400)
-err_cannot_alter_id = current_app.response_class(jsonify({"message": "Cannot alter object ID"}), status=400)
-err_no_file = current_app.response_class(jsonify({"message", "No file provided"}), status=400)
+err_must_be_object = Response(json.dumps({"message": "Request body must be an object"}), status=400)
+err_cannot_alter_id = Response(json.dumps({"message": "Cannot alter object ID"}), status=400)
+err_no_file = Response(json.dumps({"message": "No file provided"}), status=400)
 
 
 def err_validation_failed(errs):

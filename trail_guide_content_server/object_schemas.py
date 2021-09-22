@@ -176,6 +176,6 @@ modal_validator = jsonschema.Draft7Validator(MODAL_SCHEMA)
 SETTINGS_SCHEMA = {
     "type": "object",
     "additionalProperties": {
-        "type": "string",
+        "type": ["string", "null"],
     },
 }

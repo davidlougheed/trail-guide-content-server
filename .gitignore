@@ -3,3 +3,4 @@
 !/data/assets
 !/data/assets/.gitkeep
 /env
+__pycache__
