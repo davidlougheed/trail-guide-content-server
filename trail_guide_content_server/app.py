@@ -1,6 +1,7 @@
 import pathlib
 
 from flask import Flask, g
+from flask_cors import CORS
 
 from .config import Config
 from .db import get_db
@@ -8,6 +9,8 @@ from .routes import api_v1
 
 application = Flask(__name__)
 application.config.from_object(Config)
+
+CORS(application, resources={r"/api/v1/*": {"origins": "*"}})
 
 application.register_blueprint(api_v1, url_prefix="/api/v1")
 

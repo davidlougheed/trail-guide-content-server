@@ -11,6 +11,7 @@ setup(
     python_requires="~=3.8",
     install_requires=[
         "Flask>=2.0.1,<2.1",
+        "Flask-Cors>=3.0.10,<3.1",
         "jsonschema==3.2.0",
         "Werkzeug>=2.0.1,<2.1",
     ],
