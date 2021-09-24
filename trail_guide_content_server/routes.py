@@ -51,7 +51,10 @@ err_no_file = Response(json.dumps({"message": "No file provided"}), status=400)
 
 
 def err_validation_failed(errs):
-    return current_app.response_class(jsonify({"message": "Object validation failed", "errors": errs}))
+    return current_app.response_class(json.dumps({
+        "message": "Object validation failed",
+        "errors": [str(e) for e in errs],
+    }), status=400)
 
 
 @api_v1.route("/categories", methods=["GET"])

@@ -67,7 +67,7 @@ STATION_SCHEMA = {
             "type": "array",
             "items": {
                 "type": "object",
-                "required": ["type"],
+                "required": ["content_type"],
                 "properties": {
                     "content_type": {
                         "type": "string",
@@ -77,10 +77,10 @@ STATION_SCHEMA = {
                     # TODO: We need proper if/else, but for now just list the different properties
 
                     # html
-                    "contentBeforeFold": {
+                    "content_before_fold": {
                         "type": "string",
                     },
-                    "contentAfterFold": {
+                    "content_after_fold": {
                         "type": "string,"
                     },
 
