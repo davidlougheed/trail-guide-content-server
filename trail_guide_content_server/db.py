@@ -95,9 +95,10 @@ def _tuple_to_station(r: tuple) -> dict:
         },
         "section": r[7],
         "category": r[8],
-        "contents": json.loads(r[9]),
-        "enabled": bool(r[10]),
-        "rank": bool(r[11]),
+        "header_image": r[9],
+        "contents": json.loads(r[10]),
+        "enabled": bool(r[11]),
+        "rank": bool(r[12]),
     }
 
 
@@ -116,12 +117,13 @@ def get_sections_with_stations() -> list[dict]:
             stations.coordinates_utm_ns, -- 7
             stations.section, -- 8
             stations.category, -- 9
-            stations.contents, -- 10
+            stations.header_image, -- 10
+            stations.contents, -- 11
             
-            stations.enabled, -- 11
-            stations.rank, -- 12
+            stations.enabled, -- 12
+            stations.rank, -- 13
             
-            sections.rank, -- 13
+            sections.rank, -- 14
         FROM sections LEFT JOIN stations ON sections.id = stations.list_section
         ORDER BY sections.rank ASC, stations.rank ASC""")
 
@@ -129,8 +131,8 @@ def get_sections_with_stations() -> list[dict]:
 
     for r in q.fetchall():
         sections_of_stations[r[0]]["title"] = r[1]
-        sections_of_stations[r[0]]["rank"] = r[13]
-        sections_of_stations[r[0]]["data"].append(_tuple_to_station(r[2:13]))
+        sections_of_stations[r[0]]["rank"] = r[14]
+        sections_of_stations[r[0]]["data"].append(_tuple_to_station(r[2:14]))
 
     return [{"id": k, **v} for k, v in sections_of_stations.items()]
 
@@ -148,9 +150,10 @@ def get_stations():
                 coordinates_utm_ns, -- 6
                 section, -- 7
                 category, -- 8
-                contents, -- 9
-                enabled, -- 10
-                rank -- 11
+                header_image, -- 9
+                contents, -- 10
+                enabled, -- 11
+                rank -- 12
             FROM stations
             ORDER BY rank ASC""")
 
@@ -170,9 +173,10 @@ def get_station(station_id: str):
                     coordinates_utm_ns, -- 6
                     section, -- 7
                     category, -- 8
-                    contents, -- 9
-                    enabled, -- 10
-                    rank, -- 11
+                    header_image, -- 9
+                    contents, -- 10
+                    enabled, -- 11
+                    rank, -- 12
                 FROM stations
                 WHERE id = ?""", (station_id,))
 
@@ -193,10 +197,11 @@ def set_station(station_id: str, data: dict) -> dict:
         coordinates_utm_ns, -- 6
         section, -- 7
         category, -- 8
-        contents, -- 9
-        enabled, -- 10
-        rank -- 11
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", (
+        header_image, -- 9
+        contents, -- 10
+        enabled, -- 11
+        rank -- 12
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", (
         station_id,
         data["title"],
         data["long_title"],
@@ -206,6 +211,7 @@ def set_station(station_id: str, data: dict) -> dict:
         data["coordinates_utm"].get("north", data["coordinates_utm"].get("south")),
         data["section"],
         data["category"],
+        data["header_image"],
         json.dumps(data["contents"]),
         data["enabled"],
         data["rank"],

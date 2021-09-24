@@ -17,7 +17,8 @@ __all__ = [
 STATION_SCHEMA = {
     "type": "object",
     "required": [
-        "id", "title", "long_title", "subtitle", "coordinates_utm", "section", "category", "contents", "enabled"],
+        "id", "title", "long_title", "subtitle", "coordinates_utm", "section", "category", "header_image", "contents",
+        "enabled"],
     "properties": {
         "id": {
             "type": "string",
@@ -58,6 +59,9 @@ STATION_SCHEMA = {
         },
         "category": {
             "type": "string",
+        },
+        "header_image": {
+            "type": ["string", "null"],
         },
         "contents": {
             "type": "array",
