@@ -123,7 +123,7 @@ def get_sections_with_stations() -> list[dict]:
             stations.enabled, -- 12
             stations.rank, -- 13
             
-            sections.rank, -- 14
+            sections.rank -- 14
         FROM sections LEFT JOIN stations ON sections.id = stations.list_section
         ORDER BY sections.rank ASC, stations.rank ASC""")
 
@@ -176,7 +176,7 @@ def get_station(station_id: str):
                     header_image, -- 9
                     contents, -- 10
                     enabled, -- 11
-                    rank, -- 12
+                    rank -- 12
                 FROM stations
                 WHERE id = ?""", (station_id,))
 
@@ -187,7 +187,7 @@ def get_station(station_id: str):
 def set_station(station_id: str, data: dict) -> dict:
     db = get_db()
     c = db.cursor()
-    c.execute("""INSERT OR REPLACE INTO stations ("
+    c.execute("""INSERT OR REPLACE INTO stations (
         id, -- 0
         title, -- 1
         long_title, -- 2
