@@ -98,7 +98,7 @@ def _tuple_to_station(r: tuple) -> dict:
         "header_image": r[9],
         "contents": json.loads(r[10]),
         "enabled": bool(r[11]),
-        "rank": bool(r[12]),
+        "rank": r[12],
     }
 
 
@@ -207,8 +207,13 @@ def set_station(station_id: str, data: dict) -> dict:
         data["long_title"],
         data["subtitle"],
         data["coordinates_utm"]["zone"],
-        data["coordinates_utm"].get("east", data["coordinates_utm"].get("west")),
-        data["coordinates_utm"].get("north", data["coordinates_utm"].get("south")),
+
+        # UTM Coordinates; these should be guaranteed to be set from the JSON schema checking earlier
+        str(data["coordinates_utm"].get("east", data["coordinates_utm"].get("west"))) + (
+            "E" if "east" in data["coordinates_utm"] else "W"),
+        str(data["coordinates_utm"].get("north", data["coordinates_utm"].get("south"))) + (
+            "N" if "north" in data["coordinates_utm"] else "S"),
+
         data["section"],
         data["category"],
         data["header_image"],

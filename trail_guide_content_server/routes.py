@@ -57,6 +57,10 @@ def err_validation_failed(errs):
     }), status=400)
 
 
+def request_changed_id(old_id) -> bool:
+    return "id" in request.json and request.json["id"] != old_id
+
+
 @api_v1.route("/categories", methods=["GET"])
 def categories():
     return jsonify(get_categories())
@@ -80,7 +84,7 @@ def sections_detail(section_id: str):
         if not isinstance(request.json, dict):
             return err_must_be_object
 
-        if request.json.get("id") != s["id"]:
+        if request_changed_id(s["id"]):
             return err_cannot_alter_id
 
         s = {**s, **request.json}
@@ -130,7 +134,7 @@ def stations_detail(station_id: str):
         if not isinstance(request.json, dict):
             return err_must_be_object
 
-        if request.json.get("id") != s["id"]:
+        if request_changed_id(s["id"]):
             return err_cannot_alter_id
 
         s = {**s, **request.json}
@@ -222,7 +226,7 @@ def assets_detail(asset_id):
         if not isinstance(request.json, dict):
             return err_must_be_object
 
-        if request.json.get("id") != a["id"]:
+        if request_changed_id(a["id"]):
             return err_cannot_alter_id
 
         a = {**a, **request.json}
@@ -304,7 +308,7 @@ def pages_detail(page_id: str):
         if not isinstance(request.json, dict):
             return err_must_be_object
 
-        if request.json.get("id") != p["id"]:
+        if request_changed_id(p["id"]):
             return err_cannot_alter_id
 
         p = {**p, **request.json}
