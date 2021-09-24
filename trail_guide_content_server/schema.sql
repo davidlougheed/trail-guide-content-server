@@ -38,12 +38,14 @@ CREATE TABLE IF NOT EXISTS stations (
     section TEXT NOT NULL,
     category TEXT CHECK(category in ("culture", "environment", "research")),
 
+    header_image TEXT,
     contents TEXT NOT NULL DEFAULT "[]",  -- JSON list of content objects
 
     enabled INTEGER NOT NULL CHECK (enabled in (0, 1)),
     rank INTEGER NOT NULL CHECK (rank >= 0),
 
-    FOREIGN KEY (section) REFERENCES sections
+    FOREIGN KEY (section) REFERENCES sections,
+    FOREIGN KEY (header_image) REFERENCES asset
 );
 
 
