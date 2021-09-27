@@ -57,8 +57,9 @@ def err_validation_failed(errs):
     }), status=400)
 
 
-def request_changed_id(old_id) -> bool:
-    return "id" in request.json and request.json["id"] != old_id
+def request_changed(old_val, form_data: bool = False, field: str = "id") -> bool:
+    obj_to_check = request.form if form_data else request.json
+    return field in obj_to_check and obj_to_check[field] != old_val
 
 
 @api_v1.route("/categories", methods=["GET"])
@@ -84,7 +85,7 @@ def sections_detail(section_id: str):
         if not isinstance(request.json, dict):
             return err_must_be_object
 
-        if request_changed_id(s["id"]):
+        if request_changed(s["id"]):
             return err_cannot_alter_id
 
         s = {**s, **request.json}
@@ -134,7 +135,7 @@ def stations_detail(station_id: str):
         if not isinstance(request.json, dict):
             return err_must_be_object
 
-        if request_changed_id(s["id"]):
+        if request_changed(s["id"]):
             return err_cannot_alter_id
 
         s = {**s, **request.json}
@@ -223,64 +224,67 @@ def assets_detail(asset_id):
         return jsonify({"message": "Deleted."})
 
     if request.method == "PUT":
-        if not isinstance(request.json, dict):
-            return err_must_be_object
-
-        if request_changed_id(a["id"]):
+        if request_changed(a["id"], form_data=True):
             return err_cannot_alter_id
 
-        a = {**a, **request.json}
+        # Don't let users change asset_type, since the asset may already have been embedded as HTML in
+        # a document somewhere - which we cannot fix the markup for.
+        if request_changed(a["asset_type"], form_data=True, field="asset_type"):
+            return current_app.response_class(jsonify({"message": "Cannot change asset type."}), status=400)
 
-        errs = list(asset_validator.iter_errors(a))
-        if errs:
-            return err_validation_failed(errs)
+        a = {
+            **a,
+            "enabled": request.form["enabled"],
+        }
+
+        if "file" in request.files:
+            # Changing file, so handle the upload
+
+            file = request.files["file"]
+
+            asset_type, err = _detect_asset_type(file.filename)
+            if err:
+                return current_app.response_class(jsonify({"message": err}), status=400)
+
+            asset_dir = pathlib.Path(current_app.config["ASSET_DIR"])
+            file_name = f"{int(datetime.now().timestamp() * 1000)}-{secure_filename(file.filename)}"
+            file_path = asset_dir / file_name
+
+            get_db()  # Make sure the DB can be initialized before we start doing file stuff
+
+            old_file_name = a["file_name"]
+            file.save(file_path)
+            os.remove(asset_dir / old_file_name)
+
+            a = {
+                **a,
+                "asset_type": asset_type,
+                "file_name": file_name,
+                "file_size": os.path.getsize(file_path),
+            }
+
+            errs = list(asset_validator.iter_errors(a))
+            if errs:
+                os.remove(file_path)
+                return err_validation_failed(errs)
+
+        else:
+            errs = list(asset_validator.iter_errors(a))
+            if errs:
+                return err_validation_failed(errs)
 
         a = set_asset(asset_id, a)
 
     return jsonify(a)
 
 
-@api_v1.route("/assets/<string:asset_id>/bytes", methods=["GET", "PUT"])
+@api_v1.route("/assets/<string:asset_id>/bytes", methods=["GET"])
 def assets_bytes(asset_id: str):
     a = get_asset(asset_id)
 
     if a is None:
         return current_app.response_class(jsonify(
             {"message": f"Could not find asset with ID {asset_id}"}), status=404)
-
-    if request.method == "PUT":
-        if "file" not in request.files:
-            return err_no_file
-
-        file = request.files["file"]
-
-        asset_type, err = _detect_asset_type(file.filename)
-        if err:
-            return current_app.response_class(jsonify({"message": err}), status=400)
-
-        asset_dir = pathlib.Path(current_app.config["ASSET_DIR"])
-        file_name = f"{int(datetime.now().timestamp() * 1000)}-{secure_filename(file.filename)}"
-        file_path = asset_dir / file_name
-
-        get_db()  # Make sure the DB can be initialized before we start doing file stuff
-
-        old_file_name = a["file_name"]
-        file.save(file_path)
-        os.remove(asset_dir / old_file_name)
-
-        a = {
-            **a,
-            "asset_type": asset_type,
-            "file_name": file_name,
-            "file_size": os.path.getsize(file_path),
-        }
-
-        errs = list(asset_validator.iter_errors(a))
-        if errs:
-            os.remove(file_path)
-            return err_validation_failed(errs)
-
-        return jsonify(set_asset(a["id"], a))
 
     with open(pathlib.Path(current_app.config["ASSET_DIR"] / a["file_name"]), "rb") as fh:
         r = current_app.response_class(fh.read())
@@ -308,7 +312,7 @@ def pages_detail(page_id: str):
         if not isinstance(request.json, dict):
             return err_must_be_object
 
-        if request_changed_id(p["id"]):
+        if request_changed(p["id"]):
             return err_cannot_alter_id
 
         p = {**p, **request.json}
