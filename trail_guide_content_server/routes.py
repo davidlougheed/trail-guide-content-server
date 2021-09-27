@@ -78,7 +78,7 @@ def sections_detail(section_id: str):
     s = get_section(section_id)
 
     if s is None:
-        return current_app.response_class(jsonify(
+        return current_app.response_class(json.dumps(
             {"message": f"Could not find section with ID {section_id}"}), status=404)
 
     if request.method == "PUT":
@@ -123,7 +123,7 @@ def stations_detail(station_id: str):
     s = get_station(station_id)
 
     if s is None:
-        return current_app.response_class(jsonify(
+        return current_app.response_class(json.dumps(
             {"message": f"Could not find station with ID {station_id}"}), status=404)
 
     # TODO: Delete
