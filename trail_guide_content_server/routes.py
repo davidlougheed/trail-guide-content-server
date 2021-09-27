@@ -5,6 +5,7 @@ import uuid
 
 from datetime import datetime
 from flask import Blueprint, jsonify, current_app, request, Response
+from itertools import groupby
 from werkzeug.utils import secure_filename
 
 from .db import (
@@ -174,19 +175,17 @@ def _detect_asset_type(file_name: str) -> tuple[str, str]:
 
 
 @api_v1.route("/assets", methods=["GET", "POST"])
-def assets():
+def asset_list():
     if request.method == "POST":
         if "file" not in request.files:
             return err_no_file
 
+        asset_id = str(uuid.uuid4())
         file = request.files["file"]
-
-        if "id" not in request.form:
-            return current_app.response_class(jsonify({"message", "No ID provided"}), status=400)
 
         asset_type, err = _detect_asset_type(file.filename)
         if err:
-            return current_app.response_class(jsonify({"message": err}), status=400)
+            return current_app.response_class(json.dumps({"message": err}), status=400)
 
         file_name = f"{int(datetime.now().timestamp() * 1000)}-{secure_filename(file.filename)}"
         file_path = pathlib.Path(current_app.config["ASSET_DIR"]) / file_name
@@ -196,7 +195,7 @@ def assets():
         file.save(file_path)
 
         a = {
-            "id": request.form["id"],
+            "id": asset_id,
             "asset_type": asset_type,
             "file_name": file_name,
             "file_size": os.path.getsize(file_path),
@@ -208,11 +207,34 @@ def assets():
 
         return jsonify(set_asset(a["id"], a))
 
-    return jsonify(get_assets())
+    as_js = request.args.get("as_js")
+
+    assets = get_assets()
+    assets_by_type = {
+        at: {aa["id"]: f"""require("./{at}/{aa['file_name']}")""" for aa in v}
+        for at, v in groupby(assets, key=lambda x: x["asset_type"])
+    }
+
+    if as_js:
+        rt = "export default {\n"
+
+        for at in get_asset_types():
+            at_str = json.dumps(at)
+            rt += f"    {at_str}: {{\n"
+            for k, v in assets_by_type.get(at, {}).items():
+                rt += f"        {json.dumps(k)}: {v},\n"
+
+            rt += "    },\n"
+
+        rt += "};\n"
+
+        return current_app.response_class(rt, content_type="application/js")
+
+    return jsonify(assets)
 
 
 @api_v1.route("/assets/<string:asset_id>", methods=["GET", "PUT", "DELETE"])
-def assets_detail(asset_id):
+def asset_detail(asset_id):
     a = get_asset(asset_id)
 
     if a is None:

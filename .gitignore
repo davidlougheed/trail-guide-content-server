@@ -1,4 +1,5 @@
 /data/*
+/data/assets/*
 !/data/.gitkeep
 !/data/assets
 !/data/assets/.gitkeep
