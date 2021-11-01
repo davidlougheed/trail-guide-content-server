@@ -246,18 +246,21 @@ def _tuple_to_asset(r: tuple) -> dict:
         "asset_type": r[1],
         "file_name": r[2],
         "file_size": r[3],
+        "enabled": r[4],
     }
 
 
-def get_assets() -> list[dict]:
+def get_assets(filter_disabled: bool = False) -> list[dict]:
     c = get_db().cursor()
-    q = c.execute("SELECT id, asset_type, file_name, file_size FROM assets")
+    q = c.execute(
+        f"SELECT id, asset_type, file_name, file_size, enabled "
+        f"FROM assets {'WHERE enabled = 1' if filter_disabled else ''}")
     return [_tuple_to_asset(r) for r in q.fetchall()]
 
 
 def get_asset(asset_id: str) -> Optional[dict]:
     c = get_db().cursor()
-    q = c.execute("SELECT id, asset_type, file_name, file_size FROM assets WHERE id = ?", (asset_id,))
+    q = c.execute("SELECT id, asset_type, file_name, file_size, enabled FROM assets WHERE id = ?", (asset_id,))
     r = q.fetchone()
     return _tuple_to_asset(r) if r else None
 
@@ -265,8 +268,8 @@ def get_asset(asset_id: str) -> Optional[dict]:
 def set_asset(asset_id: str, data: dict) -> dict:
     db = get_db()
     c = db.cursor()
-    c.execute("INSERT OR REPLACE INTO assets (id, asset_type, file_name, file_size) VALUES (?, ?, ?, ?)",
-              (asset_id, data["asset_type"], data["file_name"], data["file_size"]))
+    c.execute("INSERT OR REPLACE INTO assets (id, asset_type, file_name, file_size, enabled) VALUES (?, ?, ?, ?, ?)",
+              (asset_id, data["asset_type"], data["file_name"], data["file_size"], data["enabled"]))
     db.commit()
     return get_asset(asset_id)
 

@@ -201,6 +201,7 @@ def asset_list():
             "asset_type": asset_type,
             "file_name": file_name,
             "file_size": os.path.getsize(file_path),
+            "enabled": request.form.get("enabled", "").strip() != "",
         }
 
         errs = list(asset_validator.iter_errors(a))
@@ -258,7 +259,7 @@ def asset_detail(asset_id):
 
         a = {
             **a,
-            "enabled": request.form["enabled"],
+            "enabled": request.form.get("enabled", "").strip() != "",
         }
 
         if "file" in request.files:

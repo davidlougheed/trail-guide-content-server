@@ -67,6 +67,8 @@ CREATE TABLE IF NOT EXISTS assets (
     file_name TEXT NOT NULL,
     file_size INTEGER NOT NULL CHECK (file_size > 0),
 
+    enabled INTEGER NOT NULL CHECK (enabled in (0, 1)),
+
     FOREIGN KEY (asset_type) REFERENCES asset_types
 );
 
