@@ -311,10 +311,36 @@ def assets_bytes(asset_id: str):
         return current_app.response_class(jsonify(
             {"message": f"Could not find asset with ID {asset_id}"}), status=404)
 
+    content_type = "application/octet-stream"
+    file_ext = os.path.splitext(a["file_name"])[1].lstrip(".").lower()
+
+    # TODO: py3.10: match
+    if a["asset_type"] == "image":
+        if file_ext in {"jpg", "jpeg"}:
+            content_type = "image/jpeg"
+        elif file_ext == "png":
+            content_type = "image/png"
+        elif file_ext == "gif":
+            content_type = "image/gif"
+    elif a["asset_type"] == "audio":
+        if file_ext == "mp3":
+            content_type = "audio/mp3"
+        elif file_ext == "m4a":
+            content_type = "audio/m4a"
+    elif a["asset_type"] == "video":
+        if file_ext == "mp4":
+            content_type = "video/mp4"
+        elif file_ext == "mov":
+            content_type = "video/quicktime"
+    elif a["asset_type"] == "video_text_track":
+        if file_ext == "vtt":
+            content_type = "text/vvt"
+
     with open(pathlib.Path(current_app.config["ASSET_DIR"] / a["file_name"]), "rb") as fh:
         r = current_app.response_class(fh.read())
-        r.headers.set("Content-Type", "application/octet-stream")
-        r.headers.set("Content-Disposition", f"attachment; filename={a['file_name']}")
+        r.headers.set("Content-Type", content_type)
+        if content_type == "application/octet-stream":
+            r.headers.set("Content-Disposition", f"attachment; filename={a['file_name']}")
         return r
 
 
