@@ -272,7 +272,8 @@ def asset_detail(asset_id):
                 return current_app.response_class(jsonify({"message": err}), status=400)
 
             asset_dir = pathlib.Path(current_app.config["ASSET_DIR"])
-            file_name = f"{int(datetime.now().timestamp() * 1000)}-{secure_filename(file.filename)}"
+            file_parts = secure_filename(file.filename).split(".")
+            file_name = f"{''.join(file_parts[:-1])}-{int(datetime.now().timestamp() * 1000)}.{file_parts[-1]}"
             file_path = asset_dir / file_name
 
             get_db()  # Make sure the DB can be initialized before we start doing file stuff
