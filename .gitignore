@@ -1,3 +1,5 @@
+.idea/dataSources*
+.idea/sqldialects.xml
 /data/*
 /data/assets/*
 !/data/.gitkeep
