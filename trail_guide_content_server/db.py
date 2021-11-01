@@ -43,6 +43,8 @@ def get_db() -> sqlite3.Connection:
     db = getattr(g, "_database", None)
     if db is None:
         db = g._database = sqlite3.connect(current_app.config["DATABASE"])
+        c = db.cursor()
+        c.execute("PRAGMA foreign_keys = ON")  # By default FKs are off in SQLite; turn them on
     return db
 
 

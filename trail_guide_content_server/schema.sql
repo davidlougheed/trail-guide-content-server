@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS stations (
     rank INTEGER NOT NULL CHECK (rank >= 0),
 
     FOREIGN KEY (section) REFERENCES sections,
-    FOREIGN KEY (header_image) REFERENCES asset
+    FOREIGN KEY (header_image) REFERENCES assets
 );
 
 
