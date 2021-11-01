@@ -63,7 +63,7 @@ def _tuple_to_section(r: tuple) -> dict:
 
 def get_sections() -> list[dict]:
     c = get_db().cursor()
-    q = c.execute("SELECT id, title, rank FROM sections ORDER BY rank ASC")
+    q = c.execute("SELECT id, title, rank FROM sections ORDER BY rank")
     return [_tuple_to_section(r) for r in q.fetchall()]
 
 
@@ -126,8 +126,8 @@ def get_sections_with_stations() -> list[dict]:
             stations.rank, -- 13
             
             sections.rank -- 14
-        FROM sections LEFT JOIN stations ON sections.id = stations.list_section
-        ORDER BY sections.rank ASC, stations.rank ASC""")
+        FROM sections LEFT JOIN stations ON sections.id = stations.section
+        ORDER BY sections.rank, stations.rank""")
 
     sections_of_stations = defaultdict(lambda: {"data": []})
 
@@ -157,7 +157,7 @@ def get_stations():
                 enabled, -- 11
                 rank -- 12
             FROM stations
-            ORDER BY rank ASC""")
+            ORDER BY rank""")
 
     return [_tuple_to_station(r) for r in q.fetchall()]
 
