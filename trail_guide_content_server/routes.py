@@ -161,10 +161,12 @@ def _detect_asset_type(file_name: str) -> tuple[str, str]:
     # TODO: py3.10: match
     if file_ext in {"jpg", "jpeg", "png", "gif"}:
         asset_type = "image"
+    elif file_ext in {"mp3", "m4a"}:
+        asset_type = "audio"
     elif file_ext in {"mp4", "mov"}:
         asset_type = "video"
-    elif file_ext in {"mp3"}:
-        asset_type = "audio"
+    elif file_ext in {"vtt"}:
+        asset_type = "video_text_track"
     else:
         if "asset_type" not in request.form:
             return "", "No asset_type provided, and could not figure it out automatically"
