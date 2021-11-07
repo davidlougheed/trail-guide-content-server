@@ -1,10 +1,12 @@
 import json
 import os
 import pathlib
+import tempfile
 import uuid
+import zipfile
 
 from datetime import datetime
-from flask import Blueprint, jsonify, current_app, request, Response
+from flask import Blueprint, jsonify, current_app, request, Response, send_from_directory
 from itertools import groupby
 from werkzeug.utils import secure_filename
 
@@ -155,6 +157,34 @@ def asset_types():
     return jsonify(get_asset_types())
 
 
+@api_v1.route("/asset_bundle", methods=["GET"])
+def asset_bundle():
+    assets_to_include = get_assets(filter_disabled=True)
+
+    asset_js, _ = make_asset_list(assets_to_include, as_js=True)
+
+    with tempfile.TemporaryDirectory() as td:
+        tdp = pathlib.Path(td)
+
+        asset_path = tdp / "assets.js"
+        bundle_name = "bundle.zip"
+        bundle_path = tdp / bundle_name
+
+        with open(asset_path, "w") as afh:
+            afh.write(asset_js)
+
+        with open(bundle_path, "wb") as zfh:
+            with zipfile.ZipFile(zfh, mode="w") as zf:
+                zf.write(asset_path, "assets.js")
+
+                for asset in assets_to_include:
+                    zf.write(
+                        pathlib.Path(current_app.config["ASSET_DIR"]) / asset["file_name"],
+                        f"{asset['asset_type']}/{asset['file_name']}")
+
+        return send_from_directory(tdp, bundle_name, as_attachment=True, mimetype="application/zip")
+
+
 def _detect_asset_type(file_name: str) -> tuple[str, str]:
     file_ext = os.path.splitext(file_name)[1].lower().lstrip(".")
 
@@ -174,6 +204,30 @@ def _detect_asset_type(file_name: str) -> tuple[str, str]:
         asset_type = request.form["asset_type"]
 
     return asset_type, ""
+
+
+def make_asset_list(assets, as_js: bool = False):
+    if as_js:
+        assets_by_type = {
+            at: {aa["id"]: f"""require("./{at}/{aa['file_name']}")""" for aa in v}
+            for at, v in groupby(assets, key=lambda x: x["asset_type"])
+        }
+
+        rt = "export default {\n"
+
+        for at in get_asset_types():
+            at_str = json.dumps(at)
+            rt += f"    {at_str}: {{\n"
+            for k, v in assets_by_type.get(at, {}).items():
+                rt += f"        {json.dumps(k)}: {v},\n"
+
+            rt += "    },\n"
+
+        rt += "};\n"
+
+        return rt, "application/js"
+
+    return json.dumps(assets), "application/json"
 
 
 @api_v1.route("/assets", methods=["GET", "POST"])
@@ -210,30 +264,9 @@ def asset_list():
 
         return jsonify(set_asset(a["id"], a))
 
-    as_js = request.args.get("as_js")
-
-    assets = get_assets()
-    assets_by_type = {
-        at: {aa["id"]: f"""require("./{at}/{aa['file_name']}")""" for aa in v}
-        for at, v in groupby(assets, key=lambda x: x["asset_type"])
-    }
-
-    if as_js:
-        rt = "export default {\n"
-
-        for at in get_asset_types():
-            at_str = json.dumps(at)
-            rt += f"    {at_str}: {{\n"
-            for k, v in assets_by_type.get(at, {}).items():
-                rt += f"        {json.dumps(k)}: {v},\n"
-
-            rt += "    },\n"
-
-        rt += "};\n"
-
-        return current_app.response_class(rt, content_type="application/js")
-
-    return jsonify(assets)
+    as_js = request.args.get("as_js", "").strip() != ""
+    rt, ct = make_asset_list(get_assets(), as_js=as_js)
+    return current_app.response_class(rt, content_type=ct)
 
 
 @api_v1.route("/assets/<string:asset_id>", methods=["GET", "PUT", "DELETE"])
