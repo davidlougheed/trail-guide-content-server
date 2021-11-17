@@ -124,15 +124,13 @@ def stations():
         if not isinstance(request.json, dict):
             return err_must_be_object
 
-        station_id = str(uuid.uuid4())
-
-        s = {"id": station_id, **request.json}
+        s = {"id": str(uuid.uuid4()), **request.json}
 
         errs = list(station_validator.iter_errors(s))
         if errs:
             return err_validation_failed(errs)
 
-        return set_station(station_id, s)
+        return set_station(s["id"], s)
 
     return jsonify(get_stations())
 
@@ -252,7 +250,6 @@ def asset_list():
         if "file" not in request.files:
             return err_no_file
 
-        asset_id = str(uuid.uuid4())
         file = request.files["file"]
 
         asset_type, err = _detect_asset_type(file.filename)
@@ -267,7 +264,7 @@ def asset_list():
         file.save(file_path)
 
         a = {
-            "id": asset_id,
+            "id": str(uuid.uuid4()),
             "asset_type": asset_type,
             "file_name": file_name,
             "file_size": os.path.getsize(file_path),
@@ -433,8 +430,7 @@ def modals():
         if not isinstance(request.json, dict):
             return err_must_be_object
 
-        # Let users set IDs for now
-        m = {**request.json}
+        m = {"id": str(uuid.uuid4()), **request.json}
 
         errs = list(modal_validator.iter_errors(m))
         if errs:
