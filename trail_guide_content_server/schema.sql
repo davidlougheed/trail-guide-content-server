@@ -51,6 +51,11 @@ CREATE TABLE IF NOT EXISTS stations (
     coordinates_utm_ew TEXT NOT NULL,
     coordinates_utm_ns TEXT NOT NULL,
 
+    -- month-day inclusive, left side of interval (or null)
+    visible_from TEXT CHECK (visible_from IS NULL OR length(visible_from) = 5),
+    -- month-day inclusive, right side of interval (or null)
+    visible_to TEXT CHECK (visible_to IS NULL OR length(visible_to) = 5),
+
     section TEXT NOT NULL,
     category TEXT CHECK(category in ('culture', 'environment', 'research')),
 

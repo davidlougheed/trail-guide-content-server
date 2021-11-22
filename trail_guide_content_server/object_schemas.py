@@ -34,7 +34,7 @@ STATION_SCHEMA = {
     "type": "object",
     "required": [
         "id", "title", "long_title", "subtitle", "coordinates_utm", "section", "category", "header_image", "contents",
-        "enabled"],
+        "enabled", "rank"],
     "properties": {
         "id": {
             "type": "string",
@@ -69,6 +69,14 @@ STATION_SCHEMA = {
                     "type": "integer",
                 },
             }
+        },
+        "visible": {
+            "type": "object",
+            "required": ["from", "to"],
+            "properties": {
+                "from": {"type": "string"},
+                "to": {"type": "string"},
+            },
         },
         "section": {
             "type": "string",
@@ -125,6 +133,9 @@ STATION_SCHEMA = {
         "enabled": {
             "type": "boolean",
         },
+        "rank": {
+            "type": "integer",
+        },
     }
 }
 
@@ -151,7 +162,7 @@ section_validator = jsonschema.Draft7Validator(SECTION_SCHEMA)
 
 ASSET_SCHEMA = {
     "type": "object",
-    "required": ["id", "asset_type", "file_name", "file_size"],
+    "required": ["id", "asset_type", "file_name", "file_size", "enabled"],
     "properties": {
         "id": {
             "type": "string",
@@ -166,6 +177,9 @@ ASSET_SCHEMA = {
         "file_size": {
             "type": "integer",
             "minimum": 0,
+        },
+        "enabled": {
+            "type": "boolean",
         },
     },
 }
