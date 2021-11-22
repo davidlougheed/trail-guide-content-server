@@ -15,7 +15,7 @@
 -- along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 CREATE TABLE IF NOT EXISTS sections (
-    id VARCHAR(15) PRIMARY KEY,
+    id VARCHAR(31) PRIMARY KEY,
     title TEXT NOT NULL,
     rank INTEGER NOT NULL CHECK (rank >= 0)
 );
@@ -30,7 +30,7 @@ INSERT OR REPLACE INTO sections VALUES
 
 
 CREATE TABLE IF NOT EXISTS categories (
-    id VARCHAR(15) PRIMARY KEY
+    id VARCHAR(31) PRIMARY KEY
 );
 
 -- Pre-populate categories
@@ -41,7 +41,7 @@ INSERT OR REPLACE INTO categories VALUES
 
 
 CREATE TABLE IF NOT EXISTS stations (
-    id VARCHAR(63) PRIMARY KEY,
+    id VARCHAR(36) PRIMARY KEY,
 
     title TEXT UNIQUE NOT NULL,
     long_title TEXT NOT NULL DEFAULT '',
@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS stations (
 
 
 CREATE TABLE IF NOT EXISTS asset_types (
-    id VARCHAR(15) PRIMARY KEY
+    id VARCHAR(31) PRIMARY KEY
 );
 
 -- Pre-populate asset types
@@ -83,8 +83,8 @@ INSERT OR REPLACE INTO asset_types VALUES
 
 
 CREATE TABLE IF NOT EXISTS assets (
-    id VARCHAR(127),
-    asset_type VARCHAR(15) NOT NULL,
+    id VARCHAR(36),
+    asset_type VARCHAR(31) NOT NULL,
     file_name TEXT NOT NULL,
     file_size INTEGER NOT NULL CHECK (file_size > 0),
 
@@ -95,7 +95,7 @@ CREATE TABLE IF NOT EXISTS assets (
 
 
 CREATE TABLE IF NOT EXISTS pages (
-    id VARCHAR(15) PRIMARY KEY,
+    id VARCHAR(36) PRIMARY KEY,
 
     title VARCHAR(31) UNIQUE NOT NULL,
     long_title TEXT NOT NULL,
@@ -114,7 +114,7 @@ INSERT OR REPLACE INTO pages VALUES
 
 
 CREATE TABLE IF NOT EXISTS modals (
-    id VARCHAR(15) PRIMARY KEY,
+    id VARCHAR(36) PRIMARY KEY,
     title TEXT NOT NULL,
     content TEXT NOT NULL,  -- HTML
     close_text TEXT NOT NULL DEFAULT 'Close'
