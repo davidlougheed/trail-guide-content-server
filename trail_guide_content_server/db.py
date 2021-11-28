@@ -52,6 +52,10 @@ __all__ = [
 
     "get_settings",
     "set_settings",
+
+    "get_feedback_items",
+    "get_feedback_item",
+    "set_feedback_item",
 ]
 
 
@@ -401,3 +405,38 @@ def set_settings(data: dict) -> dict:
         c.execute("INSERT OR REPLACE INTO settings (setting_key, setting_value) VALUES (?, ?)", (k, v))
     db.commit()
     return get_settings()
+
+
+def _tuple_to_feedback(r: tuple) -> dict:
+    return {
+        "id": r[0],
+        "from": {
+            "name": r[1],
+            "email": r[2],
+        },
+        "content": r[3],
+        "submitted": r[4],
+    }
+
+
+def get_feedback_items() -> list[dict]:
+    c = get_db().cursor()
+    q = c.execute("SELECT id, from_name, from_email, content, submitted FROM feedback")
+    return list(map(_tuple_to_feedback, q.fetchall()))
+
+
+def get_feedback_item(feedback_id: str) -> dict:
+    c = get_db().cursor()
+    q = c.execute("SELECT id, from_name, from_email, content, submitted FROM feedback WHERE id = ?", (feedback_id,))
+    r = q.fetchone()
+    return _tuple_to_feedback(r) if r else None
+
+
+def set_feedback_item(feedback_id: str, data: dict) -> dict:
+    db = get_db()
+    c = db.cursor()
+    c.execute(
+        "INSERT OR REPLACE INTO feedback (id, from_name, from_email, content, submitted) VALUES (?, ?, ?, ?, ?)",
+        (feedback_id, data["from"]["name"], data["from"]["email"], data["content"], data["submitted"]))
+    db.commit()
+    return get_feedback_item(feedback_id)

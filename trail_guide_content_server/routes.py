@@ -21,7 +21,7 @@ import tempfile
 import uuid
 import zipfile
 
-from datetime import datetime
+from datetime import datetime, timezone
 from flask import Blueprint, jsonify, current_app, request, Response, send_from_directory
 from itertools import groupby
 from werkzeug.utils import secure_filename
@@ -57,8 +57,17 @@ from .db import (
 
     get_settings,
     set_settings,
+
+    get_feedback_items,
+    set_feedback_item,
 )
-from .object_schemas import section_validator, station_validator, asset_validator, modal_validator
+from .object_schemas import (
+    section_validator,
+    station_validator,
+    asset_validator,
+    modal_validator,
+    feedback_item_validator,
+)
 
 __all__ = ["api_v1"]
 
@@ -482,3 +491,24 @@ def settings():
         s = set_settings({str(k): v for k, v in request.json.items()})
 
     return jsonify(s)
+
+
+@api_v1.route("/feedback", methods=["GET", "POST"])
+def feedback():
+    if request.method == "POST":
+        if not isinstance(request.json, dict):
+            return err_must_be_object
+
+        f = {
+            "id": str(uuid.uuid4()),
+            **request.json,
+            "submitted": datetime.utcnow().replace(microsecond=0, tzinfo=timezone.utc).isoformat()
+        }
+
+        errs = list(feedback_item_validator.iter_errors(f))
+        if errs:
+            return err_validation_failed(errs)
+
+        return jsonify(set_feedback_item(f["id"], f))
+
+    return jsonify(get_feedback_items())

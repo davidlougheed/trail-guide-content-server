@@ -114,7 +114,7 @@ INSERT OR REPLACE INTO pages VALUES
 
 
 CREATE TABLE IF NOT EXISTS modals (
-    id VARCHAR(36) PRIMARY KEY,
+    id VARCHAR(36) PRIMARY KEY,  -- UUID
     title TEXT NOT NULL,
     content TEXT NOT NULL,  -- HTML
     close_text TEXT NOT NULL DEFAULT 'Close'
@@ -129,3 +129,12 @@ CREATE TABLE IF NOT EXISTS settings (
 -- Pre-populate settings
 INSERT OR REPLACE INTO settings VALUES
     ('terms_modal', NULL);
+
+
+CREATE TABLE IF NOT EXISTS feedback (
+    id VARCHAR(36) PRIMARY KEY,  -- UUID
+    from_name TEXT NOT NULL,
+    from_email TEXT NOT NULL,
+    content TEXT NOT NULL,
+    submitted TEXT NOT NULL,  -- ISO date + time
+);

@@ -28,6 +28,9 @@ __all__ = [
 
     "MODAL_SCHEMA",
     "modal_validator",
+
+    "FEEDBACK_ITEM_SCHEMA",
+    "feedback_item_validator",
 ]
 
 STATION_SCHEMA = {
@@ -99,6 +102,11 @@ STATION_SCHEMA = {
                     },
 
                     # TODO: We need proper if/else, but for now just list the different properties
+
+                    # common
+                    "title": {
+                        "type": "string",
+                    },
 
                     # html
                     "content_before_fold": {
@@ -213,3 +221,24 @@ SETTINGS_SCHEMA = {
         "type": ["string", "null"],
     },
 }
+
+settings_validator = jsonschema.Draft7Validator(SETTINGS_SCHEMA)
+
+FEEDBACK_ITEM_SCHEMA = {
+    "type": "object",
+    "required": ["id"],
+    "properties": {
+        "from": {
+            "type": "object",
+            "required": ["name", "email"],
+            "properties": {
+                "name": {"type": "string"},
+                "email": {"type": "string"},
+            }
+        },
+        "content": {"type": "string"},
+        "submitted": {"type": "string"},
+    }
+}
+
+feedback_item_validator = jsonschema.Draft7Validator(FEEDBACK_ITEM_SCHEMA)
