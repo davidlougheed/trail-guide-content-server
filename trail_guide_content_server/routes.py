@@ -139,7 +139,7 @@ def stations():
         if errs:
             return err_validation_failed(errs)
 
-        return set_station(s["id"], s)
+        return jsonify(set_station(s["id"], s))
 
     return jsonify(get_stations())
 
@@ -445,7 +445,7 @@ def modals():
         if errs:
             return err_validation_failed(errs)
 
-        return set_modal(m["id"], m)
+        return jsonify(set_modal(m["id"], m))
 
     return jsonify(get_modals())
 
