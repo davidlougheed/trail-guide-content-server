@@ -15,8 +15,9 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import pathlib
+import werkzeug.exceptions
 
-from flask import Flask, g
+from flask import Flask, g, jsonify
 from flask_cors import CORS
 
 from .config import Config
@@ -29,6 +30,21 @@ application.config.from_object(Config)
 CORS(application, resources={r"/api/v1/*": {"origins": "*"}})
 
 application.register_blueprint(api_v1, url_prefix="/api/v1")
+
+
+@application.errorhandler(werkzeug.exceptions.NotFound)
+def handle_not_found(_e):
+    return jsonify({"message": "Not found"}), 404
+
+
+@application.errorhandler(werkzeug.exceptions.BadRequest)
+def handle_bad_request(e):
+    return jsonify({"message": "Bad request", "errors": [str(e)]}), 400
+
+
+@application.errorhandler(werkzeug.exceptions.InternalServerError)
+def handle_internal_server_error(e):
+    return jsonify({"message": "Internal server error", "errors": [str(e)]}), 500
 
 
 @application.teardown_appcontext
