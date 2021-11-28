@@ -136,5 +136,5 @@ CREATE TABLE IF NOT EXISTS feedback (
     from_name TEXT NOT NULL,
     from_email TEXT NOT NULL,
     content TEXT NOT NULL,
-    submitted TEXT NOT NULL,  -- ISO date + time
+    submitted TEXT NOT NULL  -- ISO date + time
 );
