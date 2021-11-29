@@ -13,6 +13,7 @@ setup(
         "Flask>=2.0.1,<2.1",
         "Flask-Cors>=3.0.10,<3.1",
         "jsonschema==3.2.0",
+        "PyJWT[crypto]>=2.3.0,<2.4",
         "Werkzeug>=2.0.1,<2.1",
     ],
 
