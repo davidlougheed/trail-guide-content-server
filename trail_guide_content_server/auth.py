@@ -44,7 +44,7 @@ class AuthError(Exception):
 def get_jwks_client() -> jwt.PyJWKClient:
     jwks_client = getattr(g, "_jwks_client", None)
     if jwks_client is None:
-        jwks_client = g._jwks_client = jwt.PyJWKClient(current_app.config["AUTH_ISSUER"] + "/.well-known/jwks.json")
+        jwks_client = g._jwks_client = jwt.PyJWKClient(current_app.config["AUTH_ISSUER"] + ".well-known/jwks.json")
     return jwks_client
 
 
@@ -91,8 +91,8 @@ def requires_auth(fn):
         except jwt.PyJWTError:
             raise AuthError("Unauthorized", ["Token error"])
 
-        if token_data.get("iss") != current_app.config["AUTH_ISSUER"]:
-            raise AuthError("Unauthorized", ["Bad issuer"])
+        if (iss := token_data.get("iss")) != current_app.config["AUTH_ISSUER"]:
+            raise AuthError("Unauthorized", [f"Bad issuer: {iss}"])
 
         scopes = token_data.get("scope", "").split()
         if request.method in ("GET", "HEAD") and SCOPE_READ_CONTENT not in scopes:
