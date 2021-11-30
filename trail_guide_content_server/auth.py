@@ -20,8 +20,15 @@ from functools import wraps
 from typing import Optional
 
 __all__ = [
+    "SCOPE_READ_CONTENT",
+    "SCOPE_MANAGE_CONTENT",
     "AuthError",
+    "requires_auth",
 ]
+
+
+SCOPE_READ_CONTENT = "read:content"
+SCOPE_MANAGE_CONTENT = "manage:content"
 
 
 class AuthError(Exception):
@@ -87,25 +94,12 @@ def requires_auth(fn):
         if token_data.get("iss") != current_app.config["AUTH_ISSUER"]:
             raise AuthError("Unauthorized", ["Bad issuer"])
 
-        # TODO: Check claims?
+        scopes = token_data.get("scope", "").split()
+        if request.method in ("GET", "HEAD") and SCOPE_READ_CONTENT not in scopes:
+            raise AuthError("Unauthorized", [f"Missing scope: {SCOPE_READ_CONTENT}"])
+        elif SCOPE_MANAGE_CONTENT not in scopes:
+            raise AuthError("Unauthorized", [f"Missing scope: {SCOPE_MANAGE_CONTENT}"])
 
         return fn(*args, **kwargs)
 
     return _requires_auth
-
-
-def requires_scope(scope: str):
-    token = _get_bearer()
-
-    if not token:
-        raise AuthError("Unauthorized", ["No bearer token"])
-
-    token = jwt.decode(
-        token,
-        algorithms=["RS256"],
-        audience=current_app.config["AUTH_AUDIENCE"],
-        options={"verify_signature": False},
-    )
-
-    if scope not in token.get("scope", "").split():
-        raise AuthError("Unauthorized", [f"Missing required scope: '{scope}'"])

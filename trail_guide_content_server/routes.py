@@ -26,6 +26,7 @@ from flask import Blueprint, jsonify, current_app, request, Response, send_from_
 from itertools import groupby
 from werkzeug.utils import secure_filename
 
+from .auth import requires_auth
 from .db import (
     get_db,
 
@@ -91,17 +92,20 @@ def request_changed(old_val, form_data: bool = False, field: str = "id") -> bool
 
 
 @api_v1.route("/categories", methods=["GET"])
+@requires_auth
 def categories():
     return jsonify(get_categories())
 
 
 @api_v1.route("/sections", methods=["GET"])
+@requires_auth
 def sections():
     nest_stations = request.args.get("nest_stations")
     return jsonify(get_sections_with_stations() if nest_stations else get_sections())
 
 
 @api_v1.route("/sections/<string:section_id>", methods=["GET", "PUT"])
+@requires_auth
 def sections_detail(section_id: str):
     s = get_section(section_id)
 
@@ -128,6 +132,7 @@ def sections_detail(section_id: str):
 
 
 @api_v1.route("/stations", methods=["GET", "POST"])
+@requires_auth
 def stations():
     if request.method == "POST":
         if not isinstance(request.json, dict):
@@ -145,6 +150,7 @@ def stations():
 
 
 @api_v1.route("/stations/<string:station_id>", methods=["GET", "PUT", "DELETE"])
+@requires_auth
 def stations_detail(station_id: str):
     s = get_station(station_id)
 
@@ -176,11 +182,13 @@ def stations_detail(station_id: str):
 
 
 @api_v1.route("/asset_types", methods=["GET"])
+@requires_auth
 def asset_types():
     return jsonify(get_asset_types())
 
 
 @api_v1.route("/asset_bundle", methods=["GET"])
+@requires_auth
 def asset_bundle():
     assets_to_include = get_assets(filter_disabled=True)
 
@@ -254,6 +262,7 @@ def make_asset_list(assets, as_js: bool = False):
 
 
 @api_v1.route("/assets", methods=["GET", "POST"])
+@requires_auth
 def asset_list():
     if request.method == "POST":
         if "file" not in request.files:
@@ -292,6 +301,7 @@ def asset_list():
 
 
 @api_v1.route("/assets/<string:asset_id>", methods=["GET", "PUT", "DELETE"])
+@requires_auth
 def asset_detail(asset_id):
     a = get_asset(asset_id)
 
@@ -360,6 +370,7 @@ def asset_detail(asset_id):
 
 
 @api_v1.route("/assets/<string:asset_id>/bytes", methods=["GET"])
+@requires_auth
 def assets_bytes(asset_id: str):
     a = get_asset(asset_id)
 
@@ -402,12 +413,14 @@ def assets_bytes(asset_id: str):
 
 # TODO: Create page functionality
 @api_v1.route("/pages", methods=["GET"])
+@requires_auth
 def pages():
     return jsonify(get_pages())
 
 
 # TODO: Delete page functionality when create page is done
 @api_v1.route("/pages/<string:page_id>", methods=["GET", "PUT"])
+@requires_auth
 def pages_detail(page_id: str):
     p = get_page(page_id)
 
@@ -434,6 +447,7 @@ def pages_detail(page_id: str):
 
 
 @api_v1.route("/modals", methods=["GET", "POST"])
+@requires_auth
 def modals():
     if request.method == "POST":
         if not isinstance(request.json, dict):
@@ -451,6 +465,7 @@ def modals():
 
 
 @api_v1.route("/modals/<string:modal_id>", methods=["DELETE", "GET", "PUT"])
+@requires_auth
 def modals_detail(modal_id: str):
     m = get_modal(modal_id)
 
@@ -481,6 +496,7 @@ def modals_detail(modal_id: str):
 
 
 @api_v1.route("/settings", methods=["GET", "PUT"])
+@requires_auth
 def settings():
     s = get_settings()
 
@@ -494,6 +510,7 @@ def settings():
 
 
 @api_v1.route("/feedback", methods=["GET", "POST"])
+@requires_auth
 def feedback():
     if request.method == "POST":
         if not isinstance(request.json, dict):
