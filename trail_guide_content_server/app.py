@@ -20,6 +20,7 @@ import werkzeug.exceptions
 from flask import Flask, g, jsonify
 from flask_cors import CORS
 
+from .auth import AuthError
 from .config import Config
 from .db import get_db
 from .routes import api_v1
@@ -45,6 +46,11 @@ def handle_bad_request(e):
 @application.errorhandler(werkzeug.exceptions.InternalServerError)
 def handle_internal_server_error(e):
     return jsonify({"message": "Internal server error", "errors": [str(e)]}), 500
+
+
+@application.errorhandler(AuthError)
+def handle_auth_error(e):
+    return jsonify(dict(e)), 401
 
 
 @application.teardown_appcontext
