@@ -7,3 +7,4 @@
 !/data/assets/.gitkeep
 /env
 __pycache__
+/.env

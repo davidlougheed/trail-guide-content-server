@@ -16,6 +16,7 @@
 
 import os
 import pathlib
+from dotenv import load_dotenv
 
 __all__ = ["Config"]
 
@@ -23,8 +24,12 @@ __all__ = ["Config"]
 DEFAULT_ASSET_DIR = pathlib.Path(__file__).parent.parent.resolve() / "data" / "assets"
 DEFAULT_DB = pathlib.Path(__file__).parent.parent.resolve() / "data" / "db.sqlite3"
 
+load_dotenv()
+
 
 class Config:
     ASSET_DIR = os.environ.get("TGCS_ASSET_DIR", str(DEFAULT_ASSET_DIR))
+    AUTH_AUDIENCE = os.environ.get("TGCS_AUTH_AUDIENCE", "")
+    AUTH_ISSUER = os.environ.get("TGCS_AUTH_ISSUER", "").rstrip("/")
     DATABASE = os.environ.get("TGCS_DATABASE", str(DEFAULT_DB))
     MAX_CONTENT_LENGTH = 2 * (1024 ** 2)  # 2 MB maximum upload size
