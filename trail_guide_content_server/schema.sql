@@ -99,7 +99,7 @@ CREATE TABLE IF NOT EXISTS pages (
 
     title VARCHAR(31) UNIQUE NOT NULL,
     long_title TEXT NOT NULL,
-    subtitle TEXT NOT NULL,
+    subtitle TEXT NOT NULL DEFAULT '',
     icon TEXT NOT NULL,  -- react-native cross-platform Expo icon (md-* or ios-* implicitly prefixed)
 
     content TEXT NOT NULL,  -- HTML
