@@ -372,7 +372,6 @@ def asset_detail(asset_id):
 
 
 @api_v1.route("/assets/<string:asset_id>/bytes", methods=["GET"])
-@requires_auth
 def assets_bytes(asset_id: str):
     a = get_asset(asset_id)
 
