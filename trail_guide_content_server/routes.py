@@ -21,12 +21,12 @@ import tempfile
 import uuid
 import zipfile
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from flask import Blueprint, jsonify, current_app, request, Response, send_from_directory
 from itertools import groupby
 from werkzeug.utils import secure_filename
 
-from .auth import requires_auth
+from .auth import requires_auth, SCOPE_READ_CONTENT
 from .db import (
     get_db,
 
@@ -61,6 +61,8 @@ from .db import (
 
     get_feedback_items,
     set_feedback_item,
+
+    set_ott,
 )
 from .object_schemas import (
     section_validator,
@@ -403,7 +405,7 @@ def assets_bytes(asset_id: str):
         if file_ext == "vtt":
             content_type = "text/vvt"
 
-    with open(pathlib.Path(current_app.config["ASSET_DIR"] / a["file_name"]), "rb") as fh:
+    with open(pathlib.Path(current_app.config["ASSET_DIR"]) / a["file_name"], "rb") as fh:
         r = current_app.response_class(fh.read())
         r.headers.set("Content-Type", content_type)
         if content_type == "application/octet-stream":
@@ -529,3 +531,15 @@ def feedback():
         return jsonify(set_feedback_item(f["id"], f))
 
     return jsonify(get_feedback_items())
+
+
+@api_v1.route("/ott", methods=["POST"])
+@requires_auth
+def ott():
+    new_token = str(uuid.uuid4())
+    t = {
+        "token": new_token,
+        "scope": SCOPE_READ_CONTENT,  # Currently: ignore Bearer scope
+        "expiry": (datetime.utcnow().replace(microsecond=0, tzinfo=timezone.utc) + timedelta(seconds=60)).isoformat()
+    }
+    return jsonify(set_ott(new_token, t))

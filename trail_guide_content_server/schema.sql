@@ -138,3 +138,10 @@ CREATE TABLE IF NOT EXISTS feedback (
     content TEXT NOT NULL,
     submitted TEXT NOT NULL  -- ISO date + time
 );
+
+
+CREATE TABLE IF NOT EXISTS one_time_tokens (
+    token VARCHAR(36) PRIMARY KEY,  -- UUID
+    scope TEXT NOT NULL,  -- scope, simulating an OIDC token
+    expiry TEXT NOT NULL  -- ISO date + time
+);

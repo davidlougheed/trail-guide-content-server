@@ -56,6 +56,9 @@ __all__ = [
     "get_feedback_items",
     "get_feedback_item",
     "set_feedback_item",
+
+    "get_ott",
+    "set_ott",
 ]
 
 
@@ -440,3 +443,28 @@ def set_feedback_item(feedback_id: str, data: dict) -> dict:
         (feedback_id, data["from"]["name"], data["from"]["email"], data["content"], data["submitted"]))
     db.commit()
     return get_feedback_item(feedback_id)
+
+
+def _tuple_to_ott(r: tuple) -> dict:
+    return {
+        "token": r[0],
+        "scope": r[1],
+        "expiry": r[2],
+    }
+
+
+def get_ott(token: str):
+    c = get_db().cursor()
+    q = c.execute("SELECT token, scope, expiry FROM one_time_tokens WHERE token = ?", (token,))
+    r = q.fetchone()
+    return _tuple_to_ott(r) if r else None
+
+
+def set_ott(token: str, data: dict) -> dict:
+    db = get_db()
+    c = db.cursor()
+    c.execute(
+        "INSERT OR REPLACE INTO one_time_tokens (token, scope, expiry) VALUES (?, ?, ?)",
+        (token, data["scope"], data["expiry"]))
+    db.commit()
+    return get_ott(token)
