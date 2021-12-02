@@ -32,4 +32,4 @@ class Config:
     AUTH_AUDIENCE = os.environ.get("TGCS_AUTH_AUDIENCE", "")
     AUTH_ISSUER = os.environ.get("TGCS_AUTH_ISSUER", "")
     DATABASE = os.environ.get("TGCS_DATABASE", str(DEFAULT_DB))
-    MAX_CONTENT_LENGTH = 2 * (1024 ** 2)  # 2 MB maximum upload size
+    MAX_CONTENT_LENGTH = 4 * (1024 ** 2)  # 4 MB maximum upload size
