@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS sections (
 );
 
 -- Pre-populate sections
-INSERT OR REPLACE INTO sections VALUES
+INSERT OR IGNORE INTO sections VALUES
     ('red', 'Red Trail', 0),
     ('blue', 'Blue Trail', 1),
     ('orange', 'Orange Trail', 2),
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS categories (
 );
 
 -- Pre-populate categories
-INSERT OR REPLACE INTO categories VALUES
+INSERT OR IGNORE INTO categories VALUES
     ('culture'),
     ('environment'),
     ('research');
@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS asset_types (
 );
 
 -- Pre-populate asset types
-INSERT OR REPLACE INTO asset_types VALUES
+INSERT OR IGNORE INTO asset_types VALUES
     ('image'),
     ('audio'),
     ('video'),
@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS pages (
 );
 
 -- Pre-populate pages with about page
-INSERT OR REPLACE INTO pages VALUES
+INSERT OR IGNORE INTO pages VALUES
     ('about', 'About', 'Introduction to the Elbow Lake Interpretive App', '', 'help-circle-outline', '', 1, 0);
 
 
@@ -127,7 +127,7 @@ CREATE TABLE IF NOT EXISTS settings (
 );
 
 -- Pre-populate settings
-INSERT OR REPLACE INTO settings VALUES
+INSERT OR IGNORE INTO settings VALUES
     ('terms_modal', NULL);
 
 
