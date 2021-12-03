@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="trail_guide_content_server",
-    version="0.1.0.dev1",
+    version="0.1.0",
 
     python_requires="~=3.9",
     install_requires=[
