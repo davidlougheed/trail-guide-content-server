@@ -45,17 +45,15 @@ class AuthError(Exception):
 
 
 def get_jwks_client() -> jwt.PyJWKClient:
-    jwks_client = getattr(g, "_jwks_client", None)
-    if jwks_client is None:
+    if (jwks_client := getattr(g, "_jwks_client", None)) is None:
         jwks_client = g._jwks_client = jwt.PyJWKClient(current_app.config["AUTH_ISSUER"] + ".well-known/jwks.json")
     return jwks_client
 
 
 def _get_bearer() -> Optional[str]:
-    auth_header = request.headers.get("Authorization")
     token = None
 
-    if auth_header:
+    if auth_header := request.headers.get("Authorization"):
         token_info = auth_header.split(" ")
         if len(token_info) != 2 or token_info[0] != "Bearer":
             raise AuthError("Unauthorized", ["Invalid authorization header"])
@@ -82,17 +80,11 @@ def requires_auth(fn):
     def _requires_auth(*args, **kwargs):
         # First, check for one-time tokens
 
-        ott = request.args.get("ott")
-
-        if ott is not None:
+        if (ott := request.args.get("ott")) is not None:
             ott_data = get_ott(ott)
-
-            current_time = datetime.utcnow().replace(tzinfo=timezone.utc)
             ott_expiry = datetime.fromisoformat(ott_data["expiry"])
 
-            print(current_time, ott_expiry)
-
-            if current_time > ott_expiry:
+            if datetime.utcnow().replace(tzinfo=timezone.utc) > ott_expiry:
                 raise AuthError("Unauthorized", ["Expired one-time token"])
 
             _check_scope(ott_data["scope"])

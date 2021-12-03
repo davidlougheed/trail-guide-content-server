@@ -356,14 +356,12 @@ def asset_detail(asset_id):
                 "file_size": os.path.getsize(file_path),
             }
 
-            errs = list(asset_validator.iter_errors(a))
-            if errs:
+            if errs := list(asset_validator.iter_errors(a)):
                 os.remove(file_path)
                 return err_validation_failed(errs)
 
         else:
-            errs = list(asset_validator.iter_errors(a))
-            if errs:
+            if errs := list(asset_validator.iter_errors(a)):
                 return err_validation_failed(errs)
 
         a = set_asset(asset_id, a)
@@ -438,8 +436,7 @@ def pages_detail(page_id: str):
 
         p = {**p, **request.json}
 
-        errs = list(section_validator.iter_errors(p))
-        if errs:
+        if errs := list(section_validator.iter_errors(p)):
             return err_validation_failed(errs)
 
         p = set_page(page_id, p)
@@ -456,8 +453,7 @@ def modals():
 
         m = {"id": str(uuid.uuid4()), **request.json}
 
-        errs = list(modal_validator.iter_errors(m))
-        if errs:
+        if errs := list(modal_validator.iter_errors(m)):
             return err_validation_failed(errs)
 
         return jsonify(set_modal(m["id"], m))
@@ -487,8 +483,7 @@ def modals_detail(modal_id: str):
 
         m = {**m, **request.json}
 
-        errs = list(modal_validator.iter_errors(m))
-        if errs:
+        if errs := list(modal_validator.iter_errors(m)):
             return err_validation_failed(errs)
 
         m = set_modal(modal_id, m)
@@ -523,8 +518,7 @@ def feedback():
             "submitted": datetime.utcnow().replace(microsecond=0, tzinfo=timezone.utc).isoformat()
         }
 
-        errs = list(feedback_item_validator.iter_errors(f))
-        if errs:
+        if errs := list(feedback_item_validator.iter_errors(f)):
             return err_validation_failed(errs)
 
         return jsonify(set_feedback_item(f["id"], f))
