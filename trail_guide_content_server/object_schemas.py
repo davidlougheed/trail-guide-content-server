@@ -116,12 +116,20 @@ STATION_SCHEMA = {
                         "type": "string,"
                     },
 
+                    # gallery
+                    "description": {
+                        "type": "string",
+                    },
+
                     # quiz
                     "quiz_type": {
                         "type": "string",
                         "enum": ["match_values", "select_all_that_apply", "choose_one"],
                     },
-                    "content": {
+                    "question": {
+                        "type": "string",
+                    },
+                    "answer": {
                         "type": "string",
                     },
                     "options": {
