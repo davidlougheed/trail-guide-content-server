@@ -37,6 +37,8 @@ services:
     image: ghcr.io/davidlougheed/trail-guide-content-server:latest
     ports:
       - "8124:8000"
+    env_file:
+      - server/env
     volumes:
       - ${PWD}/server/data:/data
 ```
