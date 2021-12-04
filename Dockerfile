@@ -9,5 +9,7 @@ RUN pip install -r requirements.prod.txt
 
 COPY trail_guide_content_server /trail_guide_content_server
 
+EXPOSE 8000
+
 ENV TGCS_ASSET_DIR=/data/assets TGCS_DATABASE=/data/db.sqlite3
 CMD [ "gunicorn", "--bind", "0.0.0.0:8000", "trail_guide_content_server.app:application" ]
