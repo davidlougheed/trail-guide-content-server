@@ -23,7 +23,7 @@ and the web interface.
 version: "3.9"
 services:
   web:
-    image: ghcr.io/davidlougheed/trail-guide-content-web:0.1.0
+    image: ghcr.io/davidlougheed/trail-guide-content-web:latest
     depends_on:
       - "server"
     ports:
@@ -34,7 +34,7 @@ services:
         target: /tgcw/dist/config/config.js
         read_only: true
   server:
-    image: ghcr.io/davidlougheed/trail-guide-content-server:0.1.1
+    image: ghcr.io/davidlougheed/trail-guide-content-server:latest
     ports:
       - "8124:8000"
     volumes:
