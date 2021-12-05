@@ -339,18 +339,19 @@ def get_pages() -> list[dict]:
 
 def get_page(page_id: str) -> dict:
     c = get_db().cursor()
-    q = c.execute(
-        "SELECT "
-        "  id, -- 0"
-        "  icon, -- 1"
-        "  title, -- 2"
-        "  long_title, -- 3"
-        "  subtitle, -- 4"
-        "  header_image, -- 5"
-        "  content, -- 6"
-        "  enabled, -- 7"
-        "  rank -- 8"
-        "FROM pages WHERE id = ?", (page_id,))
+    q = c.execute("""
+        SELECT 
+          id, -- 0
+          icon, -- 1
+          title, -- 2
+          long_title, -- 3
+          subtitle, -- 4
+          header_image, -- 5
+          content, -- 6
+          enabled, -- 7
+          rank -- 8
+        FROM pages WHERE id = ?
+    """, (page_id,))
     p = q.fetchone()
     return _tuple_to_page(p) if p else None
 
@@ -376,7 +377,7 @@ def set_page(page_id: str, data: dict) -> dict:
             data["icon"],
             data["long_title"],
             data["subtitle"],
-            data.get("header_image", None).strip() or None,
+            data.get("header_image", None) or None,
             data["content"],
             data["enabled"],
             data["rank"],
