@@ -326,8 +326,8 @@ def _tuple_to_page(r: tuple) -> dict:
         "header_image": r[5],
         "content": r[6],
 
-        "enabled": bool(r[6]),
-        "rank": r[7],
+        "enabled": bool(r[7]),
+        "rank": r[8],
     }
 
 
