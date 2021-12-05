@@ -230,8 +230,8 @@ def set_station(station_id: str, data: dict) -> dict:
         coordinates_utm_zone, -- 4
         coordinates_utm_ew, -- 5
         coordinates_utm_ns, -- 6
-        visible_from, 7
-        visible_to, 8
+        visible_from, -- 7
+        visible_to, -- 8
         section, -- 9
         category, -- 10
         header_image, -- 11

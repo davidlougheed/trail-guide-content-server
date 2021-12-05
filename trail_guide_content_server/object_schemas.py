@@ -77,8 +77,9 @@ STATION_SCHEMA = {
             "type": "object",
             "required": ["from", "to"],
             "properties": {
-                "from": {"type": "string"},
-                "to": {"type": "string"},
+                # TODO: Mandate that either both are null or neither are
+                "from": {"type": ["string", "null"]},
+                "to": {"type": ["string", "null"]},
             },
         },
         "section": {
