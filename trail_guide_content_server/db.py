@@ -252,12 +252,12 @@ def set_station(station_id: str, data: dict) -> dict:
         str(data["coordinates_utm"].get("north", data["coordinates_utm"].get("south"))) + (
             "N" if "north" in data["coordinates_utm"] else "S"),
 
-        data["visible"]["from"],
-        data["visible"]["to"],
+        data.get("visible", {}).get("from") or None,
+        data.get("visible", {}).get("to") or None,
 
         data["section"],
         data["category"],
-        data["header_image"],
+        data.get("header_image") or None,
         json.dumps(data["contents"]),
 
         data["enabled"],
