@@ -113,7 +113,7 @@ STATION_SCHEMA = {
                         "type": "string",
                     },
                     "content_after_fold": {
-                        "type": "string,"
+                        "type": "string",
                     },
 
                     # gallery
