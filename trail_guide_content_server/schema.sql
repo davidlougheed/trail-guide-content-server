@@ -114,7 +114,7 @@ CREATE TABLE IF NOT EXISTS pages (
 
 -- Pre-populate pages with about page
 INSERT OR IGNORE INTO pages VALUES
-    ('about', 'About', 'Introduction to the Elbow Lake Interpretive App', '', 'help-circle-outline', '', 1, 0);
+    ('about', 'About', 'help-circle-outline', 'Introduction to the Elbow Lake Interpretive App', '', '', '', 1, 0);
 
 
 CREATE TABLE IF NOT EXISTS modals (

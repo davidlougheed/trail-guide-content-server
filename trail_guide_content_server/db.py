@@ -369,7 +369,7 @@ def set_page(page_id: str, data: dict) -> dict:
         "  content, "
         "  enabled, "
         "  rank"
-        ") VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             page_id,
             data["title"],
