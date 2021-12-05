@@ -98,14 +98,18 @@ CREATE TABLE IF NOT EXISTS pages (
     id VARCHAR(36) PRIMARY KEY,
 
     title VARCHAR(31) UNIQUE NOT NULL,
+    icon TEXT NOT NULL,  -- react-native cross-platform Expo icon (md-* or ios-* implicitly prefixed)
+
     long_title TEXT NOT NULL,
     subtitle TEXT NOT NULL DEFAULT '',
-    icon TEXT NOT NULL,  -- react-native cross-platform Expo icon (md-* or ios-* implicitly prefixed)
+    header_image VARCHAR(36),
 
     content TEXT NOT NULL,  -- HTML
 
     enabled INTEGER NOT NULL CHECK (enabled in (0, 1)),
-    rank INTEGER NOT NULL CHECK (rank >= 0)
+    rank INTEGER NOT NULL CHECK (rank >= 0),
+
+    FOREIGN KEY (header_image) REFERENCES assets
 );
 
 -- Pre-populate pages with about page

@@ -319,10 +319,12 @@ def _tuple_to_page(r: tuple) -> dict:
         "id": r[0],
 
         "title": r[1],
-        "long_title": r[2],
-        "subtitle": r[3],
-        "icon": r[4],
-        "content": r[5],
+        "icon": r[2],
+
+        "long_title": r[3],
+        "subtitle": r[4],
+        "header_image": r[5],
+        "content": r[6],
 
         "enabled": bool(r[6]),
         "rank": r[7],
@@ -331,14 +333,24 @@ def _tuple_to_page(r: tuple) -> dict:
 
 def get_pages() -> list[dict]:
     c = get_db().cursor()
-    q = c.execute("SELECT id, title, long_title, subtitle, icon, content, enabled, rank FROM pages")
+    q = c.execute("SELECT id, title, icon, long_title, subtitle, header_image, content, enabled, rank FROM pages")
     return list(map(_tuple_to_page, q))
 
 
 def get_page(page_id: str) -> dict:
     c = get_db().cursor()
     q = c.execute(
-        "SELECT id, title, long_title, subtitle, icon, content, enabled, rank FROM pages WHERE id = ?", (page_id,))
+        "SELECT "
+        "  id, -- 0"
+        "  icon, -- 1"
+        "  title, -- 2"
+        "  long_title, -- 3"
+        "  subtitle, -- 4"
+        "  header_image, -- 5"
+        "  content, -- 6"
+        "  enabled, -- 7"
+        "  rank -- 8"
+        "FROM pages WHERE id = ?", (page_id,))
     p = q.fetchone()
     return _tuple_to_page(p) if p else None
 
@@ -347,10 +359,28 @@ def set_page(page_id: str, data: dict) -> dict:
     db = get_db()
     c = db.cursor()
     c.execute(
-        "INSERT OR REPLACE INTO pages (id, title, long_title, subtitle, icon, content, enabled, rank) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        (page_id, data["title"], data["long_title"], data["subtitle"], data["icon"], data["content"], data["enabled"],
-         data["rank"])
+        "INSERT OR REPLACE INTO pages ("
+        "  id, "
+        "  title, "
+        "  icon, "
+        "  long_title, "
+        "  subtitle, "
+        "  header_image, "
+        "  content, "
+        "  enabled, "
+        "  rank"
+        ") VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        (
+            page_id,
+            data["title"],
+            data["icon"],
+            data["long_title"],
+            data["subtitle"],
+            data.get("header_image", None).strip() or None,
+            data["content"],
+            data["enabled"],
+            data["rank"],
+        )
     )
     db.commit()
     return get_page(page_id)
