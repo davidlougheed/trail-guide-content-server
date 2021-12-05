@@ -478,7 +478,7 @@ def modals_detail(modal_id: str):
         if not isinstance(request.json, dict):
             return err_must_be_object
 
-        if request.json.get("id") != m["id"]:
+        if request_changed(m["id"]):
             return err_cannot_alter_id
 
         m = {**m, **request.json}
