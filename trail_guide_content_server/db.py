@@ -286,7 +286,7 @@ def _tuple_to_asset(r: tuple) -> dict:
         "asset_type": r[1],
         "file_name": r[2],
         "file_size": r[3],
-        "enabled": r[4],
+        "enabled": bool(r[4]),
     }
 
 
