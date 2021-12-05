@@ -83,7 +83,7 @@ INSERT OR IGNORE INTO asset_types VALUES
 
 
 CREATE TABLE IF NOT EXISTS assets (
-    id VARCHAR(36),
+    id VARCHAR(36) PRIMARY KEY,
     asset_type VARCHAR(31) NOT NULL,
     file_name TEXT NOT NULL,
     file_size INTEGER NOT NULL CHECK (file_size > 0),
