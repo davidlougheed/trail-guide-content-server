@@ -144,6 +144,7 @@ STATION_SCHEMA = {
                         "items": {
                             "type": "object",
                             "properties": {
+                                "label": {"type": "string"},
                                 "answer": {
                                     "type": ["boolean", "string"],
                                 }
