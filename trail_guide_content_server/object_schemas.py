@@ -121,6 +121,12 @@ STATION_SCHEMA = {
                     "description": {
                         "type": "string",
                     },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                        },
+                    },
 
                     # quiz
                     "quiz_type": {
