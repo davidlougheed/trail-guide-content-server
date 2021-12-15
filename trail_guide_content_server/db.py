@@ -168,9 +168,9 @@ def get_sections_with_stations() -> list[dict]:
     return [{"id": k, **v} for k, v in sections_of_stations.items()]
 
 
-def get_stations():
+def get_stations(enabled_only: bool = False):
     c = get_db().cursor()
-    q = c.execute("""
+    q = c.execute(f"""
             SELECT 
                 id, -- 0
                 title, -- 1
@@ -187,7 +187,7 @@ def get_stations():
                 contents, -- 12
                 enabled, -- 13
                 rank -- 14
-            FROM stations
+            FROM stations{' WHERE enabled = 1' if enabled_only else ''}
             ORDER BY rank""")
 
     return [_tuple_to_station(r) for r in q.fetchall()]
@@ -331,9 +331,11 @@ def _tuple_to_page(r: tuple) -> dict:
     }
 
 
-def get_pages() -> list[dict]:
+def get_pages(enabled_only: bool = False) -> list[dict]:
     c = get_db().cursor()
-    q = c.execute("SELECT id, title, icon, long_title, subtitle, header_image, content, enabled, rank FROM pages")
+    q = c.execute(
+        "SELECT id, title, icon, long_title, subtitle, header_image, content, enabled, rank FROM pages" +
+        (" WHERE enabled = 1" if enabled_only else ""))
     return list(map(_tuple_to_page, q))
 
 
