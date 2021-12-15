@@ -20,7 +20,6 @@ The following is an example `docker-compose.yml` which includes both the server
 and the web interface.
 
 ```yaml
-version: "3.9"
 services:
   web:
     image: ghcr.io/davidlougheed/trail-guide-content-web:latest
