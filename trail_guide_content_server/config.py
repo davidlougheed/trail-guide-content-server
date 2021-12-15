@@ -22,6 +22,7 @@ __all__ = ["Config"]
 
 
 DEFAULT_ASSET_DIR = pathlib.Path(__file__).parent.parent.resolve() / "data" / "assets"
+DEFAULT_BUNDLE_DIR = pathlib.Path(__file__).parent.parent.resolve() / "data" / "bundles"
 DEFAULT_DB = pathlib.Path(__file__).parent.parent.resolve() / "data" / "db.sqlite3"
 
 load_dotenv()
@@ -31,5 +32,6 @@ class Config:
     ASSET_DIR = os.environ.get("TGCS_ASSET_DIR", str(DEFAULT_ASSET_DIR))
     AUTH_AUDIENCE = os.environ.get("TGCS_AUTH_AUDIENCE", "")
     AUTH_ISSUER = os.environ.get("TGCS_AUTH_ISSUER", "")
+    BUNDLE_DIR = os.environ.get("TGCS_BUNDLE_DIR", str(DEFAULT_BUNDLE_DIR))
     DATABASE = os.environ.get("TGCS_DATABASE", str(DEFAULT_DB))
     MAX_CONTENT_LENGTH = 4 * (1024 ** 2)  # 4 MB maximum upload size

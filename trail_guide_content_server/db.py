@@ -50,6 +50,10 @@ __all__ = [
     "set_modal",
     "delete_modal",
 
+    "get_releases",
+    "get_release",
+    "set_release",
+
     "get_settings",
     "set_settings",
 
@@ -426,6 +430,53 @@ def delete_modal(modal_id):
     c = db.cursor()
     c.execute("DELETE FROM modals WHERE id = ?", (modal_id,))
     db.commit()
+
+
+def _tuple_to_release(r: tuple) -> dict:
+    return {
+        "version": r[0],
+        "release_notes": r[1],
+        "bundle_path": r[2],
+        "submitted_dt": r[3],
+        "published_dt": r[4],
+    }
+
+
+def get_releases():
+    c = get_db().cursor()
+    q = c.execute(
+        "SELECT version, release_notes, bundle_path, submitted_dt, published_dt "
+        "FROM releases ORDER BY version DESC")
+    return list(map(_tuple_to_release, q))
+
+
+def get_release(version: int):
+    c = get_db().cursor()
+    q = c.execute(
+        "SELECT version, release_notes, bundle_path, submitted_dt, published_dt FROM releases WHERE version = ?",
+        (version,))
+    r = q.fetchone()
+    return _tuple_to_release(r) if r else None
+
+
+def set_release(version: Optional[int], data: dict) -> Optional[dict]:
+    db = get_db()
+    c = db.cursor()
+
+    # we cannot do "insert or replace" with an auto-increment key
+
+    if version is not None:
+        c.execute(
+            "UPDATE versions SET release_notes = ?, bundle_path = ?, submitted_dt = ?, published_dt = ? "
+            "WHERE version = ?",
+            (data["release_notes"], data["bundle_path"], data["submitted_dt"], data["published_dt"], version))
+    else:
+        c.execute(
+            "INSERT INTO versions (release_notes, bundle_path, submitted_dt, published_dt) VALUES (?, ?, ?, ?)",
+            (data["release_notes"], data["bundle_path"], data["submitted_dt"], data["published_dt"]))
+
+    db.commit()
+    return get_release(version)
 
 
 def get_settings() -> dict:

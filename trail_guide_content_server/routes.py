@@ -17,12 +17,13 @@
 import json
 import os
 import pathlib
+import shutil
 import tempfile
 import uuid
 import zipfile
 
 from datetime import datetime, timedelta, timezone
-from flask import Blueprint, jsonify, current_app, request, Response, send_from_directory
+from flask import Blueprint, jsonify, current_app, request, Response
 from itertools import groupby
 from werkzeug.utils import secure_filename
 
@@ -56,6 +57,10 @@ from .db import (
     set_modal,
     delete_modal,
 
+    get_releases,
+    get_release,
+    set_release,
+
     get_settings,
     set_settings,
 
@@ -69,8 +74,10 @@ from .object_schemas import (
     station_validator,
     asset_validator,
     modal_validator,
+    release_validator,
     feedback_item_validator,
 )
+from .utils import get_utc_str, request_changed
 
 __all__ = ["api_v1"]
 
@@ -86,11 +93,6 @@ def err_validation_failed(errs):
         "message": "Object validation failed",
         "errors": [str(e) for e in errs],
     }), status=400)
-
-
-def request_changed(old_val, form_data: bool = False, field: str = "id") -> bool:
-    obj_to_check = request.form if form_data else request.json
-    return field in obj_to_check and obj_to_check[field] != old_val
 
 
 @api_v1.route("/categories", methods=["GET"])
@@ -187,35 +189,6 @@ def stations_detail(station_id: str):
 @requires_auth
 def asset_types():
     return jsonify(get_asset_types())
-
-
-@api_v1.route("/asset_bundle", methods=["GET"])
-@requires_auth
-def asset_bundle():
-    assets_to_include = get_assets(filter_disabled=True)
-
-    asset_js, _ = make_asset_list(assets_to_include, as_js=True)
-
-    with tempfile.TemporaryDirectory() as td:
-        tdp = pathlib.Path(td)
-
-        asset_path = tdp / "assets.js"
-        bundle_name = "bundle.zip"
-        bundle_path = tdp / bundle_name
-
-        with open(asset_path, "w") as afh:
-            afh.write(asset_js)
-
-        with open(bundle_path, "wb") as zfh:
-            with zipfile.ZipFile(zfh, mode="w") as zf:
-                zf.write(asset_path, "assets.js")
-
-                for asset in assets_to_include:
-                    zf.write(
-                        pathlib.Path(current_app.config["ASSET_DIR"]) / asset["file_name"],
-                        f"{asset['asset_type']}/{asset['file_name']}")
-
-        return send_from_directory(tdp, bundle_name, as_attachment=True, mimetype="application/zip")
 
 
 def _detect_asset_type(file_name: str) -> tuple[str, str]:
@@ -491,6 +464,121 @@ def modals_detail(modal_id: str):
     return jsonify(m)
 
 
+def make_bundle_path() -> pathlib.Path:
+    return pathlib.Path(current_app.config["BUNDLE_DIR"]) / f"{str(uuid.uuid4())}.zip"
+
+
+def make_release_bundle(final_bundle_path: pathlib.Path):
+    assets_to_include = get_assets(filter_disabled=True)
+
+    asset_js, _ = make_asset_list(assets_to_include, as_js=True)
+
+    with tempfile.TemporaryDirectory() as td:
+        tdp = pathlib.Path(td)
+
+        os.mkdir(tdp / "assets")
+
+        asset_path = tdp / "assets" / "assets.js"
+        modals_path = tdp / "modals.json"
+        pages_path = tdp / "pages.json"
+        stations_path = tdp / "stations.json"
+
+        bundle_name = "bundle.zip"
+        bundle_path = tdp / bundle_name
+
+        with open(asset_path, "w") as afh:
+            afh.write(asset_js)
+
+        with open(modals_path, "w") as mfh:
+            json.dump(get_modals(), mfh)
+
+        with open(pages_path, "w") as pfh:
+            json.dump(get_pages(enabled_only=True), pfh)
+
+        with open(stations_path, "w") as sfh:
+            json.dump(get_stations(enabled_only=True), sfh)
+
+        with open(bundle_path, "wb") as zfh:
+            with zipfile.ZipFile(zfh, mode="w") as zf:
+                zf.write(modals_path, "modals.json")
+                zf.write(pages_path, "pages.json")
+                zf.write(stations_path, "stations.json")
+
+                zf.write(asset_path, "assets/assets.js")
+
+                for asset in assets_to_include:
+                    zf.write(
+                        pathlib.Path(current_app.config["ASSET_DIR"]) / asset["file_name"],
+                        f"assets/{asset['asset_type']}/{asset['file_name']}")
+
+        shutil.copyfile(bundle_path, final_bundle_path)
+
+
+@api_v1.route("/releases", methods=["GET", "POST"])
+@requires_auth
+def releases():
+    if request.method == "POST":
+        if not isinstance(request.json, dict):
+            return err_must_be_object
+
+        bundle_path = make_bundle_path()
+
+        r = {
+            "version": 0,  # Dummy ID for validation
+            **request.json,
+            "bundle_path": str(bundle_path),
+            "submitted_dt": get_utc_str(),
+            "published_dt": None,
+        }
+
+        if errs := list(release_validator.iter_errors(r)):
+            return err_validation_failed(errs)
+
+        make_release_bundle(bundle_path)
+        r = set_release(None, r)
+
+        return jsonify(r)
+
+    return jsonify(get_releases())
+
+
+@api_v1.route("/releases/<int:version>", methods=["GET"])
+@requires_auth
+def releases_detail(version: int):
+    r = get_release(version)
+
+    if r is None:
+        return current_app.response_class(jsonify(
+            {"message": f"Could not find version {version}"}), status=404)
+
+    if request.method == "PUT":
+        if not isinstance(request.json, dict):
+            return err_must_be_object
+
+        if request_changed(r["version"]):
+            return err_cannot_alter_id
+
+        if request_changed(r["bundle_path"], field="bundle_path"):
+            return current_app.response_class(jsonify({"message": f"Cannot alter bundle path"}), status=400)
+
+        if request_changed(r["submitted_dt"], field="submitted_dt"):
+            return current_app.response_class(jsonify({"message": f"Cannot alter submitted date/time"}), status=400)
+
+        published_dt = request.json.get("published_dt", request.json.get("published"))
+        if r["published_dt"] is None and published_dt:
+            # Overwrite user-set published time
+            published_dt = get_utc_str()
+
+        r = {**r, **request.json, "published_dt": published_dt}
+
+        if errs := list(release_validator.iter_errors(r)):
+            return err_validation_failed(errs)
+
+        r = set_release(version, r)
+
+    return jsonify(r)
+
+
 @api_v1.route("/settings", methods=["GET", "PUT"])
 @requires_auth
 def settings():
@@ -515,7 +603,7 @@ def feedback():
         f = {
             "id": str(uuid.uuid4()),
             **request.json,
-            "submitted": datetime.utcnow().replace(microsecond=0, tzinfo=timezone.utc).isoformat()
+            "submitted": get_utc_str(),
         }
 
         if errs := list(feedback_item_validator.iter_errors(f)):

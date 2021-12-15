@@ -29,6 +29,9 @@ __all__ = [
     "MODAL_SCHEMA",
     "modal_validator",
 
+    "RELEASE_SCHEMA",
+    "release_validator",
+
     "FEEDBACK_ITEM_SCHEMA",
     "feedback_item_validator",
 ]
@@ -230,6 +233,30 @@ MODAL_SCHEMA = {
 }
 
 modal_validator = jsonschema.Draft7Validator(MODAL_SCHEMA)
+
+RELEASE_SCHEMA = {
+    "type": "object",
+    "required": ["version", "release_notes", "bundle_path", "submitted_dt"],
+    "properties": {
+        "version": {
+            "type": "integer",
+        },
+        "release_notes": {
+            "type": "string",
+        },
+        "bundle_path": {
+            "type": "string",
+        },
+        "submitted_dt": {
+            "type": "string",
+        },
+        "published_dt": {
+            "type": ["string", "null"],
+        },
+    }
+}
+
+release_validator = jsonschema.Draft7Validator(RELEASE_SCHEMA)
 
 SETTINGS_SCHEMA = {
     "type": "object",

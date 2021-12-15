@@ -2,9 +2,12 @@
 .idea/sqldialects.xml
 /data/*
 /data/assets/*
+/data/bundles/*
 !/data/.gitkeep
 !/data/assets
+!/data/bundles
 !/data/assets/.gitkeep
+!/data/bundles/.gitkeep
 /env
 __pycache__
 /.env

@@ -1,7 +1,8 @@
 FROM python:3.10-slim-bullseye
 ENV PYTHONUNBUFFERED 1
 
-RUN mkdir -p /data/assets
+RUN mkdir -p /data/assets && \
+    mkdir -p /data/bundles
 RUN pip install gunicorn==20.1.0
 
 COPY requirements.prod.txt /requirements.prod.txt

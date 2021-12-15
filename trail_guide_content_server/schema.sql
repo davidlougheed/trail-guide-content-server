@@ -134,6 +134,17 @@ CREATE TABLE IF NOT EXISTS modals (
 );
 
 
+CREATE TABLE IF NOT EXISTS releases (
+    version INTEGER PRIMARY KEY AUTOINCREMENT,
+    release_notes TEXT NOT NULL,
+
+    bundle_path TEXT NOT NULL,
+
+    submitted_dt TEXT NOT NULL,  -- ISO date + time
+    published_dt TEXT   -- ISO date + time; NULL if not published yet
+);
+
+
 CREATE TABLE IF NOT EXISTS settings (
     setting_key VARCHAR(63) PRIMARY KEY,
     setting_value TEXT
