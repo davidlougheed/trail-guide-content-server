@@ -467,13 +467,14 @@ def set_release(version: Optional[int], data: dict) -> Optional[dict]:
 
     if version is not None:
         c.execute(
-            "UPDATE versions SET release_notes = ?, bundle_path = ?, submitted_dt = ?, published_dt = ? "
+            "UPDATE releases SET release_notes = ?, bundle_path = ?, submitted_dt = ?, published_dt = ? "
             "WHERE version = ?",
             (data["release_notes"], data["bundle_path"], data["submitted_dt"], data["published_dt"], version))
     else:
         c.execute(
-            "INSERT INTO versions (release_notes, bundle_path, submitted_dt, published_dt) VALUES (?, ?, ?, ?)",
+            "INSERT INTO releases (release_notes, bundle_path, submitted_dt, published_dt) VALUES (?, ?, ?, ?)",
             (data["release_notes"], data["bundle_path"], data["submitted_dt"], data["published_dt"]))
+        version = c.lastrowid
 
     db.commit()
     return get_release(version)
