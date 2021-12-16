@@ -127,7 +127,15 @@ STATION_SCHEMA = {
                     "items": {
                         "type": "array",
                         "items": {
-                            "type": "string",
+                            "type": "object",
+                            "properties": {
+                                "asset": {
+                                    "type": "string",
+                                },
+                                "caption": {
+                                    "type": "string",
+                                },
+                            },
                         },
                     },
 
