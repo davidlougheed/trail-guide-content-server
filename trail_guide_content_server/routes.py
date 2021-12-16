@@ -490,13 +490,13 @@ def make_release_bundle(final_bundle_path: pathlib.Path):
             afh.write(asset_js)
 
         with open(modals_path, "w") as mfh:
-            json.dump(get_modals(), mfh)
+            json.dump({m["id"]: m for m in get_modals()}, mfh)
 
         with open(pages_path, "w") as pfh:
-            json.dump(get_pages(enabled_only=True), pfh)
+            json.dump({p["id"]: p for p in get_pages(enabled_only=True)}, pfh)
 
         with open(stations_path, "w") as sfh:
-            json.dump(get_stations(enabled_only=True), sfh)
+            json.dump(get_sections_with_stations(enabled_only=True), sfh)
 
         with open(bundle_path, "wb") as zfh:
             with zipfile.ZipFile(zfh, mode="w") as zf:
