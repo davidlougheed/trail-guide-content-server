@@ -12,7 +12,7 @@ setup(
     install_requires=[
         "Flask>=2.0.2,<2.1",
         "Flask-Cors>=3.0.10,<3.1",
-        "jsonschema>=4.2.1,<4.3",
+        "jsonschema>=4.3.0,<4.4",
         "PyJWT[crypto]>=2.3.0,<2.4",
         "python-dotenv>=0.19.2,<0.20",
         "Werkzeug>=2.0.2,<2.1",
