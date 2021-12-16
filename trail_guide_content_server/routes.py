@@ -528,7 +528,7 @@ def releases():
             **request.json,
             "bundle_path": str(bundle_path),
             "submitted_dt": get_utc_str(),
-            "published_dt": get_utc_str() if request.json.get("published_dt", request.json.get("published")) else None,
+            "published_dt": None,
         }
 
         if errs := list(release_validator.iter_errors(r)):
