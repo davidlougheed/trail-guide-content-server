@@ -87,6 +87,7 @@ CREATE TABLE IF NOT EXISTS assets (
     asset_type VARCHAR(31) NOT NULL,
     file_name TEXT NOT NULL,
     file_size INTEGER NOT NULL CHECK (file_size > 0),
+    sha1_checksum VARCHAR(40) NOT NULL,  -- Checksum for checking for duplicates, etc.
 
     enabled INTEGER NOT NULL CHECK (enabled in (0, 1)),
 

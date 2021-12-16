@@ -77,7 +77,7 @@ from .object_schemas import (
     release_validator,
     feedback_item_validator,
 )
-from .utils import get_utc_str, request_changed
+from .utils import get_file_hash_hex, detect_asset_type, get_utc_str, request_changed
 
 __all__ = ["api_v1"]
 
@@ -191,27 +191,6 @@ def asset_types():
     return jsonify(get_asset_types())
 
 
-def _detect_asset_type(file_name: str) -> tuple[str, str]:
-    file_ext = os.path.splitext(file_name)[1].lower().lstrip(".")
-
-    # TODO: py3.10: match
-    if file_ext in {"jpg", "jpeg", "png", "gif"}:
-        asset_type = "image"
-    elif file_ext in {"mp3", "m4a"}:
-        asset_type = "audio"
-    elif file_ext in {"mp4", "mov"}:
-        asset_type = "video"
-    elif file_ext in {"vtt"}:
-        asset_type = "video_text_track"
-    else:
-        if "asset_type" not in request.form:
-            return "", "No asset_type provided, and could not figure it out automatically"
-
-        asset_type = request.form["asset_type"]
-
-    return asset_type, ""
-
-
 def make_asset_list(assets, as_js: bool = False):
     if as_js:
         assets_by_type = {
@@ -245,7 +224,7 @@ def asset_list():
 
         file = request.files["file"]
 
-        asset_type, err = _detect_asset_type(file.filename)
+        asset_type, err = detect_asset_type(file.filename)
         if err:
             return current_app.response_class(json.dumps({"message": err}), status=400)
 
@@ -261,6 +240,7 @@ def asset_list():
             "asset_type": asset_type,
             "file_name": file_name,
             "file_size": os.path.getsize(file_path),
+            "sha1_checksum": get_file_hash_hex(file_path),
             "enabled": request.form.get("enabled", "").strip() != "",
         }
 
@@ -307,7 +287,7 @@ def asset_detail(asset_id):
 
             file = request.files["file"]
 
-            asset_type, err = _detect_asset_type(file.filename)
+            asset_type, err = detect_asset_type(file.filename)
             if err:
                 return current_app.response_class(jsonify({"message": err}), status=400)
 
