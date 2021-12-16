@@ -135,9 +135,9 @@ def _tuple_to_station(r: tuple) -> dict:
     }
 
 
-def get_sections_with_stations() -> list[dict]:
+def get_sections_with_stations(enabled_only: bool = False) -> list[dict]:
     c = get_db().cursor()
-    q = c.execute("""
+    q = c.execute(f"""
         SELECT 
             sections.id, -- 0
             sections.title, -- 1
@@ -160,6 +160,7 @@ def get_sections_with_stations() -> list[dict]:
             
             sections.rank -- 16
         FROM sections LEFT JOIN stations ON sections.id = stations.section
+        {'WHERE stations.enabled = 1' if enabled_only else ''}
         ORDER BY sections.rank, stations.rank""")
 
     sections_of_stations = defaultdict(lambda: {"data": []})
