@@ -142,23 +142,24 @@ def get_sections_with_stations(enabled_only: bool = False) -> list[dict]:
             sections.id, -- 0
             sections.title, -- 1
             
-            stations.title, -- 2
-            stations.long_title, -- 3
-            stations.subtitle, -- 4
-            stations.coordinates_utm_zone, -- 5
-            stations.coordinates_utm_ew, -- 6
-            stations.coordinates_utm_ns, -- 7
-            stations.visible_from, -- 8
-            stations.visible_to, -- 9
-            stations.section, -- 10
-            stations.category, -- 11
-            stations.header_image, -- 12
-            stations.contents, -- 13
+            stations.id, -- 2
+            stations.title, -- 3
+            stations.long_title, -- 4
+            stations.subtitle, -- 5
+            stations.coordinates_utm_zone, -- 6
+            stations.coordinates_utm_ew, -- 7
+            stations.coordinates_utm_ns, -- 8
+            stations.visible_from, -- 9
+            stations.visible_to, -- 10
+            stations.section, -- 11
+            stations.category, -- 12
+            stations.header_image, -- 13
+            stations.contents, -- 14
             
-            stations.enabled, -- 14
-            stations.rank, -- 15
+            stations.enabled, -- 15
+            stations.rank, -- 16
             
-            sections.rank -- 16
+            sections.rank -- 17
         FROM sections LEFT JOIN stations ON sections.id = stations.section
         {'WHERE stations.enabled = 1' if enabled_only else ''}
         ORDER BY sections.rank, stations.rank""")
@@ -167,8 +168,8 @@ def get_sections_with_stations(enabled_only: bool = False) -> list[dict]:
 
     for r in q.fetchall():
         sections_of_stations[r[0]]["title"] = r[1]
-        sections_of_stations[r[0]]["rank"] = r[16]
-        sections_of_stations[r[0]]["data"].append(_tuple_to_station(r[2:15]))
+        sections_of_stations[r[0]]["rank"] = r[17]
+        sections_of_stations[r[0]]["data"].append(_tuple_to_station(r[2:17]))
 
     return [{"id": k, **v} for k, v in sections_of_stations.items()]
 
