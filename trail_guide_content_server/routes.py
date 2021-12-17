@@ -461,6 +461,7 @@ def make_release_bundle(final_bundle_path: pathlib.Path):
         asset_path = tdp / "assets" / "assets.js"
         modals_path = tdp / "modals.json"
         pages_path = tdp / "pages.json"
+        settings_path = tdp / "settings.json"
         stations_path = tdp / "stations.json"
 
         bundle_name = "bundle.zip"
@@ -474,6 +475,9 @@ def make_release_bundle(final_bundle_path: pathlib.Path):
 
         with open(pages_path, "w") as pfh:
             json.dump({p["id"]: p for p in get_pages(enabled_only=True)}, pfh)
+
+        with open(settings_path, "w") as sfh:
+            json.dump(get_settings(), sfh)
 
         with open(stations_path, "w") as sfh:
             json.dump(get_sections_with_stations(enabled_only=True), sfh)
