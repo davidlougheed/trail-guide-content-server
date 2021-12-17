@@ -23,7 +23,7 @@ import uuid
 import zipfile
 
 from datetime import datetime, timedelta, timezone
-from flask import Blueprint, jsonify, current_app, request, Response, send_from_directory
+from flask import Blueprint, jsonify, current_app, request, Response, send_file
 from itertools import groupby
 from werkzeug.utils import secure_filename
 
@@ -568,8 +568,8 @@ def releases_bundle(version: int):
         return current_app.response_class(jsonify(
             {"message": f"Could not find version {version}"}), status=404)
 
-    return send_from_directory(
-        r["bundle_path"], "version_{r['version']}.zip", as_attachment=True, mimetype="application/zip")
+    return send_file(
+        r["bundle_path"], mimetype="application/zip", as_attachment=True, download_name=f"version_{r['version']}.zip")
 
 
 @api_v1.route("/settings", methods=["GET", "PUT"])
