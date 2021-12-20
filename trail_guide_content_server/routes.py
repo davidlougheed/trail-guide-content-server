@@ -57,6 +57,11 @@ from .db import (
     set_modal,
     delete_modal,
 
+    get_layers,
+    get_layer,
+    set_layer,
+    delete_layer,
+
     get_releases,
     get_release,
     set_release,
@@ -444,6 +449,51 @@ def modals_detail(modal_id: str):
     return jsonify(m)
 
 
+@api_v1.route("/layers", methods=["GET", "POST"])
+@requires_auth
+def layers():
+    if request.method == "POST":
+        if not isinstance(request.json, dict):
+            return err_must_be_object
+
+        m = {"id": str(uuid.uuid4()), **request.json}
+
+        # TODO: Validate
+
+        return jsonify(set_layer(m["id"], m))
+
+    return jsonify(get_layers())
+
+
+@api_v1.route("/layers/<string:layer_id>", methods=["DELETE", "GET", "PUT"])
+@requires_auth
+def layers_detail(layer_id: str):
+    layer = get_layer(layer_id)
+
+    if layer is None:
+        return current_app.response_class(jsonify(
+            {"message": f"Could not find layer with ID {layer_id}"}), status=404)
+
+    if request.method == "DELETE":
+        delete_layer(layer_id)
+        return jsonify({"message": "Deleted."})
+
+    if request.method == "PUT":
+        if not isinstance(request.json, dict):
+            return err_must_be_object
+
+        if request_changed(layer["id"]):
+            return err_cannot_alter_id
+
+        layer = {**layer, **request.json}
+
+        # TODO: Validate
+
+        layer = set_layer(layer_id, layer)
+
+    return jsonify(layer)
+
+
 def make_bundle_path() -> pathlib.Path:
     return pathlib.Path(current_app.config["BUNDLE_DIR"]) / f"{str(uuid.uuid4())}.zip"
 
@@ -459,6 +509,7 @@ def make_release_bundle(final_bundle_path: pathlib.Path):
         os.mkdir(tdp / "assets")
 
         asset_path = tdp / "assets" / "assets.js"
+        layers_path = tdp / "layers.json"
         modals_path = tdp / "modals.json"
         pages_path = tdp / "pages.json"
         settings_path = tdp / "settings.json"
@@ -469,6 +520,9 @@ def make_release_bundle(final_bundle_path: pathlib.Path):
 
         with open(asset_path, "w") as afh:
             afh.write(asset_js)
+
+        with open(layers_path, "w") as lfh:
+            json.dump(get_layers(), lfh)
 
         with open(modals_path, "w") as mfh:
             json.dump({m["id"]: m for m in get_modals()}, mfh)
@@ -484,6 +538,7 @@ def make_release_bundle(final_bundle_path: pathlib.Path):
 
         with open(bundle_path, "wb") as zfh:
             with zipfile.ZipFile(zfh, mode="w") as zf:
+                zf.write(layers_path, "layers.json")
                 zf.write(modals_path, "modals.json")
                 zf.write(pages_path, "pages.json")
                 zf.write(stations_path, "stations.json")

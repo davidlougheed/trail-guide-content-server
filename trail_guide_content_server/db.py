@@ -50,6 +50,11 @@ __all__ = [
     "set_modal",
     "delete_modal",
 
+    "get_layer",
+    "get_layers",
+    "set_layer",
+    "delete_layer",
+
     "get_releases",
     "get_release",
     "set_release",
@@ -436,6 +441,49 @@ def delete_modal(modal_id):
     db = get_db()
     c = db.cursor()
     c.execute("DELETE FROM modals WHERE id = ?", (modal_id,))
+    db.commit()
+
+
+def _tuple_to_layer(r: tuple) -> dict:
+    return {
+        "id": r[0],
+        "name": r[1],
+        "geojson": json.loads(r[2]),
+        "enabled": bool(r[3]),
+    }
+
+
+def get_layers() -> list[dict]:
+    c = get_db().cursor()
+    q = c.execute("SELECT id, name, geojson, enabled FROM layers")
+    return list(map(_tuple_to_layer, q))
+
+
+def get_layer(layer_id: str):
+    c = get_db().cursor()
+    q = c.execute("SELECT id, name, geojson, enabled FROM layers WHERE id = ?", (layer_id,))
+    r = q.fetchone()
+    return _tuple_to_layer(r) if r else None
+
+
+def set_layer(layer_id: str, data: dict) -> Optional[dict]:
+    db = get_db()
+    c = db.cursor()
+
+    if isinstance(data["geojson"], dict):
+        data["geojson"] = json.dumps(data["geojson"])
+
+    c.execute(
+        "INSERT OR REPLACE INTO layers (id, name, geojson, enabled) VALUES (?, ?, ?, ?)",
+        (layer_id, data["name"], data["geojson"], int(data["enabled"])))
+    db.commit()
+    return get_layer(layer_id)
+
+
+def delete_layer(layer_id):
+    db = get_db()
+    c = db.cursor()
+    c.execute("DELETE FROM layers WHERE id = ?", (layer_id,))
     db.commit()
 
 

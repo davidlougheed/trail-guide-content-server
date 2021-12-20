@@ -135,6 +135,14 @@ CREATE TABLE IF NOT EXISTS modals (
 );
 
 
+CREATE TABLE IF NOT EXISTS layers (
+    id VARCHAR(36) PRIMARY KEY,  -- UUID
+    name TEXT NOT NULL,
+    geojson TEXT NOT NULL,
+    enabled INTEGER NOT NULL CHECK (enabled in (0, 1))
+);
+
+
 CREATE TABLE IF NOT EXISTS releases (
     version INTEGER PRIMARY KEY AUTOINCREMENT,
     release_notes TEXT NOT NULL,
