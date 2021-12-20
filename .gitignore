@@ -3,11 +3,13 @@
 /data/*
 /data/assets/*
 /data/bundles/*
+/to_import/*
 !/data/.gitkeep
 !/data/assets
 !/data/bundles
 !/data/assets/.gitkeep
 !/data/bundles/.gitkeep
+!/to_import/.gitkeep
 /env
 __pycache__
 /.env
