@@ -160,7 +160,13 @@ def import_stations(base_path, stations_json, manifest_json):
                         continue
 
                     asset_id = _import_file(c, match_path, match)
-                    string = string.replace(match, asset_id)
+
+                    if direct:
+                        string = string.replace(match, asset_id)
+                    else:
+                        # Use a sort of multipurpose URL which resolves but can also be hijacked by the app
+                        string = string.replace(
+                            match, f"{application.config['BASE_URL']}/api/v1/assets/{asset_id}/bytes")
 
                 return string
 
