@@ -10,6 +10,7 @@ setup(
 
     python_requires="~=3.9",
     install_requires=[
+        "click>=8.0.3,<8.1",
         "Flask>=2.0.2,<2.1",
         "Flask-Cors>=3.0.10,<3.1",
         "jsonschema>=4.3.0,<4.4",

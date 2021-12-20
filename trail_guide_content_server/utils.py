@@ -23,7 +23,7 @@ def get_file_hash_hex(path: Union[str, Path]) -> str:
     return file_hash.hexdigest()
 
 
-def detect_asset_type(file_name: str) -> tuple[str, str]:
+def detect_asset_type(file_name: Union[str, Path]) -> tuple[str, str]:
     file_ext = os.path.splitext(file_name)[1].lower().lstrip(".")
 
     # TODO: py3.10: match
