@@ -77,6 +77,7 @@ from .object_schemas import (
     station_validator,
     asset_validator,
     modal_validator,
+    layer_validator,
     release_validator,
     feedback_item_validator,
 )
@@ -430,11 +431,13 @@ def layers():
         if not isinstance(request.json, dict):
             return err_must_be_object
 
-        m = {"id": str(uuid.uuid4()), **request.json}
+        layer = {"id": str(uuid.uuid4()), **request.json}
 
-        # TODO: Validate
+        errs = list(layer_validator.iter_errors(layer))
+        if errs:
+            return err_validation_failed(errs)
 
-        return jsonify(set_layer(m["id"], m))
+        return jsonify(set_layer(layer["id"], layer))
 
     return jsonify(get_layers())
 
@@ -461,7 +464,9 @@ def layers_detail(layer_id: str):
 
         layer = {**layer, **request.json}
 
-        # TODO: Validate
+        errs = list(layer_validator.iter_errors(layer))
+        if errs:
+            return err_validation_failed(errs)
 
         layer = set_layer(layer_id, layer)
 

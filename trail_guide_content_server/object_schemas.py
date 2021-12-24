@@ -29,6 +29,9 @@ __all__ = [
     "MODAL_SCHEMA",
     "modal_validator",
 
+    "LAYER_SCHEMA",
+    "layer_validator",
+
     "RELEASE_SCHEMA",
     "release_validator",
 
@@ -247,6 +250,30 @@ MODAL_SCHEMA = {
 }
 
 modal_validator = jsonschema.Draft7Validator(MODAL_SCHEMA)
+
+LAYER_SCHEMA = {
+    "type": "object",
+    "required": ["id", "name", "geojson", "enabled", "rank"],
+    "properties": {
+        "id": {
+            "type": "string",
+        },
+        "name": {
+            "type": "string",
+        },
+        "geojson": {
+            "type": "object",
+        },
+        "enabled": {
+            "type": "boolean",
+        },
+        "rank": {
+            "type": "integer",
+        },
+    },
+}
+
+layer_validator = jsonschema.Draft7Validator(LAYER_SCHEMA)
 
 RELEASE_SCHEMA = {
     "type": "object",
