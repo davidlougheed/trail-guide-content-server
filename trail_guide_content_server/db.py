@@ -111,7 +111,7 @@ def set_section(section_id: str, data: dict) -> dict:
     c = db.cursor()
     c.execute(
         "INSERT OR REPLACE INTO sections (id, title, rank) VALUES (?, ?, ?)",
-        (section_id, data["title"], data["rank"]))
+        (section_id, data["title"], int(data["rank"])))
     db.commit()
     return get_section(section_id)
 
@@ -450,18 +450,19 @@ def _tuple_to_layer(r: tuple) -> dict:
         "name": r[1],
         "geojson": json.loads(r[2]),
         "enabled": bool(r[3]),
+        "rank": r[4],
     }
 
 
 def get_layers() -> list[dict]:
     c = get_db().cursor()
-    q = c.execute("SELECT id, name, geojson, enabled FROM layers")
+    q = c.execute("SELECT id, name, geojson, enabled, rank FROM layers")
     return list(map(_tuple_to_layer, q))
 
 
 def get_layer(layer_id: str):
     c = get_db().cursor()
-    q = c.execute("SELECT id, name, geojson, enabled FROM layers WHERE id = ?", (layer_id,))
+    q = c.execute("SELECT id, name, geojson, enabled, rank FROM layers WHERE id = ? ORDER BY rank", (layer_id,))
     r = q.fetchone()
     return _tuple_to_layer(r) if r else None
 
@@ -474,8 +475,8 @@ def set_layer(layer_id: str, data: dict) -> Optional[dict]:
         data["geojson"] = json.dumps(data["geojson"])
 
     c.execute(
-        "INSERT OR REPLACE INTO layers (id, name, geojson, enabled) VALUES (?, ?, ?, ?)",
-        (layer_id, data["name"], data["geojson"], int(data["enabled"])))
+        "INSERT OR REPLACE INTO layers (id, name, geojson, enabled, rank) VALUES (?, ?, ?, ?, ?)",
+        (layer_id, data["name"], data["geojson"], int(data["enabled"]), int(data["rank"])))
     db.commit()
     return get_layer(layer_id)
 

@@ -139,7 +139,9 @@ CREATE TABLE IF NOT EXISTS layers (
     id VARCHAR(36) PRIMARY KEY,  -- UUID
     name TEXT NOT NULL,
     geojson TEXT NOT NULL,
-    enabled INTEGER NOT NULL CHECK (enabled in (0, 1))
+
+    enabled INTEGER NOT NULL CHECK (enabled in (0, 1)),
+    rank INTEGER NOT NULL CHECK (rank >= 0)
 );
 
 
