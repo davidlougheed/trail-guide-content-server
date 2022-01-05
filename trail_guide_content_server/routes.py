@@ -23,7 +23,7 @@ from datetime import datetime, timedelta, timezone
 from flask import Blueprint, jsonify, current_app, request, Response, send_file
 from werkzeug.utils import secure_filename
 
-from .assets import make_asset_list
+from .assets import detect_asset_type, make_asset_list
 from .auth import requires_auth, SCOPE_READ_CONTENT
 from .bundles import make_bundle_path, make_release_bundle
 from .db import (
@@ -81,7 +81,7 @@ from .object_schemas import (
     release_validator,
     feedback_item_validator,
 )
-from .utils import get_file_hash_hex, detect_asset_type, get_utc_str, request_changed
+from .utils import get_file_hash_hex, get_utc_str, request_changed
 
 __all__ = ["api_v1"]
 
