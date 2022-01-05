@@ -29,11 +29,12 @@ from flask import Flask, g, jsonify
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 
+from .assets import detect_asset_type
 from .auth import AuthError
 from .config import Config
 from .db import get_db, set_asset, set_station
 from .routes import api_v1
-from .utils import get_file_hash_hex, detect_asset_type
+from .utils import get_file_hash_hex
 
 SRC_PATTERN = re.compile(r"src=\\?\"([A-Za-z0-9/._\-]+)\\?\"")
 POSTER_PATTERN = re.compile(r"poster=\\?\"([A-Za-z0-9/._\-]+)\\?\"")
