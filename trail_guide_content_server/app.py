@@ -36,6 +36,7 @@ from .db import get_db, set_asset, set_station
 from .routes import api_v1
 from .utils import get_file_hash_hex
 
+HREF_PATTERN = re.compile(r"href=\\?\"([A-Za-z0-9/._\-]+)\\?\"")
 SRC_PATTERN = re.compile(r"src=\\?\"([A-Za-z0-9/._\-]+)\\?\"")
 POSTER_PATTERN = re.compile(r"poster=\\?\"([A-Za-z0-9/._\-]+)\\?\"")
 
@@ -148,11 +149,13 @@ def import_stations(base_path, stations_json, manifest_json):
                     matches = [string]
                     print(f"\tmatches: {matches}")
                 else:
+                    href_data = HREF_PATTERN.findall(string)
                     src_data = SRC_PATTERN.findall(string)
                     poster_data = POSTER_PATTERN.findall(string)
+                    print(f"\t  href matches: {href_data}")
                     print(f"\t   src matches: {src_data}")
                     print(f"\tposter matches: {poster_data}")
-                    matches = [*src_data, *poster_data]
+                    matches = [*href_data, *src_data, *poster_data]
 
                 for match in matches:
                     match_path = os.path.join(base_path, station_path, match)

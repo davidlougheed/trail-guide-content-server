@@ -11,7 +11,6 @@ from flask import current_app
 from .assets import make_asset_list
 from .db import (
     get_assets,
-    get_asset_types,
     get_layers,
     get_modals,
     get_pages,

@@ -79,7 +79,8 @@ INSERT OR IGNORE INTO asset_types VALUES
     ('image'),
     ('audio'),
     ('video'),
-    ('video_text_track');
+    ('video_text_track'),
+    ('pdf');
 
 
 CREATE TABLE IF NOT EXISTS assets (

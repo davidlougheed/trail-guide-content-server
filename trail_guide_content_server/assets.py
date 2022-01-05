@@ -28,6 +28,8 @@ def detect_asset_type(file_name: Union[str, Path]) -> tuple[str, str]:
         asset_type = "video"
     elif file_ext in {"vtt"}:
         asset_type = "video_text_track"
+    elif file_ext in {"pdf"}:
+        asset_type = "pdf"
     else:
         if "asset_type" not in request.form:
             return "", "No asset_type provided, and could not figure it out automatically"
