@@ -13,7 +13,7 @@ setup(
         "click>=8.0.3,<8.1",
         "Flask>=2.0.2,<2.1",
         "Flask-Cors>=3.0.10,<3.1",
-        "jsonschema>=4.3.0,<4.4",
+        "jsonschema>=4.4.0,<4.5",
         "PyJWT[crypto]>=2.3.0,<2.4",
         "python-dotenv>=0.19.2,<0.20",
         "Werkzeug>=2.0.2,<2.1",

@@ -13,7 +13,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-import sqlite3
 
 import click
 import json
@@ -21,6 +20,7 @@ import os
 import pathlib
 import re
 import shutil
+import sqlite3
 import uuid
 import werkzeug.exceptions
 
@@ -120,10 +120,6 @@ def import_stations(base_path, stations_json, manifest_json):
 
     with open(manifest_json, "r") as afh:
         manifest = json.load(afh)
-
-    asset_checksums = {}
-    # for a, p in assets.items():
-    #     asset_checksums[a] = get_file_hash_hex(p)
 
     db = get_db()
     c = db.cursor()
