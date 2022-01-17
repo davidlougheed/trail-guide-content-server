@@ -40,9 +40,12 @@ def detect_asset_type(file_name: Union[str, Path]) -> tuple[str, str]:
 
 
 def _make_asset_list_js(assets):
+    def _asset_type(a):
+        return a["asset_type"]
+
     assets_by_type = {
         at: {aa["id"]: f"""require("./{at}/{aa['file_name']}")""" for aa in v}
-        for at, v in groupby(assets, key=lambda x: x["asset_type"])
+        for at, v in groupby(sorted(assets, key=_asset_type), key=_asset_type)
     }
 
     rt = (
