@@ -58,7 +58,7 @@ def make_release_bundle(final_bundle_path: pathlib.Path):
             json.dump({m["id"]: m for m in get_modals()}, mfh)
 
         with open(pages_path, "w") as pfh:
-            json.dump({p["id"]: p for p in get_pages(enabled_only=True)}, pfh)
+            json.dump(get_pages(enabled_only=True), pfh)
 
         with open(settings_path, "w") as sfh:
             json.dump(get_settings(), sfh)

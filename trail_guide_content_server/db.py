@@ -351,7 +351,7 @@ def get_pages(enabled_only: bool = False) -> list[dict]:
     c = get_db().cursor()
     q = c.execute(
         "SELECT id, title, icon, long_title, subtitle, header_image, content, enabled, rank FROM pages" +
-        (" WHERE enabled = 1" if enabled_only else ""))
+        (" WHERE enabled = 1" if enabled_only else "") + " ORDER BY rank")
     return list(map(_tuple_to_page, q))
 
 
