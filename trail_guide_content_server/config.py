@@ -18,8 +18,12 @@ import os
 import pathlib
 from dotenv import load_dotenv
 
-__all__ = ["Config"]
+__all__ = [
+    "config",
+    "public_config",
+]
 
+ENV_PREFIX = "TGCS_"
 
 DEFAULT_ASSET_DIR = pathlib.Path(__file__).parent.parent.resolve() / "data" / "assets"
 DEFAULT_BUNDLE_DIR = pathlib.Path(__file__).parent.parent.resolve() / "data" / "bundles"
@@ -27,12 +31,36 @@ DEFAULT_DB = pathlib.Path(__file__).parent.parent.resolve() / "data" / "db.sqlit
 
 load_dotenv()
 
+_public_config_values = {
+    "AUTH_AUDIENCE",
+    "AUTH_ISSUER",
+    "BASE_URL",
+    "MAX_CONTENT_LENGTH",
+    "LINKING_SCHEME",
+}
 
-class Config:
-    ASSET_DIR = os.environ.get("TGCS_ASSET_DIR", str(DEFAULT_ASSET_DIR))
-    AUTH_AUDIENCE = os.environ.get("TGCS_AUTH_AUDIENCE", "")
-    AUTH_ISSUER = os.environ.get("TGCS_AUTH_ISSUER", "")
-    BASE_URL = os.environ.get("TGCS_BASE_URL", "http://localhost:5000")
-    BUNDLE_DIR = os.environ.get("TGCS_BUNDLE_DIR", str(DEFAULT_BUNDLE_DIR))
-    DATABASE = os.environ.get("TGCS_DATABASE", str(DEFAULT_DB))
-    MAX_CONTENT_LENGTH = 5 * (1024 ** 2)  # 5 MB maximum upload size
+_config_vars_and_defaults = {
+    "ASSET_DIR": (str, DEFAULT_ASSET_DIR),
+    "BUNDLE_DIR": (str, DEFAULT_BUNDLE_DIR),
+    "DATABASE": (str, DEFAULT_DB),
+
+    "AUTH_AUDIENCE": (str, ""),
+    "AUTH_ISSUER": (str, ""),
+
+    "BASE_URL": (str, "http://localhost:5000"),
+
+    "MAX_CONTENT_LENGTH": (int, 5 * (1024 ** 2)),  # 5 MB maximum upload size
+
+    "LINKING_SCHEME": (str, ""),
+}
+
+config = {
+    k: os.environ.get(f"{ENV_PREFIX}{k}", v[0](v[1]))
+    for k, v in _config_vars_and_defaults.items()
+}
+
+public_config = {
+    k: v
+    for k, v in config.items()
+    if k in _public_config_values
+}

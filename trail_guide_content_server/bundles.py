@@ -9,6 +9,7 @@ import zipfile
 from flask import current_app
 
 from .assets import make_asset_list
+from .config import public_config
 from .db import (
     get_assets,
     get_layers,
@@ -39,6 +40,7 @@ def make_release_bundle(final_bundle_path: pathlib.Path):
         os.mkdir(tdp / "assets")
 
         asset_path = tdp / "assets" / "assets.js"
+        config_path = tdp / "config.json"
         layers_path = tdp / "layers.json"
         modals_path = tdp / "modals.json"
         pages_path = tdp / "pages.json"
@@ -51,20 +53,23 @@ def make_release_bundle(final_bundle_path: pathlib.Path):
         with open(asset_path, "w") as afh:
             afh.write(asset_js)
 
+        with open(config_path, "w") as cfh:
+            json.dump(public_config, cfh, indent=2)
+
         with open(layers_path, "w") as lfh:
-            json.dump(get_layers(), lfh)
+            json.dump(get_layers(), lfh, indent=2)
 
         with open(modals_path, "w") as mfh:
-            json.dump({m["id"]: m for m in get_modals()}, mfh)
+            json.dump({m["id"]: m for m in get_modals()}, mfh, indent=2)
 
         with open(pages_path, "w") as pfh:
-            json.dump(get_pages(enabled_only=True), pfh)
+            json.dump(get_pages(enabled_only=True), pfh, indent=2)
 
         with open(settings_path, "w") as sfh:
-            json.dump(get_settings(), sfh)
+            json.dump(get_settings(), sfh, indent=2)
 
         with open(stations_path, "w") as sfh:
-            json.dump(get_sections_with_stations(enabled_only=True), sfh)
+            json.dump(get_sections_with_stations(enabled_only=True), sfh, indent=2)
 
         with open(bundle_path, "wb") as zfh:
             with zipfile.ZipFile(zfh, mode="w") as zf:

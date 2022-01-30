@@ -31,7 +31,7 @@ from werkzeug.utils import secure_filename
 
 from .assets import detect_asset_type
 from .auth import AuthError
-from .config import Config
+from .config import config
 from .db import get_db, set_asset, set_station
 from .routes import api_v1
 from .utils import get_file_hash_hex
@@ -41,7 +41,7 @@ SRC_PATTERN = re.compile(r"src=\\?\"([A-Za-z0-9/._\-]+)\\?\"")
 POSTER_PATTERN = re.compile(r"poster=\\?\"([A-Za-z0-9/._\-]+)\\?\"")
 
 application = Flask(__name__)
-application.config.from_object(Config)
+application.config.from_mapping(**config)
 
 CORS(application, resources={r"/api/v1/*": {"origins": "*"}})
 

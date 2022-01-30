@@ -26,6 +26,7 @@ from werkzeug.utils import secure_filename
 from .assets import detect_asset_type, make_asset_list
 from .auth import requires_auth, SCOPE_READ_CONTENT
 from .bundles import make_bundle_path, make_release_bundle
+from .config import public_config
 from .db import (
     get_db,
 
@@ -563,6 +564,11 @@ def settings():
         s = set_settings({str(k): v for k, v in request.json.items()})
 
     return jsonify(s)
+
+
+@api_v1.route("/config", methods=["GET"])
+def config():
+    return jsonify(public_config)
 
 
 @api_v1.route("/feedback", methods=["GET", "POST"])
