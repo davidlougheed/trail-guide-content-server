@@ -36,6 +36,8 @@ _public_config_values = {
     "AUTH_ISSUER",
     "BASE_URL",
     "MAX_CONTENT_LENGTH",
+    "APP_NAME",
+    "APP_SLUG",
     "LINKING_SCHEME",
 }
 
@@ -51,6 +53,8 @@ _config_vars_and_defaults = {
 
     "MAX_CONTENT_LENGTH": (int, 5 * (1024 ** 2)),  # 5 MB maximum upload size
 
+    "APP_NAME": (str, "Trail Guide"),
+    "APP_SLUG": (str, "trail-guide"),
     "LINKING_SCHEME": (str, ""),
 }
 
