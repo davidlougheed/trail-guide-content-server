@@ -29,7 +29,7 @@ def make_bundle_path() -> pathlib.Path:
     return pathlib.Path(current_app.config["BUNDLE_DIR"]) / f"{str(uuid.uuid4())}.zip"
 
 
-def make_release_bundle(final_bundle_path: pathlib.Path):
+def make_release_bundle(release: dict, final_bundle_path: pathlib.Path):
     assets_to_include = get_assets(filter_disabled=True)
 
     asset_js, _ = make_asset_list(assets_to_include, as_js=True)
@@ -42,6 +42,7 @@ def make_release_bundle(final_bundle_path: pathlib.Path):
         asset_path = tdp / "assets" / "assets.js"
         config_path = tdp / "config.json"
         layers_path = tdp / "layers.json"
+        metadata_path = tdp / "metadata.json"
         modals_path = tdp / "modals.json"
         pages_path = tdp / "pages.json"
         settings_path = tdp / "settings.json"
@@ -58,6 +59,11 @@ def make_release_bundle(final_bundle_path: pathlib.Path):
 
         with open(layers_path, "w") as lfh:
             json.dump(get_layers(), lfh, indent=2)
+
+        with open(metadata_path, "w") as mfh:
+            json.dump({
+                "release": {k: v for k, v in release.items() if not k.endswith("_dt")},
+            }, mfh, indent=2)
 
         with open(modals_path, "w") as mfh:
             json.dump({m["id"]: m for m in get_modals()}, mfh, indent=2)

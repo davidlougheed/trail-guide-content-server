@@ -17,6 +17,7 @@
 import json
 import os
 import pathlib
+import traceback
 import uuid
 
 from datetime import datetime, timedelta, timezone
@@ -494,8 +495,22 @@ def releases():
         if errs := list(release_validator.iter_errors(r)):
             return err_validation_failed(errs)
 
-        make_release_bundle(bundle_path)
-        r = set_release(None, r)
+        db = get_db()
+        c = db.cursor()
+
+        try:
+            c.execute("BEGIN")  # Put SQLite into manual commit mode
+            r = set_release(None, r, commit=False)
+            make_release_bundle(r, bundle_path)
+            db.commit()
+        except Exception as e:
+            print("Warning: encountered exception while making bundle", e)
+            traceback.print_exc()
+            db.rollback()
+            return current_app.response_class(json.dumps({
+                "message": "Error encountered while generating release",
+                "errors": [traceback.format_exc()],
+            }), status=500)
 
         return jsonify(r)
 

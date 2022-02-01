@@ -74,7 +74,7 @@ __all__ = [
 def get_db() -> sqlite3.Connection:
     db = getattr(g, "_database", None)
     if db is None:
-        db = g._database = sqlite3.connect(current_app.config["DATABASE"])
+        db = g._database = sqlite3.connect(current_app.config["DATABASE"], isolation_level=None)
         c = db.cursor()
         c.execute("PRAGMA foreign_keys = ON")  # By default, FKs are off in SQLite; turn them on
     return db
@@ -515,7 +515,7 @@ def get_release(version: int):
     return _tuple_to_release(r) if r else None
 
 
-def set_release(version: Optional[int], data: dict) -> Optional[dict]:
+def set_release(version: Optional[int], data: dict, commit: bool = True) -> Optional[dict]:
     db = get_db()
     c = db.cursor()
 
@@ -532,7 +532,9 @@ def set_release(version: Optional[int], data: dict) -> Optional[dict]:
             (data["release_notes"], data["bundle_path"], data["submitted_dt"], data["published_dt"]))
         version = c.lastrowid
 
-    db.commit()
+    if commit:
+        db.commit()
+
     return get_release(version)
 
 
