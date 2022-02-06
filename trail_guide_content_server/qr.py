@@ -7,7 +7,7 @@ __all__ = [
 ]
 
 
-def make_station_qr(station_id: str):
+def make_station_qr(station_id: str) -> BytesIO:
     qr = qrcode.QRCode(
         version=1,
         error_correction=qrcode.constants.ERROR_CORRECT_M,
