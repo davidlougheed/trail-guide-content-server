@@ -78,6 +78,11 @@ def _check_scope(scope):
 def requires_auth(fn):
     @wraps(fn)
     def _requires_auth(*args, **kwargs):
+        # If we're in debug mode, skip this whole deal
+
+        if current_app.debug:
+            return fn(*args, **kwargs)
+
         # First, check for one-time tokens
 
         if (ott := request.args.get("ott")) is not None:
