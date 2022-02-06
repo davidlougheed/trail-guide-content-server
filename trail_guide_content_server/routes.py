@@ -83,6 +83,7 @@ from .object_schemas import (
     release_validator,
     feedback_item_validator,
 )
+from .qr import make_station_qr
 from .utils import get_file_hash_hex, get_utc_str, request_changed
 
 __all__ = ["api_v1"]
@@ -189,6 +190,19 @@ def stations_detail(station_id: str):
         s = set_station(station_id, s)
 
     return jsonify(s)
+
+
+@api_v1.route("/stations/<string:station_id>/qr", methods=["GET"])
+def stations_qr(station_id: str):
+    s = get_station(station_id)
+
+    if s is None:
+        return current_app.response_class(status=404)
+
+    r = current_app.response_class(make_station_qr(station_id))
+    r.headers.set("Content-Type", "image/png")
+    r.headers.set("Content-Disposition", f"inline; filename=station-qr-{station_id}.png")
+    return r
 
 
 @api_v1.route("/asset_types", methods=["GET"])
