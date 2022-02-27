@@ -1,5 +1,5 @@
 -- A server for hosting a trail guide mobile app's content and data.
--- Copyright (C) 2021  David Lougheed
+-- Copyright (C) 2021-2022  David Lougheed
 --
 -- This program is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
