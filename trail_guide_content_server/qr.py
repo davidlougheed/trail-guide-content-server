@@ -1,3 +1,7 @@
+# A server for hosting a trail guide mobile app's content and data.
+# Copyright (C) 2021-2022  David Lougheed
+# See NOTICE for more information.
+
 import qrcode
 from flask import current_app
 from io import BytesIO
