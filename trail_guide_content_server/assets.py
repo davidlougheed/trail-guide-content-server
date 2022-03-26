@@ -20,7 +20,8 @@ __all__ = [
 ]
 
 
-def detect_asset_type(file_name: Union[str, Path]) -> tuple[str, str]:
+def detect_asset_type(file_name: Union[str, Path], form_data=None) -> tuple[str, str]:
+    form_data = form_data or {}
     file_ext = os.path.splitext(file_name)[1].lower().lstrip(".")
 
     # TODO: py3.10: match
@@ -35,10 +36,10 @@ def detect_asset_type(file_name: Union[str, Path]) -> tuple[str, str]:
     elif file_ext in {"pdf"}:
         asset_type = "pdf"
     else:
-        if "asset_type" not in request.form:
+        if "asset_type" not in form_data:
             return "", "No asset_type provided, and could not figure it out automatically"
 
-        asset_type = request.form["asset_type"]
+        asset_type = form_data["asset_type"]
 
     return asset_type, ""
 

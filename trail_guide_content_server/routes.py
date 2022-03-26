@@ -208,7 +208,7 @@ def asset_list():
 
         file = request.files["file"]
 
-        asset_type, err = detect_asset_type(file.filename)
+        asset_type, err = detect_asset_type(file.filename, request.form)
         if err:
             return current_app.response_class(json.dumps({"message": err}), status=400)
 
@@ -271,7 +271,7 @@ def asset_detail(asset_id):
 
             file = request.files["file"]
 
-            asset_type, err = detect_asset_type(file.filename)
+            asset_type, err = detect_asset_type(file.filename, request.form)
             if err:
                 return current_app.response_class(jsonify({"message": err}), status=400)
 
