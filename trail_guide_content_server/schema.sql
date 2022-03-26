@@ -10,11 +10,12 @@ CREATE TABLE IF NOT EXISTS sections (
 
 -- Pre-populate sections
 INSERT OR IGNORE INTO sections VALUES
-    ('red', 'Red Trail', 0),
-    ('blue', 'Blue Trail', 1),
-    ('orange', 'Orange Trail', 2),
-    ('green', 'Green Trail', 3),
-    ('other', 'Main Facility and Off the Trails', 4);
+    ('acc', 'Accessible Trail', 0),
+    ('red', 'Red Trail', 1),
+    ('blue', 'Blue Trail', 2),
+    ('orange', 'Orange Trail', 3),
+    ('green', 'Green Trail', 4),
+    ('other', 'Main Facility and Off the Trails', 5);
 
 
 CREATE TABLE IF NOT EXISTS categories (
