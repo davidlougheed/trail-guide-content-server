@@ -46,6 +46,17 @@ def handle_bad_request(e):
     return jsonify({"message": "Bad request", "errors": [str(e)]}), 400
 
 
+@application.errorhandler(werkzeug.exceptions.RequestEntityTooLarge)
+def handle_too_large(e):
+    return jsonify({
+        "message": (
+            f"Request is too large. "
+            f"Maximum request size: {application.config['MAX_CONTENT_LENGTH'] / (1024 ** 2):.1f} MB"
+        ),
+        "errors": [str(e)],
+    }), 413
+
+
 @application.errorhandler(werkzeug.exceptions.InternalServerError)
 def handle_internal_server_error(e):
     return jsonify({"message": "Internal server error", "errors": [str(e)]}), 500
