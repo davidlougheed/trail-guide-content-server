@@ -15,7 +15,7 @@ setup(
         "Flask-Cors>=3.0.10,<3.1",
         "jsonschema>=4.4.0,<4.5",
         "PyJWT[crypto]>=2.3.0,<2.4",
-        "python-dotenv>=0.19.2,<0.20",
+        "python-dotenv>=0.20.0,<0.21",
         "qrcode[pil]>=7.3.0,<8",
         "Werkzeug>=2.0.3,<2.1",
     ],
