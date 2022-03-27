@@ -26,24 +26,15 @@ from .db import (
     get_section,
     set_section,
 
-    get_stations,
-    get_station,
-    set_station,
-    delete_station,
+    station_model,
 
     get_asset_types,
     get_assets,
     get_asset,
     set_asset,
 
-    get_pages,
-    get_page,
-    set_page,
-
-    get_modals,
-    get_modal,
-    set_modal,
-    delete_modal,
+    page_model,
+    modal_model,
 
     get_layers,
     get_layer,
@@ -71,12 +62,14 @@ from .object_schemas import (
     release_validator,
     feedback_item_validator,
 )
-from .qr import make_station_qr
+from .qr import make_station_qr, make_page_qr
 from .utils import get_file_hash_hex, get_utc_str, request_changed
 
-__all__ = ["api_v1"]
+__all__ = ["api_v1", "app_dl", "well_known"]
 
 api_v1 = Blueprint("api", __name__)
+app_dl = Blueprint("app", __name__)
+well_known = Blueprint("well_known", __name__)
 
 err_must_be_object = Response(json.dumps({"message": "Request body must be an object"}), status=400)
 err_cannot_alter_id = Response(json.dumps({"message": "Cannot alter object ID"}), status=400)
@@ -143,15 +136,15 @@ def stations():
         if errs:
             return err_validation_failed(errs)
 
-        return jsonify(set_station(s["id"], s))
+        return jsonify(station_model.set_obj(s["id"], s))
 
-    return jsonify(get_stations())
+    return jsonify(station_model.get_all())
 
 
 @api_v1.route("/stations/<string:station_id>", methods=["GET", "PUT", "DELETE"])
 @requires_auth
 def stations_detail(station_id: str):
-    s = get_station(station_id)
+    s = station_model.get_one(station_id)
 
     if s is None:
         return current_app.response_class(json.dumps(
@@ -159,7 +152,7 @@ def stations_detail(station_id: str):
 
     # TODO: Delete
     if request.method == "DELETE":
-        delete_station(station_id)
+        station_model.delete_obj(station_id)
         return jsonify({"message": "Deleted."})
 
     if request.method == "PUT":
@@ -175,14 +168,14 @@ def stations_detail(station_id: str):
         if errs:
             return err_validation_failed(errs)
 
-        s = set_station(station_id, s)
+        s = station_model.set_obj(station_id, s)
 
     return jsonify(s)
 
 
 @api_v1.route("/stations/<string:station_id>/qr", methods=["GET"])
 def stations_qr(station_id: str):
-    s = get_station(station_id)
+    s = station_model.get_one(station_id)
 
     if s is None:
         return current_app.response_class(status=404)
@@ -351,14 +344,14 @@ def assets_bytes(asset_id: str):
 @api_v1.route("/pages", methods=["GET"])
 @requires_auth
 def pages():
-    return jsonify(get_pages())
+    return jsonify(page_model.get_all())
 
 
 # TODO: Delete page functionality when create page is done
 @api_v1.route("/pages/<string:page_id>", methods=["GET", "PUT"])
 @requires_auth
 def pages_detail(page_id: str):
-    p = get_page(page_id)
+    p = page_model.get_one(page_id)
 
     if p is None:
         return current_app.response_class(jsonify(
@@ -376,9 +369,22 @@ def pages_detail(page_id: str):
         if errs := list(section_validator.iter_errors(p)):
             return err_validation_failed(errs)
 
-        p = set_page(page_id, p)
+        p = page_model.set_obj(page_id, p)
 
     return jsonify(p)
+
+
+@api_v1.route("/pages/<string:page_id>/qr", methods=["GET"])
+def pages_qr(page_id: str):
+    s = page_model.get_one(page_id)
+
+    if s is None:
+        return current_app.response_class(status=404)
+
+    r = current_app.response_class(make_page_qr(page_id))
+    r.headers.set("Content-Type", "image/png")
+    r.headers.set("Content-Disposition", f"inline; filename=page-qr-{page_id}.png")
+    return r
 
 
 @api_v1.route("/modals", methods=["GET", "POST"])
@@ -393,22 +399,22 @@ def modals():
         if errs := list(modal_validator.iter_errors(m)):
             return err_validation_failed(errs)
 
-        return jsonify(set_modal(m["id"], m))
+        return jsonify(modal_model.set_obj(m["id"], m))
 
-    return jsonify(get_modals())
+    return jsonify(modal_model.get_all())
 
 
 @api_v1.route("/modals/<string:modal_id>", methods=["DELETE", "GET", "PUT"])
 @requires_auth
 def modals_detail(modal_id: str):
-    m = get_modal(modal_id)
+    m = modal_model.get_one(modal_id)
 
     if m is None:
         return current_app.response_class(jsonify(
             {"message": f"Could not find modal with ID {modal_id}"}), status=404)
 
     if request.method == "DELETE":
-        delete_modal(modal_id)
+        modal_model.delete_obj(modal_id)
         return jsonify({"message": "Deleted."})
 
     if request.method == "PUT":
@@ -423,7 +429,7 @@ def modals_detail(modal_id: str):
         if errs := list(modal_validator.iter_errors(m)):
             return err_validation_failed(errs)
 
-        m = set_modal(modal_id, m)
+        m = modal_model.set_obj(modal_id, m)
 
     return jsonify(m)
 
@@ -451,7 +457,7 @@ def layers():
 def layers_detail(layer_id: str):
     layer = get_layer(layer_id)
 
-    if layer is None:
+    if layer is None:  # doesn't exist, or deleted
         return current_app.response_class(jsonify(
             {"message": f"Could not find layer with ID {layer_id}"}), status=404)
 
@@ -501,7 +507,7 @@ def releases():
         c = db.cursor()
 
         try:
-            c.execute("BEGIN")  # Put SQLite into manual commit mode
+            c.execute("BEGIN TRANSACTION")  # Put SQLite into manual commit mode
             r = set_release(None, r, commit=False)
             make_release_bundle(r, bundle_path)
             db.commit()

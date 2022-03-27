@@ -194,7 +194,7 @@ def import_stations(base_path, stations_json, manifest_json):
 
                 contents.append(ci)
 
-            set_station(str(uuid.uuid4()), {
+            station_model.set_obj(str(uuid.uuid4()), {
                 **station,
                 "header_image": header_asset,
                 "contents": contents,

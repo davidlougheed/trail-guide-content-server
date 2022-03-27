@@ -4,7 +4,7 @@
 
 CREATE TABLE IF NOT EXISTS sections (
     id VARCHAR(31) PRIMARY KEY,
-    title TEXT NOT NULL,
+    title TEXT NOT NULL CHECK (length(title) > 0),
     rank INTEGER NOT NULL CHECK (rank >= 0)
 );
 
@@ -30,9 +30,13 @@ INSERT OR IGNORE INTO categories VALUES
 
 
 CREATE TABLE IF NOT EXISTS stations (
-    id VARCHAR(36) PRIMARY KEY,
+    id VARCHAR(36),
 
-    title TEXT UNIQUE NOT NULL,
+    revision INTEGER NOT NULL CHECK (revision > 0),
+    revision_dt TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),  -- timestamp - parens to evaluate
+    revision_msg TEXT NOT NULL DEFAULT 'created',  -- reason for latest revision
+
+    title TEXT NOT NULL CHECK (length(title) > 0),
     long_title TEXT NOT NULL DEFAULT '',
     subtitle TEXT NOT NULL,
 
@@ -46,7 +50,7 @@ CREATE TABLE IF NOT EXISTS stations (
     visible_to TEXT CHECK (visible_to IS NULL OR length(visible_to) = 5),
 
     section TEXT NOT NULL,
-    category TEXT CHECK(category in ('culture', 'environment', 'research')),
+    category TEXT NOT NULL,
 
     header_image TEXT,
     contents TEXT NOT NULL DEFAULT '[]',  -- JSON list of content objects
@@ -54,8 +58,19 @@ CREATE TABLE IF NOT EXISTS stations (
     enabled INTEGER NOT NULL CHECK (enabled in (0, 1)),
     rank INTEGER NOT NULL CHECK (rank >= 0),
 
+    deleted INTEGER NOT NULL CHECK (deleted in (0, 1)) DEFAULT 0,
+
+    PRIMARY KEY (id, revision),
     FOREIGN KEY (section) REFERENCES sections,
+    FOREIGN KEY (category) REFERENCES categories,
     FOREIGN KEY (header_image) REFERENCES assets
+);
+
+CREATE TABLE IF NOT EXISTS stations_current_revision (
+    id VARCHAR(36) PRIMARY KEY,
+    revision INTEGER NOT NULL,
+
+    FOREIGN KEY (id, revision) REFERENCES stations (id, revision) DEFERRABLE INITIALLY DEFERRED
 );
 
 
@@ -81,17 +96,24 @@ CREATE TABLE IF NOT EXISTS assets (
 
     enabled INTEGER NOT NULL CHECK (enabled in (0, 1)),
 
+    -- Deleted -> file is no longer available, but keep record
+    deleted INTEGER NOT NULL CHECK (deleted in (0, 1)) DEFAULT 0,
+
     FOREIGN KEY (asset_type) REFERENCES asset_types
 );
 
 
 CREATE TABLE IF NOT EXISTS pages (
-    id VARCHAR(36) PRIMARY KEY,
+    id VARCHAR(36),
 
-    title VARCHAR(31) UNIQUE NOT NULL,
+    revision INTEGER NOT NULL CHECK (revision > 0),
+    revision_dt TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),  -- timestamp - parens to evaluate
+    revision_msg TEXT NOT NULL DEFAULT 'created',  -- reason for latest revision
+
+    title VARCHAR(31) NOT NULL CHECK (length(title) > 0),
     icon TEXT NOT NULL,  -- react-native cross-platform Expo icon (md-* or ios-* implicitly prefixed)
 
-    long_title TEXT NOT NULL,
+    long_title TEXT NOT NULL CHECK (length(long_title) > 0),
     subtitle TEXT NOT NULL DEFAULT '',
     header_image VARCHAR(36),
 
@@ -100,12 +122,26 @@ CREATE TABLE IF NOT EXISTS pages (
     enabled INTEGER NOT NULL CHECK (enabled in (0, 1)),
     rank INTEGER NOT NULL CHECK (rank >= 0),
 
+    -- Keep record when someone 'deletes' the page to keep the revision history, etc.
+    deleted INTEGER NOT NULL CHECK (deleted in (0, 1)) DEFAULT 0,
+
+    PRIMARY KEY (id, revision),
     FOREIGN KEY (header_image) REFERENCES assets
 );
 
+CREATE TABLE IF NOT EXISTS pages_current_revision (
+    id VARCHAR(36) PRIMARY KEY,
+    revision INTEGER NOT NULL,
+
+    FOREIGN KEY (id, revision) REFERENCES pages (id, revision) DEFERRABLE INITIALLY DEFERRED
+);
+
 -- Pre-populate pages with about page
-INSERT OR IGNORE INTO pages VALUES (
+INSERT OR IGNORE INTO pages
+    (id, revision, title, icon, long_title, subtitle, header_image, content, enabled, rank)
+VALUES (
     'about',
+    1,
     'About',
     'help-circle-outline',
     'Introduction to the Elbow Lake Interpretive App',
@@ -115,13 +151,31 @@ INSERT OR IGNORE INTO pages VALUES (
     1,
     0
 );
+INSERT OR IGNORE INTO pages_current_revision VALUES ('about', 1);
 
 
 CREATE TABLE IF NOT EXISTS modals (
-    id VARCHAR(36) PRIMARY KEY,  -- UUID
+    id VARCHAR(36),  -- UUID
+
+    revision INTEGER NOT NULL CHECK (revision > 0),
+    revision_dt TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),  -- timestamp
+    revision_msg TEXT NOT NULL DEFAULT 'created',  -- reason for latest revision
+
     title TEXT NOT NULL,
     content TEXT NOT NULL,  -- HTML
-    close_text TEXT NOT NULL DEFAULT 'Close'
+    close_text TEXT NOT NULL DEFAULT 'Close',
+
+    -- Keep record when someone 'deletes' the page to keep the revision history, etc.
+    deleted INTEGER NOT NULL CHECK (deleted in (0, 1)) DEFAULT 0,
+
+    PRIMARY KEY (id, revision)
+);
+
+CREATE TABLE IF NOT EXISTS modals_current_revision (
+    id VARCHAR(36) PRIMARY KEY,
+    revision INTEGER NOT NULL,
+
+    FOREIGN KEY (id, revision) REFERENCES modals (id, revision) DEFERRABLE INITIALLY DEFERRED
 );
 
 
@@ -131,7 +185,10 @@ CREATE TABLE IF NOT EXISTS layers (
     geojson TEXT NOT NULL,
 
     enabled INTEGER NOT NULL CHECK (enabled in (0, 1)),
-    rank INTEGER NOT NULL CHECK (rank >= 0)
+    rank INTEGER NOT NULL CHECK (rank >= 0),
+
+    -- Keep record when someone 'deletes' the layer
+    deleted INTEGER NOT NULL CHECK (deleted in (0, 1)) DEFAULT 0
 );
 
 

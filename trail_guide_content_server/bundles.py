@@ -17,8 +17,8 @@ from .config import public_config
 from .db import (
     get_assets,
     get_layers,
-    get_modals,
-    get_pages,
+    modal_model,
+    page_model,
     get_sections_with_stations,
     get_settings,
 )
@@ -70,10 +70,10 @@ def make_release_bundle(release: dict, final_bundle_path: pathlib.Path):
             }, mfh, indent=2)
 
         with open(modals_path, "w") as mfh:
-            json.dump({m["id"]: m for m in get_modals()}, mfh, indent=2)
+            json.dump({m["id"]: m for m in modal_model.get_all()}, mfh, indent=2)
 
         with open(pages_path, "w") as pfh:
-            json.dump(get_pages(enabled_only=True), pfh, indent=2)
+            json.dump(page_model.get_all(enabled_only=True), pfh, indent=2)
 
         with open(settings_path, "w") as sfh:
             json.dump(get_settings(), sfh, indent=2)
