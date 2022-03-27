@@ -19,7 +19,7 @@ def make_station_qr(station_id: str) -> BytesIO:
         border=6,
     )
 
-    qr.add_data(f"{current_app.config['LINKING_SCHEME']}://stations/detail/{station_id}")
+    qr.add_data(f"{current_app.config['BASE_URL']}/app/stations/detail/{station_id}")
     qr.make(fit=True)
 
     img = qr.make_image(fill_color="black", back_color="white")

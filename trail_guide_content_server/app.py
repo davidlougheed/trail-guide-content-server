@@ -20,8 +20,8 @@ from werkzeug.utils import secure_filename
 from .assets import detect_asset_type
 from .auth import AuthError
 from .config import config
-from .db import get_db, set_asset, set_station
-from .routes import api_v1
+from .db import get_db, set_asset, station_model
+from .routes import api_v1, app_dl, well_known
 from .utils import get_file_hash_hex
 
 HREF_PATTERN = re.compile(r"href=\\?\"([A-Za-z0-9/._\-]+)\\?\"")
@@ -33,7 +33,9 @@ application.config.from_mapping(**config)
 
 CORS(application, resources={r"/api/v1/*": {"origins": "*"}})
 
-application.register_blueprint(api_v1, url_prefix="/api/v1")
+application.register_blueprint(api_v1, url_prefix="/api/v1")  # API
+application.register_blueprint(app_dl, url_prefix="/app")  # Deep linking
+application.register_blueprint(well_known, url_prefix="/.well-known")  # Well known files, used for deep linking verif.
 
 
 @application.errorhandler(werkzeug.exceptions.NotFound)

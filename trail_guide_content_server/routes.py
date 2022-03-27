@@ -619,3 +619,28 @@ def ott():
         "expiry": (datetime.utcnow().replace(microsecond=0, tzinfo=timezone.utc) + timedelta(seconds=60)).isoformat()
     }
     return jsonify(set_ott(new_token, t))
+
+
+@well_known.route("/apple-app-site-association")
+def asaa():
+    return {
+        "applinks": {
+            "apps": [],
+            "details": [{
+                "appID": current_app.config["APPLE_APP_ID"],
+                "paths": ["/app/stations/detail/*"],
+            }],
+        },
+    }
+
+
+@well_known.route("/assetlinks.json")
+def android_asset_links():
+    return jsonify([{
+        "relation": ["delegate_permission/common.handle_all_urls"],
+        "target": {
+            "namespace": "android_app",
+            "package_name": current_app.config["ANDROID_PACKAGE_NAME"],
+            "sha256_cert_fingerprints": [current_app.config["ANDROID_CERT_FINGERPRINT"]],
+        },
+    }])

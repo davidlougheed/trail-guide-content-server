@@ -26,7 +26,9 @@ _public_config_values = {
     "MAX_CONTENT_LENGTH",
     "APP_NAME",
     "APP_SLUG",
-    "LINKING_SCHEME",
+    "APPLE_APP_ID",
+    "ANDROID_PACKAGE_NAME",
+    "ANDROID_CERT_FINGERPRINT",
 }
 
 _config_vars_and_defaults = {
@@ -43,7 +45,10 @@ _config_vars_and_defaults = {
 
     "APP_NAME": (str, "Trail Guide"),
     "APP_SLUG": (str, "trail-guide"),
-    "LINKING_SCHEME": (str, ""),
+
+    "APPLE_APP_ID": (str, ""),
+    "ANDROID_PACKAGE_NAME": (str, ""),
+    "ANDROID_CERT_FINGERPRINT": (str, ""),
 }
 
 config = {
