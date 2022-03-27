@@ -8,10 +8,11 @@ from io import BytesIO
 
 __all__ = [
     "make_station_qr",
+    "make_page_qr",
 ]
 
 
-def make_station_qr(station_id: str) -> BytesIO:
+def _make_qr(url: str) -> BytesIO:
     qr = qrcode.QRCode(
         version=1,
         error_correction=qrcode.constants.ERROR_CORRECT_M,
@@ -19,7 +20,7 @@ def make_station_qr(station_id: str) -> BytesIO:
         border=6,
     )
 
-    qr.add_data(f"{current_app.config['BASE_URL']}/app/stations/detail/{station_id}")
+    qr.add_data(url)
     qr.make(fit=True)
 
     img = qr.make_image(fill_color="black", back_color="white")
@@ -29,3 +30,11 @@ def make_station_qr(station_id: str) -> BytesIO:
     buf.seek(0)
 
     return buf
+
+
+def make_station_qr(station_id: str) -> BytesIO:
+    return _make_qr(f"{current_app.config['BASE_URL']}/app/stations/detail/{station_id}")
+
+
+def make_page_qr(page_id: str) -> BytesIO:
+    return _make_qr(f"{current_app.config['BASE_URL']}/app/pages/{page_id}")
