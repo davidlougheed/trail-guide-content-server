@@ -20,10 +20,11 @@ DEFAULT_DB = pathlib.Path(__file__).parent.parent.resolve() / "data" / "db.sqlit
 load_dotenv()
 
 _public_config_values = {
+    "MAX_CONTENT_LENGTH",
     "AUTH_AUDIENCE",
     "AUTH_ISSUER",
     "BASE_URL",
-    "MAX_CONTENT_LENGTH",
+    "APP_BASE_URL",
     "APP_NAME",
     "APP_SLUG",
     "APPLE_APP_ID",
@@ -36,13 +37,14 @@ _config_vars_and_defaults = {
     "BUNDLE_DIR": (str, DEFAULT_BUNDLE_DIR),
     "DATABASE": (str, DEFAULT_DB),
 
+    "MAX_CONTENT_LENGTH": (int, 5 * (1024 ** 2)),  # 5 MB maximum upload size
+
     "AUTH_AUDIENCE": (str, ""),
     "AUTH_ISSUER": (str, ""),
 
     "BASE_URL": (str, "http://localhost:5000"),
 
-    "MAX_CONTENT_LENGTH": (int, 5 * (1024 ** 2)),  # 5 MB maximum upload size
-
+    "APP_BASE_URL": (str, "http://localhost:5000/app"),
     "APP_NAME": (str, "Trail Guide"),
     "APP_SLUG": (str, "trail-guide"),
 

@@ -33,8 +33,8 @@ def _make_qr(url: str) -> BytesIO:
 
 
 def make_station_qr(station_id: str) -> BytesIO:
-    return _make_qr(f"{current_app.config['BASE_URL']}/app/stations/detail/{station_id}")
+    return _make_qr(f"{current_app.config['APP_BASE_URL']}/stations/detail/{station_id}")
 
 
 def make_page_qr(page_id: str) -> BytesIO:
-    return _make_qr(f"{current_app.config['BASE_URL']}/app/pages/{page_id}")
+    return _make_qr(f"{current_app.config['APP_BASE_URL']}/pages/{page_id}")
