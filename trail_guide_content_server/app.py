@@ -160,6 +160,12 @@ def import_stations(base_path, stations_json, manifest_json):
                         print(f"\tMissing asset '{match}' (not in manifest.)")
                         continue
 
+                    if match_path.endswith(".html"):
+                        # Skip importing HTML files for now
+                        # TODO: Import these as modals...
+                        print("Skipping", match_path, "(unsupported asset type)")
+                        continue
+
                     asset_id = _import_file(c, match_path, match)
 
                     if direct:
