@@ -634,7 +634,11 @@ def asaa():
             "apps": [],
             "details": [{
                 "appID": current_app.config["APPLE_APP_ID"],
-                "paths": ["/app/stations/detail/*"],
+                "paths": [
+                    "/app/modals/*",
+                    "/app/pages/*",
+                    "/app/stations/detail/*",
+                ],
             }],
         },
     }
