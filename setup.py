@@ -11,7 +11,7 @@ setup(
     python_requires="~=3.9",
     install_requires=[
         "click>=8.1.0,<8.2",
-        "Flask>=2.0.3,<2.1",
+        "Flask>=2.1.0,<2.2",
         "Flask-Cors>=3.0.10,<3.1",
         "jsonschema>=4.4.0,<4.5",
         "PyJWT[crypto]>=2.3.0,<2.4",
