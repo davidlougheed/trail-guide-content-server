@@ -134,10 +134,8 @@ class ModelWithRevision:
         c.execute("BEGIN EXCLUSIVE TRANSACTION")
 
         cr_num = self._get_new_revision(c, obj_id)
-        cr_msg = data.get("revision", {}).get("message", "updated" if cr_num > 1 else "created")
-
-        print(cr_num, cr_msg)
-        print(data)
+        default_msg = "deleted" if data.get("deleted") else ("updated" if cr_num > 1 else "created")
+        cr_msg = data.get("revision", {}).get("message", default_msg).strip() or default_msg
 
         c.execute(
             f"""
