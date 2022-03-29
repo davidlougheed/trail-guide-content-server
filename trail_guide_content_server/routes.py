@@ -114,8 +114,7 @@ def sections_detail(section_id: str):
 
         s = {**s, **request.json}
 
-        errs = list(section_validator.iter_errors(s))
-        if errs:
+        if errs := list(section_validator.iter_errors(s)):
             return err_validation_failed(errs)
 
         s = set_section(section_id, s)
@@ -132,8 +131,7 @@ def stations():
 
         s = {"id": str(uuid.uuid4()), **request.json}
 
-        errs = list(station_validator.iter_errors(s))
-        if errs:
+        if errs := list(station_validator.iter_errors(s)):
             return err_validation_failed(errs)
 
         return jsonify(station_model.set_obj(s["id"], s))
@@ -164,8 +162,7 @@ def stations_detail(station_id: str):
 
         s = {**s, **request.json}
 
-        errs = list(section_validator.iter_errors(s))
-        if errs:
+        if errs := list(section_validator.iter_errors(s)):
             return err_validation_failed(errs)
 
         s = station_model.set_obj(station_id, s)
@@ -299,6 +296,35 @@ def asset_detail(asset_id):
     return jsonify(a)
 
 
+CT_OCTET_STREAM = "application/octet-stream"
+
+
+def _get_content_type(asset_type: str, file_ext: str) -> str:
+    match (asset_type, file_ext):
+        case ("image", "jpg" | "jpeg"):
+            return "image/jpeg"
+        case ("image", "png"):
+            return "image/png"
+        case ("image", "gif"):
+            return "image/gif"
+
+        case ("audio", "mp3"):
+            return "audio/mp3"
+        case ("audio", "m4a"):
+            return "audio/m4a"
+
+        case ("video", "mp4"):
+            return "video/mp4"
+        case ("video", "mov"):
+            return "video/quicktime"
+
+        case ("video_text_track", "vtt"):
+            return "text/vvt"
+
+        case _:
+            return CT_OCTET_STREAM
+
+
 @api_v1.route("/assets/<string:asset_id>/bytes", methods=["GET"])
 def assets_bytes(asset_id: str):
     a = get_asset(asset_id)
@@ -307,36 +333,15 @@ def assets_bytes(asset_id: str):
         return current_app.response_class(jsonify(
             {"message": f"Could not find asset with ID {asset_id}"}), status=404)
 
-    content_type = "application/octet-stream"
-    file_ext = os.path.splitext(a["file_name"])[1].lstrip(".").lower()
+    file_name = a["file_name"]
+    file_ext = os.path.splitext(file_name)[1].lstrip(".").lower()
+    content_type = _get_content_type(a["asset_type"], file_ext)
 
-    # TODO: py3.10: match
-    if a["asset_type"] == "image":
-        if file_ext in {"jpg", "jpeg"}:
-            content_type = "image/jpeg"
-        elif file_ext == "png":
-            content_type = "image/png"
-        elif file_ext == "gif":
-            content_type = "image/gif"
-    elif a["asset_type"] == "audio":
-        if file_ext == "mp3":
-            content_type = "audio/mp3"
-        elif file_ext == "m4a":
-            content_type = "audio/m4a"
-    elif a["asset_type"] == "video":
-        if file_ext == "mp4":
-            content_type = "video/mp4"
-        elif file_ext == "mov":
-            content_type = "video/quicktime"
-    elif a["asset_type"] == "video_text_track":
-        if file_ext == "vtt":
-            content_type = "text/vvt"
-
-    with open(pathlib.Path(current_app.config["ASSET_DIR"]) / a["file_name"], "rb") as fh:
+    with open(pathlib.Path(current_app.config["ASSET_DIR"]) / file_name, "rb") as fh:
         r = current_app.response_class(fh.read())
         r.headers.set("Content-Type", content_type)
-        if content_type == "application/octet-stream":
-            r.headers.set("Content-Disposition", f"attachment; filename={a['file_name']}")
+        if content_type == CT_OCTET_STREAM:
+            r.headers.set("Content-Disposition", f"attachment; filename={file_name}")
         return r
 
 

@@ -71,8 +71,7 @@ def handle_auth_error(e):
 
 @application.teardown_appcontext
 def close_db(_exception):
-    db = getattr(g, "_database", None)
-    if db is not None:
+    if (db := getattr(g, "_database", None)) is not None:
         db.close()
 
 
@@ -83,32 +82,30 @@ def _import_file(c: sqlite3.Cursor, file_path, file_match) -> str:
     r = c.fetchone()
 
     if r:
-        asset_id = r[0]
+        # Asset already exists (checksums match), so return it instead of duplicating it
+        return r[0]
 
-    else:
-        # Make new asset since it isn't in the database
+    # Otherwise, make new asset since it isn't in the database
 
-        file_name = f"{int(datetime.now().timestamp() * 1000)}-{secure_filename(file_match)}"
-        new_file_path = pathlib.Path(application.config["ASSET_DIR"]) / file_name
+    file_name = f"{int(datetime.now().timestamp() * 1000)}-{secure_filename(file_match)}"
+    new_file_path = pathlib.Path(application.config["ASSET_DIR"]) / file_name
 
-        shutil.copyfile(file_path, new_file_path)
+    print("\tImporting", file_name)
 
-        new_asset = {
-            "id": str(uuid.uuid4()),
-            "asset_type": detect_asset_type(new_file_path)[0],
-            "file_name": file_name,
-            "file_size": os.path.getsize(new_file_path),
-            "sha1_checksum": checksum,
-            "enabled": True,
-        }
+    shutil.copyfile(file_path, new_file_path)
 
-        print("\tImporting", file_name)
+    new_id = str(uuid.uuid4())
 
-        set_asset(new_asset["id"], new_asset)
+    set_asset(new_id, {
+        "id": new_id,
+        "asset_type": detect_asset_type(new_file_path)[0],
+        "file_name": file_name,
+        "file_size": os.path.getsize(new_file_path),
+        "sha1_checksum": checksum,
+        "enabled": True,
+    })
 
-        asset_id = new_asset["id"]
-
-    return asset_id
+    return new_id
 
 
 @application.cli.command("import_stations")

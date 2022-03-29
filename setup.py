@@ -8,7 +8,7 @@ setup(
     name="trail_guide_content_server",
     version="0.6.1",
 
-    python_requires="~=3.9",
+    python_requires="~=3.10",
     install_requires=[
         "click>=8.1.0,<8.2",
         "Flask>=2.1.0,<2.2",
