@@ -87,9 +87,12 @@ def make_release_bundle(release: dict, final_bundle_path: pathlib.Path):
 
         with open(bundle_path, "wb") as zfh:
             with zipfile.ZipFile(zfh, mode="w") as zf:
+                zf.write(config_path, "config.json")
                 zf.write(layers_path, "layers.json")
+                zf.write(metadata_path, "metadata.json")
                 zf.write(modals_path, "modals.json")
                 zf.write(pages_path, "pages.json")
+                zf.write(settings_path, "settings.json")
                 zf.write(stations_path, "stations.json")
 
                 zf.write(asset_path, "assets/assets.js")

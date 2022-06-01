@@ -286,9 +286,9 @@ def get_sections_with_stations(enabled_only: bool = False) -> list[dict]:
     c = get_db().cursor()
     q = c.execute(f"""
         SELECT 
-            sc.id,
-            sc.title,
-            sc.rank,
+            sc.id AS sc_id,
+            sc.title AS sc_title,
+            sc.rank AS sc_rank,
             
             st.id,
             st.title,
@@ -311,15 +311,15 @@ def get_sections_with_stations(enabled_only: bool = False) -> list[dict]:
             st.rank
         FROM sections AS sc
         LEFT JOIN stations AS st ON sc.id = st.section
-        {'WHERE stations.enabled = 1' if enabled_only else ''}
-        ORDER BY sections.rank, stations.rank""")
+        {'WHERE st.enabled = 1' if enabled_only else ''}
+        ORDER BY sc.rank, st.rank""")
 
     sections_of_stations = defaultdict(lambda: {"data": []})
 
     for r in q.fetchall():
-        sections_of_stations[r["sc.id"]]["title"] = r["sc.title"]
-        sections_of_stations[r["sc.id"]]["rank"] = r["sc.rank"]
-        sections_of_stations[r["sc.id"]]["data"].append(_row_to_station(r, "st"))
+        sections_of_stations[r["sc_id"]]["title"] = r["sc_title"]
+        sections_of_stations[r["sc_id"]]["rank"] = r["sc_rank"]
+        sections_of_stations[r["sc_id"]]["data"].append({"id": r["id"], **_row_to_station(r)})
 
     return [{"id": k, **v} for k, v in sections_of_stations.items()]
 
