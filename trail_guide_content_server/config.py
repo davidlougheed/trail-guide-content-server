@@ -51,6 +51,10 @@ _config_vars_and_defaults = {
     "APPLE_APP_ID": (str, ""),
     "ANDROID_PACKAGE_NAME": (str, ""),
     "ANDROID_CERT_FINGERPRINT": (str, ""),
+
+    "GITHUB_CI_REPOSITORY": (str, ""),  # Format: davidlougheed/trail-guide-app-impl or similar
+    "GITHUB_CI_BRANCH": (str, "main"),
+    "GITHUB_TOKEN": (str, ""),
 }
 
 config = {

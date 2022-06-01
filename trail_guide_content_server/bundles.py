@@ -5,8 +5,11 @@
 import json
 import os
 import pathlib
+import requests
 import shutil
+import sys
 import tempfile
+import uritemplate
 import uuid
 import zipfile
 
@@ -26,6 +29,7 @@ from .db import (
 __all__ = [
     "make_bundle_path",
     "make_release_bundle",
+    "do_github_release",
 ]
 
 
@@ -96,3 +100,48 @@ def make_release_bundle(release: dict, final_bundle_path: pathlib.Path):
                         f"assets/{asset['asset_type']}/{asset['file_name']}")
 
         shutil.copyfile(bundle_path, final_bundle_path)
+
+
+def do_github_release(release: dict, final_bundle_path: pathlib.Path):
+    if not (token := current_app.config["GITHUB_TOKEN"]):
+        raise Exception("No GitHub token provided; skipping GitHub release")
+
+    if not (ci_repo := current_app.config["GITHUB_CI_REPOSITORY"]):
+        raise Exception("No GitHub CI repository provided; skipping GitHub release")
+
+    version = release["version"]
+
+    r = requests.post(
+        f"https://api.github.com/repos/{ci_repo}/releases",
+        headers={
+            "Accept": "application/vnd.github.v3+json",
+            "Authorization": f"token {token}",
+        },
+        json={
+            "tag_name": f"tgcs/release/{version}",
+            "target_commitish": current_app.config["GITHUB_CI_BRANCH"],
+            "name": f"Release {version}",
+            "body": release["release_notes"],
+            "draft": False,
+            "prerelease": False,
+            "generate_release_notes": False,
+        })
+
+    r.raise_for_status()  # Error out if we didn't succeed
+    r_data = r.json()
+
+    try:
+        with open(final_bundle_path, "rb") as fh:
+            r = requests.post(
+                uritemplate.expand(r_data["upload_url"], name="bundle.zip", label="content bundle"),
+                headers={
+                    "Accept": "application/vnd.github.v3+json",
+                    "Authorization": f"token {token}",
+                    "Content-Type": "application/zip",
+                },
+                data=fh.read())
+
+        r.raise_for_status()
+
+    except Exception as e:
+        print("Warning: encountered exception while uploading bundle data to GitHub", e, file=sys.stderr)

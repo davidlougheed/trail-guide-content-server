@@ -5,6 +5,7 @@
 import json
 import os
 import pathlib
+import sys
 import traceback
 import uuid
 
@@ -14,7 +15,7 @@ from werkzeug.utils import secure_filename
 
 from .assets import detect_asset_type, make_asset_list
 from .auth import requires_auth, SCOPE_READ_CONTENT
-from .bundles import make_bundle_path, make_release_bundle
+from .bundles import make_bundle_path, make_release_bundle, do_github_release
 from .config import public_config
 from .db import (
     get_db,
@@ -518,13 +519,19 @@ def releases():
             make_release_bundle(r, bundle_path)
             db.commit()
         except Exception as e:
-            print("Warning: encountered exception while making bundle", e)
+            print("Warning: encountered exception while making bundle", e, file=sys.stderr)
             traceback.print_exc()
             db.rollback()
             return current_app.response_class(json.dumps({
                 "message": "Error encountered while generating release",
                 "errors": [traceback.format_exc()],
             }), status=500)
+
+        try:
+            do_github_release(r, bundle_path)
+        except Exception as e:
+            print("Warning: encountered exception while uploading GitHub release (release still created locally)",
+                  e, file=sys.stderr)
 
         return jsonify(r)
 
