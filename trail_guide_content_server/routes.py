@@ -538,7 +538,7 @@ def releases_detail(version: int):
 
     if r is None:
         return current_app.response_class(jsonify(
-            {"message": f"Could not find version {version}"}), status=404)
+            {"message": f"Could not find release {version}"}), status=404)
 
     if request.method == "PUT":
         if not isinstance(request.json, dict):
@@ -575,7 +575,7 @@ def releases_bundle(version: int):
 
     if r is None:
         return current_app.response_class(jsonify(
-            {"message": f"Could not find version {version}"}), status=404)
+            {"message": f"Could not find release {version}"}), status=404)
 
     return send_file(
         r["bundle_path"], mimetype="application/zip", as_attachment=True, download_name=f"version_{r['version']}.zip")
