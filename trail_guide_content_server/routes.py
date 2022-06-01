@@ -43,6 +43,7 @@ from .db import (
 
     get_releases,
     get_release,
+    get_latest_release,
     set_release,
 
     get_settings,
@@ -578,6 +579,18 @@ def releases_bundle(version: int):
 
     return send_file(
         r["bundle_path"], mimetype="application/zip", as_attachment=True, download_name=f"version_{r['version']}.zip")
+
+
+@api_v1.route("/releases/latest", methods=["GET"])
+@requires_auth
+def latest_release():
+    r = get_latest_release()
+
+    if r is None:
+        return current_app.response_class(jsonify(
+            {"message": f"No releases exist"}), status=404)
+
+    return jsonify(r)
 
 
 @api_v1.route("/settings", methods=["GET", "PUT"])

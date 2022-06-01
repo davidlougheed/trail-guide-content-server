@@ -38,6 +38,7 @@ __all__ = [
 
     "get_releases",
     "get_release",
+    "get_latest_release",
     "set_release",
 
     "get_settings",
@@ -496,6 +497,13 @@ def get_release(version: int):
         (version,))
     r = q.fetchone()
     return _row_to_release(r) if r else None
+
+
+def get_latest_release():
+    c = get_db().cursor()
+    q = c.execute("SELECT MAX(version) AS latest_version FROM releases")
+    r = q.fetchone()
+    return get_release(r["latest_version"]) if r else None
 
 
 def set_release(version: Optional[int], data: dict, commit: bool = True) -> Optional[dict]:
