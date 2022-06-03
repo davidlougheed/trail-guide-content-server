@@ -6,14 +6,14 @@ with open("README.md", "r") as fh:
 
 setup(
     name="trail_guide_content_server",
-    version="0.8.0",
+    version="0.9.0",
 
     python_requires="~=3.10",
     install_requires=[
         "click>=8.1.3,<8.2",
         "Flask>=2.1.2,<2.2",
         "Flask-Cors>=3.0.10,<3.1",
-        "jsonschema>=4.5.1,<4.6",
+        "jsonschema>=4.6.0,<4.7",
         "PyJWT[crypto]>=2.4.0,<2.5",
         "python-dotenv>=0.20.0,<0.21",
         "qrcode[pil]>=7.3.0,<8",
