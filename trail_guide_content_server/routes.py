@@ -182,6 +182,9 @@ def stations_qr(station_id: str):
     r = current_app.response_class(make_station_qr(station_id))
     r.headers.set("Content-Type", "image/png")
     r.headers.set("Content-Disposition", f"inline; filename=station-qr-{station_id}.png")
+    r.cache_control.max_age = 31536000
+    r.cache_control.public = True
+    r.cache_control.immutable = True
     return r
 
 
@@ -394,6 +397,9 @@ def pages_qr(page_id: str):
     r = current_app.response_class(make_page_qr(page_id))
     r.headers.set("Content-Type", "image/png")
     r.headers.set("Content-Disposition", f"inline; filename=page-qr-{page_id}.png")
+    r.cache_control.max_age = 31536000
+    r.cache_control.public = True
+    r.cache_control.immutable = True
     return r
 
 
