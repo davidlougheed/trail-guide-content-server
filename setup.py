@@ -18,7 +18,6 @@ setup(
         "python-dotenv>=0.20.0,<0.21",
         "qrcode[pil]>=7.3.0,<8",
         "requests>=2.27.1,<2.28",
-        "uritemplate>=4.1.1,<4.2",
         "Werkzeug>=2.1.2,<2.2",
     ],
 
