@@ -14,7 +14,7 @@ from flask import Blueprint, jsonify, current_app, request, Response, send_file
 from werkzeug.utils import secure_filename
 
 from .assets import detect_asset_type, make_asset_list
-from .auth import requires_auth, SCOPE_READ_CONTENT
+from .auth import requires_auth, SCOPE_READ_CONTENT, SCOPE_READ_RELEASES, SCOPE_MANAGE_CONTENT, SCOPE_EDIT_RELEASES
 from .bundles import make_bundle_path, make_release_bundle
 from .config import public_config
 from .db import (
@@ -86,20 +86,20 @@ def err_validation_failed(errs):
 
 
 @api_v1.route("/categories", methods=["GET"])
-@requires_auth
+@requires_auth()
 def categories():
     return jsonify(get_categories())
 
 
 @api_v1.route("/sections", methods=["GET"])
-@requires_auth
+@requires_auth()
 def sections():
     nest_stations = request.args.get("nest_stations")
     return jsonify(get_sections_with_stations() if nest_stations else get_sections())
 
 
 @api_v1.route("/sections/<string:section_id>", methods=["GET", "PUT"])
-@requires_auth
+@requires_auth()
 def sections_detail(section_id: str):
     s = get_section(section_id)
 
@@ -125,7 +125,7 @@ def sections_detail(section_id: str):
 
 
 @api_v1.route("/stations", methods=["GET", "POST"])
-@requires_auth
+@requires_auth()
 def stations():
     if request.method == "POST":
         if not isinstance(request.json, dict):
@@ -142,7 +142,7 @@ def stations():
 
 
 @api_v1.route("/stations/<string:station_id>", methods=["GET", "PUT", "DELETE"])
-@requires_auth
+@requires_auth()
 def stations_detail(station_id: str):
     s = station_model.get_one(station_id)
 
@@ -186,13 +186,13 @@ def stations_qr(station_id: str):
 
 
 @api_v1.route("/asset_types", methods=["GET"])
-@requires_auth
+@requires_auth()
 def asset_types():
     return jsonify(get_asset_types())
 
 
 @api_v1.route("/assets", methods=["GET", "POST"])
-@requires_auth
+@requires_auth()
 def asset_list():
     if request.method == "POST":
         if "file" not in request.files:
@@ -232,7 +232,7 @@ def asset_list():
 
 
 @api_v1.route("/assets/<string:asset_id>", methods=["GET", "PUT", "DELETE"])
-@requires_auth
+@requires_auth()
 def asset_detail(asset_id):
     a = get_asset(asset_id)
 
@@ -349,14 +349,14 @@ def assets_bytes(asset_id: str):
 
 # TODO: Create page functionality
 @api_v1.route("/pages", methods=["GET"])
-@requires_auth
+@requires_auth()
 def pages():
     return jsonify(page_model.get_all())
 
 
 # TODO: Delete page functionality when create page is done
 @api_v1.route("/pages/<string:page_id>", methods=["GET", "PUT"])
-@requires_auth
+@requires_auth()
 def pages_detail(page_id: str):
     p = page_model.get_one(page_id)
 
@@ -395,7 +395,7 @@ def pages_qr(page_id: str):
 
 
 @api_v1.route("/modals", methods=["GET", "POST"])
-@requires_auth
+@requires_auth()
 def modals():
     if request.method == "POST":
         if not isinstance(request.json, dict):
@@ -412,7 +412,7 @@ def modals():
 
 
 @api_v1.route("/modals/<string:modal_id>", methods=["DELETE", "GET", "PUT"])
-@requires_auth
+@requires_auth()
 def modals_detail(modal_id: str):
     m = modal_model.get_one(modal_id)
 
@@ -442,7 +442,7 @@ def modals_detail(modal_id: str):
 
 
 @api_v1.route("/layers", methods=["GET", "POST"])
-@requires_auth
+@requires_auth()
 def layers():
     if request.method == "POST":
         if not isinstance(request.json, dict):
@@ -460,7 +460,7 @@ def layers():
 
 
 @api_v1.route("/layers/<string:layer_id>", methods=["DELETE", "GET", "PUT"])
-@requires_auth
+@requires_auth()
 def layers_detail(layer_id: str):
     layer = get_layer(layer_id)
 
@@ -491,7 +491,7 @@ def layers_detail(layer_id: str):
 
 
 @api_v1.route("/releases", methods=["GET", "POST"])
-@requires_auth
+@requires_auth(read_scopes=(SCOPE_READ_CONTENT, SCOPE_READ_RELEASES))
 def releases():
     if request.method == "POST":
         if not isinstance(request.json, dict):
@@ -532,8 +532,9 @@ def releases():
     return jsonify(get_releases())
 
 
-@api_v1.route("/releases/<int:version>", methods=["GET"])
-@requires_auth
+@api_v1.route("/releases/<int:version>", methods=["GET", "PUT"])
+@requires_auth(read_scopes=(SCOPE_READ_CONTENT, SCOPE_READ_RELEASES),
+               alter_scopes=(SCOPE_MANAGE_CONTENT, SCOPE_EDIT_RELEASES))
 def releases_detail(version: int):
     r = get_release(version)
 
@@ -570,7 +571,7 @@ def releases_detail(version: int):
 
 
 @api_v1.route("/releases/<int:version>/bundle", methods=["GET"])
-@requires_auth
+@requires_auth(read_scopes=(SCOPE_READ_CONTENT, SCOPE_READ_RELEASES))
 def releases_bundle(version: int):
     r = get_release(version)
 
@@ -583,7 +584,7 @@ def releases_bundle(version: int):
 
 
 @api_v1.route("/releases/latest", methods=["GET"])
-@requires_auth
+@requires_auth(read_scopes=(SCOPE_READ_CONTENT, SCOPE_READ_RELEASES))
 def latest_release():
     r = get_latest_release()
 
@@ -595,7 +596,7 @@ def latest_release():
 
 
 @api_v1.route("/settings", methods=["GET", "PUT"])
-@requires_auth
+@requires_auth()
 def settings():
     s = get_settings()
 
@@ -614,7 +615,7 @@ def config():
 
 
 @api_v1.route("/feedback", methods=["GET", "POST"])
-@requires_auth
+@requires_auth()
 def feedback():
     if request.method == "POST":
         if not isinstance(request.json, dict):
@@ -635,7 +636,7 @@ def feedback():
 
 
 @api_v1.route("/ott", methods=["POST"])
-@requires_auth
+@requires_auth()
 def ott():
     new_token = str(uuid.uuid4())
     t = {
