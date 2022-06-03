@@ -169,6 +169,7 @@ def import_stations(base_path, stations_json, manifest_json):
                         string = string.replace(match, asset_id)
                     else:
                         # Use a sort of multipurpose URL which resolves but can also be hijacked by the app
+                        # TODO: This breaks when an asset has a name which is a subset of another one
                         string = string.replace(
                             match, f"{application.config['BASE_URL']}/api/v1/assets/{asset_id}/bytes")
 

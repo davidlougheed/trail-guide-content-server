@@ -342,6 +342,9 @@ def assets_bytes(asset_id: str):
     with open(pathlib.Path(current_app.config["ASSET_DIR"]) / file_name, "rb") as fh:
         r = current_app.response_class(fh.read())
         r.headers.set("Content-Type", content_type)
+        r.cache_control.max_age = 31536000
+        r.cache_control.public = True
+        r.cache_control.immutable = True
         if content_type == CT_OCTET_STREAM:
             r.headers.set("Content-Disposition", f"attachment; filename={file_name}")
         return r
