@@ -65,13 +65,15 @@ def get_db() -> Connection:
 
 # TODO: JSON schema
 class ModelWithRevision:
-    def __init__(self, table: str, get_fields, set_fields, insert_tuple_from_data_fn, row_to_dict, order: str = ''):
+    def __init__(self, table: str, get_fields, set_fields, insert_tuple_from_data_fn, row_to_dict, order: str = '',
+                 search_fields: tuple[str, ...] = ("id",)):
         self.table: str = table
         self.get_fields: tuple[str, ...] = get_fields
         self.set_fields: tuple[str, ...] = set_fields
         self.insert_tuple_from_data_fn: Callable[[dict], tuple] = insert_tuple_from_data_fn
         self._row_to_dict_partial: Callable[[Row], dict] = row_to_dict
         self._order = order
+        self._search_fields = search_fields
 
     def row_to_dict(self, row: Row):
         return {
@@ -115,6 +117,28 @@ class ModelWithRevision:
             WHERE 1{'' if include_deleted else ' AND deleted = 0'}{' AND enabled = 1' if enabled_only else ''}
             {self._order}
             """
+        ).fetchall()))
+
+    def search(self, q: str, include_deleted: bool = False, **kwargs) -> list[dict]:
+        db = get_db()
+        c = db.cursor()
+
+        # Special field: enabled
+        enabled_only = "enabled" in self.get_fields and kwargs.get("enabled", False)
+
+        q = f"%{q}%"
+        search_conditions = " OR ".join((f"CAST(td.{sf} AS TEXT) LIKE :q" for sf in self._search_fields))
+
+        return list(map(self.row_to_dict, c.execute(
+            f"""
+            SELECT td.id AS id, td.revision AS revision, revision_dt, revision_msg, {', '.join(self.get_fields)} 
+            FROM {self.table} AS td INNER JOIN {self.table}_current_revision AS cr
+                ON td.id = cr.id AND td.revision = cr.revision 
+            WHERE ({search_conditions})
+            {'' if include_deleted else ' AND deleted = 0'}{' AND enabled = 1' if enabled_only else ''}
+            {self._order}
+            """,
+            {"q": q}
         ).fetchall()))
 
     def _get_revision(self, c: sqlite3.Cursor, obj_id: Any) -> Optional[dict]:
@@ -278,7 +302,8 @@ station_model = ModelWithRevision(
     station_content_fields,
     _station_data_to_insert_tuple,
     _row_to_station,
-    "ORDER BY section, rank"
+    "ORDER BY section, rank",
+    search_fields=("id", "title", "long_title"),
 )
 
 
@@ -409,7 +434,8 @@ page_model = ModelWithRevision(
         "enabled": bool(r["enabled"]),
         "rank": r["rank"],
     },
-    "ORDER BY rank"
+    "ORDER BY rank",
+    search_fields=("id", "title", "long_title"),
 )
 
 
@@ -420,6 +446,7 @@ modal_model = ModelWithRevision(
     modal_content_fields,
     lambda d: (d["title"], d["content"], d["close_text"]),
     dict,
+    search_fields=("id", "title"),
 )
 
 

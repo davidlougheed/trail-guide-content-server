@@ -594,6 +594,21 @@ def latest_release():
     return jsonify(r)
 
 
+@api_v1.route("/search", methods=["GET"])
+@requires_auth()
+def search():
+    q = request.args.get("q", "").strip()
+
+    if not q:
+        return {"message": "No query specified"}, 400
+
+    return {
+        "modals": modal_model.search(q),
+        "pages": page_model.search(q),
+        "stations": station_model.search(q),
+    }
+
+
 @api_v1.route("/settings", methods=["GET", "PUT"])
 @requires_auth()
 def settings():
