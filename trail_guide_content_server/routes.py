@@ -104,8 +104,7 @@ def sections_detail(section_id: str):
     s = get_section(section_id)
 
     if s is None:
-        return current_app.response_class(json.dumps(
-            {"message": f"Could not find section with ID {section_id}"}), status=404)
+        return {"message": f"Could not find section with ID {section_id}"}, 404
 
     if request.method == "PUT":
         if not isinstance(request.json, dict):
@@ -147,8 +146,7 @@ def stations_detail(station_id: str):
     s = station_model.get_one(station_id)
 
     if s is None:
-        return current_app.response_class(json.dumps(
-            {"message": f"Could not find station with ID {station_id}"}), status=404)
+        return {"message": f"Could not find station with ID {station_id}"}, 404
 
     # TODO: Delete
     if request.method == "DELETE":
@@ -205,7 +203,7 @@ def asset_list():
 
         asset_type, err = detect_asset_type(file.filename, request.form)
         if err:
-            return current_app.response_class(json.dumps({"message": err}), status=400)
+            return {"message": err}, 400
 
         file_name = f"{int(datetime.now().timestamp() * 1000)}-{secure_filename(file.filename)}"
         file_path = pathlib.Path(current_app.config["ASSET_DIR"]) / file_name
@@ -240,8 +238,7 @@ def asset_detail(asset_id):
     a = get_asset(asset_id)
 
     if a is None:
-        return current_app.response_class(jsonify(
-            {"message": f"Could not find asset with ID {asset_id}"}), status=404)
+        return {"message": f"Could not find asset with ID {asset_id}"}, 404
 
     if request.method == "DELETE":
         # TODO: Delete object and bytes
@@ -254,7 +251,7 @@ def asset_detail(asset_id):
         # Don't let users change asset_type, since the asset may already have been embedded as HTML in
         # a document somewhere - which we cannot fix the markup for.
         if request_changed(a["asset_type"], form_data=True, field="asset_type"):
-            return current_app.response_class(jsonify({"message": "Cannot change asset type."}), status=400)
+            return {"message": "Cannot change asset type."}, 400
 
         a = {
             **a,
@@ -268,7 +265,7 @@ def asset_detail(asset_id):
 
             asset_type, err = detect_asset_type(file.filename, request.form)
             if err:
-                return current_app.response_class(jsonify({"message": err}), status=400)
+                return {"message": err}, 400
 
             asset_dir = pathlib.Path(current_app.config["ASSET_DIR"])
             file_parts = secure_filename(file.filename).split(".")
@@ -335,8 +332,7 @@ def assets_bytes(asset_id: str):
     a = get_asset(asset_id)
 
     if a is None:
-        return current_app.response_class(jsonify(
-            {"message": f"Could not find asset with ID {asset_id}"}), status=404)
+        return {"message": f"Could not find asset with ID {asset_id}"}, 404
 
     file_name = a["file_name"]
     file_ext = os.path.splitext(file_name)[1].lstrip(".").lower()
@@ -367,8 +363,7 @@ def pages_detail(page_id: str):
     p = page_model.get_one(page_id)
 
     if p is None:
-        return current_app.response_class(jsonify(
-            {"message": f"Could not find page with ID {page_id}"}), status=404)
+        return {"message": f"Could not find page with ID {page_id}"}, 404
 
     if request.method == "PUT":
         if not isinstance(request.json, dict):
@@ -426,8 +421,7 @@ def modals_detail(modal_id: str):
     m = modal_model.get_one(modal_id)
 
     if m is None:
-        return current_app.response_class(jsonify(
-            {"message": f"Could not find modal with ID {modal_id}"}), status=404)
+        return {"message": f"Could not find modal with ID {modal_id}"}, 404
 
     if request.method == "DELETE":
         modal_model.delete_obj(modal_id)
@@ -474,8 +468,7 @@ def layers_detail(layer_id: str):
     layer = get_layer(layer_id)
 
     if layer is None:  # doesn't exist, or deleted
-        return current_app.response_class(jsonify(
-            {"message": f"Could not find layer with ID {layer_id}"}), status=404)
+        return {"message": f"Could not find layer with ID {layer_id}"}, 404
 
     if request.method == "DELETE":
         delete_layer(layer_id)
@@ -531,10 +524,10 @@ def releases():
             print("Warning: encountered exception while making bundle", e, file=sys.stderr)
             traceback.print_exc()
             db.rollback()
-            return current_app.response_class(json.dumps({
+            return {
                 "message": "Error encountered while generating release",
                 "errors": [traceback.format_exc()],
-            }), status=500)
+            }, 500
 
         return jsonify(r)
 
@@ -548,8 +541,7 @@ def releases_detail(version: int):
     r = get_release(version)
 
     if r is None:
-        return current_app.response_class(jsonify(
-            {"message": f"Could not find release {version}"}), status=404)
+        return {"message": f"Could not find release {version}"}, 404
 
     if request.method == "PUT":
         if not isinstance(request.json, dict):
@@ -559,10 +551,10 @@ def releases_detail(version: int):
             return err_cannot_alter_id
 
         if request_changed(r["bundle_path"], field="bundle_path"):
-            return current_app.response_class(jsonify({"message": f"Cannot alter bundle path"}), status=400)
+            return {"message": f"Cannot alter bundle path"}, 400
 
         if request_changed(r["submitted_dt"], field="submitted_dt"):
-            return current_app.response_class(jsonify({"message": f"Cannot alter submitted date/time"}), status=400)
+            return {"message": f"Cannot alter submitted date/time"}, 400
 
         published_dt = request.json.get("published_dt", request.json.get("published"))
         if r["published_dt"] is None and published_dt:
@@ -585,8 +577,7 @@ def releases_bundle(version: int):
     r = get_release(version)
 
     if r is None:
-        return current_app.response_class(jsonify(
-            {"message": f"Could not find release {version}"}), status=404)
+        return {"message": f"Could not find release {version}"}, 404
 
     return send_file(
         r["bundle_path"], mimetype="application/zip", as_attachment=True, download_name=f"version_{r['version']}.zip")
@@ -598,8 +589,7 @@ def latest_release():
     r = get_latest_release()
 
     if r is None:
-        return current_app.response_class(jsonify(
-            {"message": f"No releases exist"}), status=404)
+        return {"message": f"No releases exist"}, 404
 
     return jsonify(r)
 
