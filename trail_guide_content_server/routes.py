@@ -556,9 +556,10 @@ def releases_detail(version: int):
         if request_changed(r["submitted_dt"], field="submitted_dt"):
             return {"message": f"Cannot alter submitted date/time"}, 400
 
-        published_dt = request.json.get("published_dt", request.json.get("published"))
-        if r["published_dt"] is None and published_dt:
-            # Overwrite user-set published time
+        published_dt = request.json.get("published_dt")
+        published = request.json.get("published")  # Alternate boolean field - signal to generate published_dt timestamp
+        if r["published_dt"] is None and (published_dt or published):
+            # Overwrite user-set published time if it exists
             published_dt = get_utc_str()
 
         r = {**r, **request.json, "published_dt": published_dt}
