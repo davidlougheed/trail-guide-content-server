@@ -1,1 +1,2 @@
 include trail_guide_content_server/schema.sql
+include trail_guide_content_server/migrations/*.sql
