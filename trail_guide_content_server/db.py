@@ -532,6 +532,7 @@ def get_release(version: int):
         WHERE version = ?
         """,
         (version,))
+    r = q.fetchone()
     return _row_to_release(r) if r else None
 
 
