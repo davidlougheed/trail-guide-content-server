@@ -3,6 +3,7 @@
 # See NOTICE for more information.
 
 import json
+import os.path
 import sqlite3
 
 from collections import defaultdict
@@ -501,13 +502,21 @@ def delete_layer(layer_id):
 
 
 # Nothing to transform
-_row_to_release = dict
+def _row_to_release(row: sqlite3.Row):
+    r = dict(row)
+    if not r["bundle_size"]:
+        # Get bundle size manually for pre-0.11.0 bundles
+        try:
+            r["bundle_size"] = os.path.getsize(r["bundle_path"])
+        except FileNotFoundError:
+            pass  # No bundle found on FS anymore, leave it null
+    return r
 
 
 def get_releases():
     c = get_db().cursor()
     q = c.execute("""
-        SELECT version, release_notes, bundle_path, submitted_dt, published_dt
+        SELECT version, release_notes, bundle_path, bundle_size, submitted_dt, published_dt
         FROM releases
         ORDER BY version DESC
     """)
@@ -518,12 +527,11 @@ def get_release(version: int):
     c = get_db().cursor()
     q = c.execute(
         """
-        SELECT version, release_notes, bundle_path, submitted_dt, published_dt 
+        SELECT version, release_notes, bundle_path, bundle_size, submitted_dt, published_dt 
         FROM releases 
         WHERE version = ?
         """,
         (version,))
-    r = q.fetchone()
     return _row_to_release(r) if r else None
 
 
@@ -544,17 +552,19 @@ def set_release(version: Optional[int], data: dict, commit: bool = True) -> Opti
         c.execute(
             """
             UPDATE releases 
-            SET release_notes = ?, bundle_path = ?, submitted_dt = ?, published_dt = ?
+            SET release_notes = ?, bundle_path = ?, bundle_size = ?, submitted_dt = ?, published_dt = ?
             WHERE version = ?
             """,
-            (data["release_notes"], data["bundle_path"], data["submitted_dt"], data["published_dt"], version))
+            (data["release_notes"], data["bundle_path"], data.get("bundle_size"), data["submitted_dt"],
+             data["published_dt"], version))
     else:
         c.execute(
             """
-            INSERT INTO releases (release_notes, bundle_path, submitted_dt, published_dt) 
-            VALUES (?, ?, ?, ?)
+            INSERT INTO releases (release_notes, bundle_path, bundle_size, submitted_dt, published_dt) 
+            VALUES (?, ?, ?, ?, ?)
             """,
-            (data["release_notes"], data["bundle_path"], data["submitted_dt"], data["published_dt"]))
+            (data["release_notes"], data["bundle_path"], data.get("bundle_size"), data["submitted_dt"],
+             data["published_dt"]))
         version = c.lastrowid
 
     if commit:

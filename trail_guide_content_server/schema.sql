@@ -197,6 +197,8 @@ CREATE TABLE IF NOT EXISTS releases (
     release_notes TEXT NOT NULL,
 
     bundle_path TEXT NOT NULL,
+    -- bundle size in bytes, NULL is for legacy reasons/migrations:
+    bundle_size INTEGER CHECK (bundle_size IS NULL OR bundle_size >= 0),
 
     submitted_dt TEXT NOT NULL,  -- ISO date + time
     published_dt TEXT   -- ISO date + time; NULL if not published yet

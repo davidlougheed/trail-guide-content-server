@@ -517,9 +517,12 @@ def releases():
 
         try:
             c.execute("BEGIN TRANSACTION")  # Put SQLite into manual commit mode
+            # First insert the row with no bundle create, to trigger any early errors and rollback if necessary
+            # without wasting disk space.
             r = set_release(None, r, commit=False)
-            make_release_bundle(r, bundle_path)
-            db.commit()
+            r["bundle_size"] = make_release_bundle(r, bundle_path)  # Side effect: write bundle file
+            r = set_release(r["version"], r, commit=False)  # Update release row with bundle size
+            db.commit()  # Finally, commit
         except Exception as e:
             print("Warning: encountered exception while making bundle", e, file=sys.stderr)
             traceback.print_exc()

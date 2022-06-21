@@ -33,7 +33,7 @@ def make_bundle_path() -> pathlib.Path:
     return pathlib.Path(current_app.config["BUNDLE_DIR"]) / f"{str(uuid.uuid4())}.zip"
 
 
-def make_release_bundle(release: dict, final_bundle_path: pathlib.Path):
+def make_release_bundle(release: dict, final_bundle_path: pathlib.Path) -> int:
     assets_to_include = get_assets(filter_disabled=True)
 
     asset_js, _ = make_asset_list(assets_to_include, as_js=True)
@@ -99,3 +99,5 @@ def make_release_bundle(release: dict, final_bundle_path: pathlib.Path):
                         f"assets/{asset['asset_type']}/{asset['file_name']}")
 
         shutil.copyfile(bundle_path, final_bundle_path)
+
+    return os.path.getsize(final_bundle_path)
