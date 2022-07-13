@@ -148,7 +148,6 @@ def stations_detail(station_id: str):
     if s is None:
         return {"message": f"Could not find station with ID {station_id}"}, 404
 
-    # TODO: Delete
     if request.method == "DELETE":
         station_model.delete_obj(station_id)
         return jsonify({"message": "Deleted."})

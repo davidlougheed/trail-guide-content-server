@@ -13,11 +13,11 @@ setup(
         "click>=8.1.3,<8.2",
         "Flask>=2.1.2,<2.2",
         "Flask-Cors>=3.0.10,<3.1",
-        "jsonschema>=4.6.0,<4.7",
+        "jsonschema>=4.7.2,<4.8",
         "PyJWT[crypto]>=2.4.0,<2.5",
         "python-dotenv>=0.20.0,<0.21",
         "qrcode[pil]>=7.3.0,<8",
-        "requests>=2.28.0,<2.29",
+        "requests>=2.28.1,<2.29",
         "Werkzeug>=2.1.2,<2.2",
     ],
 
