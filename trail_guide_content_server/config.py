@@ -37,7 +37,7 @@ _config_vars_and_defaults = {
     "BUNDLE_DIR": (str, DEFAULT_BUNDLE_DIR),
     "DATABASE": (str, DEFAULT_DB),
 
-    "MAX_CONTENT_LENGTH": (int, 5 * (1024 ** 2)),  # 5 MB maximum upload size
+    "MAX_CONTENT_LENGTH": (int, 10 * (1024 ** 2)),  # 10 MB maximum upload size
 
     "AUTH_AUDIENCE": (str, ""),
     "AUTH_ISSUER": (str, ""),
