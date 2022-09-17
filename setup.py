@@ -11,14 +11,14 @@ setup(
     python_requires="~=3.10",
     install_requires=[
         "click>=8.1.3,<8.2",
-        "Flask>=2.1.2,<2.2",
+        "Flask>=2.2.2,<2.3",
         "Flask-Cors>=3.0.10,<3.1",
-        "jsonschema>=4.7.2,<4.8",
+        "jsonschema>=4.16.0,<4.17",
         "PyJWT[crypto]>=2.4.0,<2.5",
-        "python-dotenv>=0.20.0,<0.21",
+        "python-dotenv>=0.21.0,<0.22",
         "qrcode[pil]>=7.3.0,<8",
         "requests>=2.28.1,<2.29",
-        "Werkzeug>=2.1.2,<2.2",
+        "Werkzeug>=2.2.2,<2.3",
     ],
 
     description="A server for storing content for a trail guide app.",
