@@ -33,6 +33,7 @@ from .db import (
     get_assets,
     get_asset,
     set_asset,
+    delete_asset,
 
     page_model,
     modal_model,
@@ -240,7 +241,10 @@ def asset_detail(asset_id):
         return {"message": f"Could not find asset with ID {asset_id}"}, 404
 
     if request.method == "DELETE":
-        # TODO: Delete object and bytes
+        asset_path = pathlib.Path(current_app.config["ASSET_DIR"]) / a["file_name"]
+        if asset_path.exists():
+            asset_path.unlink()
+        delete_asset(asset_id)
         return jsonify({"message": "Deleted."})
 
     if request.method == "PUT":

@@ -27,6 +27,7 @@ __all__ = [
     "get_assets",
     "get_asset",
     "set_asset",
+    "delete_asset",
 
     "page_model",
 
@@ -372,7 +373,7 @@ def get_assets(filter_disabled: bool = False) -> list[dict]:
     c = get_db().cursor()
     q = c.execute(f"""
         SELECT id, asset_type, file_name, file_size, sha1_checksum, enabled
-        FROM assets {'WHERE enabled = 1' if filter_disabled else ''}
+        FROM assets WHERE deleted = 0 {'AND enabled = 1' if filter_disabled else ''}
     """)
     return [_row_to_asset(r) for r in q.fetchall()]
 
@@ -382,7 +383,7 @@ def get_asset(asset_id: str) -> Optional[dict]:
     q = c.execute(
         """
         SELECT id, asset_type, file_name, file_size, sha1_checksum, enabled FROM assets
-        WHERE id = ?
+        WHERE id = ? AND deleted = 0
         """, (asset_id,))
     r = q.fetchone()
     return _row_to_asset(r) if r else None
@@ -392,12 +393,23 @@ def set_asset(asset_id: str, data: dict) -> dict:
     db = get_db()
     c = db.cursor()
     c.execute("""
-        INSERT OR REPLACE INTO assets (id, asset_type, file_name, file_size, sha1_checksum, enabled)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT OR REPLACE INTO assets (id, asset_type, file_name, file_size, sha1_checksum, enabled, deleted)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
     """, (asset_id, data["asset_type"], data["file_name"], data["file_size"], data["sha1_checksum"],
           int(data["enabled"])))
     db.commit()
     return get_asset(asset_id)
+
+
+def delete_asset(asset_id: str):
+    obj = get_asset(asset_id)
+    if not obj:
+        return
+
+    db = get_db()
+    c = db.cursor()
+    c.execute("UPDATE assets SET deleted = 1 WHERE id = ?", (asset_id,))
+    db.commit()
 
 
 page_content_fields = (
