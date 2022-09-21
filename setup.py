@@ -4,9 +4,12 @@ from setuptools import setup, find_packages
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+with open("./trail_guide_content_server/VERSION", "r") as vf:
+    version = vf.read().strip()
+
 setup(
     name="trail_guide_content_server",
-    version="0.12.0",
+    version=version,
 
     python_requires="~=3.10",
     install_requires=[

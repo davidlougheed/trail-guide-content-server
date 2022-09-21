@@ -13,6 +13,7 @@ from datetime import datetime, timedelta, timezone
 from flask import Blueprint, jsonify, current_app, request, Response, send_file
 from werkzeug.utils import secure_filename
 
+from . import __version__
 from .assets import detect_asset_type, make_asset_list
 from .auth import requires_auth, SCOPE_READ_CONTENT, SCOPE_READ_RELEASES, SCOPE_MANAGE_CONTENT, SCOPE_EDIT_RELEASES
 from .bundles import make_bundle_path, make_release_bundle
@@ -84,6 +85,18 @@ def err_validation_failed(errs):
         "message": "Object validation failed",
         "errors": [str(e) for e in errs],
     }), status=400)
+
+
+@api_v1.route("/service", methods=["GET"])
+def service_info():
+    return {
+        "version": __version__,
+    }
+
+
+@api_v1.route("/config", methods=["GET"])
+def config():
+    return jsonify(public_config)
 
 
 @api_v1.route("/categories", methods=["GET"])
@@ -628,11 +641,6 @@ def settings():
         s = set_settings({str(k): v for k, v in request.json.items()})
 
     return jsonify(s)
-
-
-@api_v1.route("/config", methods=["GET"])
-def config():
-    return jsonify(public_config)
 
 
 @api_v1.route("/feedback", methods=["GET", "POST"])

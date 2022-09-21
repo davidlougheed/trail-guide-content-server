@@ -19,7 +19,7 @@ DEFAULT_DB = pathlib.Path(__file__).parent.parent.resolve() / "data" / "db.sqlit
 
 load_dotenv()
 
-_public_config_values = {
+_public_config_values: set[str] = {
     "MAX_CONTENT_LENGTH",
     "AUTH_AUDIENCE",
     "AUTH_ISSUER",
