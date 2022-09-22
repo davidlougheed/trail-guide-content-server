@@ -87,7 +87,7 @@ def err_validation_failed(errs):
     }), status=400)
 
 
-@api_v1.route("/service", methods=["GET"])
+@api_v1.route("/info", methods=["GET"])
 def service_info():
     return {
         "version": __version__,
