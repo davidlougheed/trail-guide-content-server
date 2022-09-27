@@ -10,7 +10,7 @@ import traceback
 import uuid
 
 from datetime import datetime, timedelta, timezone
-from flask import Blueprint, jsonify, current_app, request, Response, send_file
+from flask import after_this_request, Blueprint, jsonify, current_app, request, Response, send_file
 from werkzeug.utils import secure_filename
 
 from . import __version__
@@ -506,6 +506,22 @@ def layers_detail(layer_id: str):
         layer = set_layer(layer_id, layer)
 
     return jsonify(layer)
+
+
+@api_v1.route("/ad-hoc-bundle", methods=["GET"])
+@requires_auth(read_scopes=(SCOPE_READ_CONTENT, SCOPE_READ_RELEASES))
+def ad_hoc_bundle():
+    rel = get_latest_release()
+
+    bundle_path = make_bundle_path()
+    make_release_bundle(rel, bundle_path)
+
+    @after_this_request
+    def remove_file(res):
+        bundle_path.unlink(missing_ok=True)
+        return res
+
+    return send_file(bundle_path, mimetype="application/zip", as_attachment=True)
 
 
 @api_v1.route("/releases", methods=["GET", "POST"])
