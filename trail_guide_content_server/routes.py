@@ -183,6 +183,15 @@ def stations_detail(station_id: str):
     return jsonify(s)
 
 
+@api_v1.route("/stations/<string:station_id>/revision/<int:revision_id>", methods=["GET"])
+@requires_auth()
+def stations_revision(station_id: str, revision_id: int):
+    s = station_model.get_one(station_id, revision=revision_id)
+    if s is None:
+        return {"message": f"Could not find either station {station_id} or revision {revision_id}"}, 404
+    return jsonify(s)
+
+
 @api_v1.route("/stations/<string:station_id>/qr", methods=["GET"])
 def stations_qr(station_id: str):
     s = station_model.get_one(station_id)

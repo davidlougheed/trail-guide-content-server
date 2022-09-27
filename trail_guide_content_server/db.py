@@ -88,19 +88,30 @@ class ModelWithRevision:
             },
         }
 
-    def get_one(self, obj_id: Any, include_deleted: bool = False) -> Optional[dict]:
+    def get_one(self, obj_id: Any, include_deleted: bool = False, revision: Optional[int] = None) -> Optional[dict]:
         db = get_db()
         c = db.cursor()
 
-        obj = c.execute(
-            f"""
-            SELECT td.id AS id, td.revision AS revision, revision_dt, revision_msg, {', '.join(self.get_fields)} 
-            FROM {self.table} AS td INNER JOIN {self.table}_current_revision AS cr
-                ON td.id = cr.id AND td.revision = cr.revision
-            WHERE td.id = ?{'' if include_deleted else ' AND deleted = 0'}
-            """,
-            (obj_id,)
-        ).fetchone()
+        if revision is None:
+            obj = c.execute(
+                f"""
+                SELECT td.id AS id, td.revision AS revision, revision_dt, revision_msg, {', '.join(self.get_fields)} 
+                FROM {self.table} AS td INNER JOIN {self.table}_current_revision AS cr
+                    ON td.id = cr.id AND td.revision = cr.revision
+                WHERE td.id = ?{'' if include_deleted else ' AND deleted = 0'}
+                """,
+                (obj_id,)
+            ).fetchone()
+        else:
+            # Otherwise, return specified revision
+            obj = c.execute(
+                f"""
+                SELECT td.id AS id, td.revision AS revision, revision_dt, revision_msg, {', '.join(self.get_fields)} 
+                FROM {self.table} AS td 
+                WHERE td.id = ? AND td.revision = ?{'' if include_deleted else ' AND deleted = 0'}
+                """,
+                (obj_id, revision)
+            ).fetchone()
 
         return self.row_to_dict(obj) if obj else None
 
