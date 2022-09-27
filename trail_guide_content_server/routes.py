@@ -407,11 +407,20 @@ def pages_detail(page_id: str):
     return jsonify(p)
 
 
+@api_v1.route("/pages/<string:page_id>/revision/<int:revision_id>", methods=["GET"])
+@requires_auth()
+def pages_revision(page_id: str, revision_id: int):
+    p = page_model.get_one(page_id, revision=revision_id)
+    if p is None:
+        return {"message": f"Could not find either page {page_id} or revision {revision_id}"}, 404
+    return jsonify(p)
+
+
 @api_v1.route("/pages/<string:page_id>/qr", methods=["GET"])
 def pages_qr(page_id: str):
-    s = page_model.get_one(page_id)
+    p = page_model.get_one(page_id)
 
-    if s is None:
+    if p is None:
         return current_app.response_class(status=404)
 
     r = current_app.response_class(make_page_qr(page_id))
@@ -466,6 +475,15 @@ def modals_detail(modal_id: str):
 
         m = modal_model.set_obj(modal_id, m)
 
+    return jsonify(m)
+
+
+@api_v1.route("/modals/<string:modal_id>/revision/<int:revision_id>", methods=["GET"])
+@requires_auth()
+def modals_revision(modal_id: str, revision_id: int):
+    m = modal_model.get_one(modal_id, revision=revision_id)
+    if m is None:
+        return {"message": f"Could not find either modal {modal_id} or revision {revision_id}"}, 404
     return jsonify(m)
 
 
