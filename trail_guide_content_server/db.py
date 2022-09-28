@@ -405,7 +405,7 @@ def set_asset(asset_id: str, data: dict) -> dict:
     c = db.cursor()
     c.execute("""
         INSERT OR REPLACE INTO assets (id, asset_type, file_name, file_size, sha1_checksum, enabled)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?)
     """, (asset_id, data["asset_type"], data["file_name"], data["file_size"], data["sha1_checksum"],
           int(data["enabled"])))
     db.commit()
