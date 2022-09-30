@@ -249,6 +249,7 @@ def _row_to_station(r: Row, prefix: str = "") -> dict:
         "long_title": r[p("long_title")],
         "subtitle": r[p("subtitle")],
         "coordinates_utm": {
+            "crs": r[p("coordinates_utm_crs")],
             "zone": r[p("coordinates_utm_zone")],
             **({"east": int(c_ew[:-1])} if c_ew[-1] == "E" else {"west": int(c_ew[:-1])}),
             **({"north": int(c_ns[:-1])} if c_ns[-1] == "N" else {"south": int(c_ns[:-1])}),
@@ -272,6 +273,7 @@ def _station_data_to_insert_tuple(data: dict):
         data["long_title"],
         data["subtitle"],
 
+        data["coordinates_utm"]["crs"],
         data["coordinates_utm"]["zone"],
 
         # UTM Coordinates; these should be guaranteed to be set from the JSON schema checking earlier
@@ -297,6 +299,7 @@ station_content_fields = (
     "title",
     "long_title",
     "subtitle",
+    "coordinates_utm_crs",
     "coordinates_utm_zone",
     "coordinates_utm_ew",
     "coordinates_utm_ns",

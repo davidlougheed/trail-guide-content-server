@@ -40,7 +40,8 @@ CREATE TABLE IF NOT EXISTS stations (
     long_title TEXT NOT NULL DEFAULT '',
     subtitle TEXT NOT NULL,
 
-    coordinates_utm_zone TEXT NOT NULL DEFAULT '18N',
+    coordinates_utm_crs TEXT NOT NULL DEFAULT 'NAD83',
+    coordinates_utm_zone TEXT NOT NULL DEFAULT '18T',
     coordinates_utm_ew TEXT NOT NULL,
     coordinates_utm_ns TEXT NOT NULL,
 
