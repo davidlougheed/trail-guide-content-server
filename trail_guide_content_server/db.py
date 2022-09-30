@@ -336,6 +336,7 @@ def get_sections_with_stations(enabled_only: bool = False) -> list[dict]:
             st.long_title,
             st.subtitle,
             
+            st.coordinates_utm_crs,
             st.coordinates_utm_zone,
             st.coordinates_utm_ew,
             st.coordinates_utm_ns,
