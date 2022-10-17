@@ -21,7 +21,7 @@ from .assets import detect_asset_type
 from .auth import AuthError
 from .config import config
 from .db import get_db, set_asset, station_model
-from .routes import api_v1, app_dl, well_known
+from .routes import api_v1, well_known
 from .utils import get_file_hash_hex
 
 HREF_PATTERN = re.compile(r"href=\\?\"([A-Za-z0-9/._\-]+)\\?\"")
