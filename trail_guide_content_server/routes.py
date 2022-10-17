@@ -69,10 +69,9 @@ from .object_schemas import (
 from .qr import make_station_qr, make_page_qr
 from .utils import get_file_hash_hex, get_utc_str, request_changed
 
-__all__ = ["api_v1", "app_dl", "well_known"]
+__all__ = ["api_v1", "well_known"]
 
 api_v1 = Blueprint("api", __name__)
-app_dl = Blueprint("app", __name__)
 well_known = Blueprint("well_known", __name__)
 
 err_must_be_object = Response(json.dumps({"message": "Request body must be an object"}), status=400)
@@ -719,6 +718,7 @@ def ott():
     return jsonify(set_ott(new_token, t))
 
 
+# TODO: Move this into app web distribution
 @well_known.route("/apple-app-site-association")
 def asaa():
     return {
@@ -727,15 +727,16 @@ def asaa():
             "details": [{
                 "appID": current_app.config["APPLE_APP_ID"],
                 "paths": [
-                    "/app/modals/*",
-                    "/app/pages/*",
-                    "/app/stations/detail/*",
+                    "/modals/*",
+                    "/pages/*",
+                    "/stations/detail/*",
                 ],
             }],
         },
     }
 
 
+# TODO: move this into app web distribution
 @well_known.route("/assetlinks.json")
 def android_asset_links():
     return jsonify([{
