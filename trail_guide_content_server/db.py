@@ -77,7 +77,7 @@ class ModelWithRevision:
         self._order = order
         self._search_fields = search_fields
 
-    def row_to_dict(self, row: Row):
+    def row_to_dict(self, row: Row) -> dict:
         return {
             **self._row_to_dict_partial(row),
             "id": row["id"],
@@ -190,7 +190,7 @@ class ModelWithRevision:
 
         return self.get_one(obj_id)
 
-    def delete_obj(self, obj_id: Any):
+    def delete_obj(self, obj_id: Any) -> None:
         obj = self.get_one(obj_id)
         if not obj:  # not present or already deleted
             return
@@ -204,7 +204,7 @@ class ModelWithRevision:
 # Access methods
 
 
-def get_categories():
+def get_categories() -> list[str]:
     c = get_db().cursor()
     q = c.execute("SELECT id FROM categories")
     return [r["id"] for r in q.fetchall()]
@@ -267,7 +267,7 @@ def _row_to_station(r: Row, prefix: str = "") -> dict:
     }
 
 
-def _station_data_to_insert_tuple(data: dict):
+def _station_data_to_insert_tuple(data: dict) -> tuple:
     return (
         data["title"],
         data["long_title"],
@@ -495,7 +495,7 @@ def get_layers() -> list[dict]:
     return list(map(_row_to_layer, q))
 
 
-def get_layer(layer_id: str, include_deleted: bool = False):
+def get_layer(layer_id: str, include_deleted: bool = False) -> dict | None:
     c = get_db().cursor()
     q = c.execute(f"""
         SELECT id, name, geojson, enabled, rank 
@@ -521,7 +521,7 @@ def set_layer(layer_id: str, data: dict) -> Optional[dict]:
     return get_layer(layer_id)
 
 
-def delete_layer(layer_id):
+def delete_layer(layer_id) -> None:
     db = get_db()
     c = db.cursor()
     c.execute("UPDATE layers SET deleted = 1 WHERE id = ?", (layer_id,))
@@ -529,7 +529,7 @@ def delete_layer(layer_id):
 
 
 # Nothing to transform
-def _row_to_release(row: sqlite3.Row):
+def _row_to_release(row: sqlite3.Row) -> dict:
     r = dict(row)
     if not r["bundle_size"]:
         # Get bundle size manually for pre-0.11.0 bundles
@@ -540,7 +540,7 @@ def _row_to_release(row: sqlite3.Row):
     return r
 
 
-def get_releases():
+def get_releases() -> list[dict]:
     c = get_db().cursor()
     q = c.execute("""
         SELECT version, release_notes, bundle_path, bundle_size, submitted_dt, published_dt
@@ -550,7 +550,7 @@ def get_releases():
     return list(map(_row_to_release, q))
 
 
-def get_release(version: int):
+def get_release(version: int) -> dict | None:
     c = get_db().cursor()
     q = c.execute(
         """
@@ -563,7 +563,7 @@ def get_release(version: int):
     return _row_to_release(r) if r else None
 
 
-def get_latest_release():
+def get_latest_release() -> dict | None:
     c = get_db().cursor()
     q = c.execute("SELECT MAX(version) AS latest_version FROM releases")
     r = q.fetchone()
@@ -601,13 +601,13 @@ def set_release(version: Optional[int], data: dict, commit: bool = True) -> Opti
     return get_release(version)
 
 
-def get_settings() -> dict:
+def get_settings() -> dict[str, str]:
     c = get_db().cursor()
     q = c.execute("SELECT setting_key, setting_value FROM settings")
     return {r[0]: r[1] for r in q.fetchall()}
 
 
-def set_settings(data: dict) -> dict:
+def set_settings(data: dict[str, str]) -> dict[str, str]:
     db = get_db()
     c = db.cursor()
     for k, v in data.items():
@@ -634,7 +634,7 @@ def get_feedback_items() -> list[dict]:
     return list(map(_row_to_feedback, q.fetchall()))
 
 
-def get_feedback_item(feedback_id: str) -> dict:
+def get_feedback_item(feedback_id: str) -> dict | None:
     c = get_db().cursor()
     q = c.execute("SELECT id, from_name, from_email, content, submitted FROM feedback WHERE id = ?", (feedback_id,))
     r = q.fetchone()
@@ -648,14 +648,18 @@ def set_feedback_item(feedback_id: str, data: dict) -> dict:
         "INSERT OR REPLACE INTO feedback (id, from_name, from_email, content, submitted) VALUES (?, ?, ?, ?, ?)",
         (feedback_id, data["from"]["name"], data["from"]["email"], data["content"], data["submitted"]))
     db.commit()
-    return get_feedback_item(feedback_id)
+
+    if fb := get_feedback_item(feedback_id):
+        return fb
+
+    raise Exception(f"Something went very wrong: feedback item '{feedback_id}' did not save correctly")
 
 
 # Nothing to transform here
 _tuple_to_ott = dict
 
 
-def get_ott(token: str):
+def get_ott(token: str) -> dict | None:
     c = get_db().cursor()
     q = c.execute("SELECT token, scope, expiry FROM one_time_tokens WHERE token = ?", (token,))
     r = q.fetchone()
@@ -669,4 +673,8 @@ def set_ott(token: str, data: dict) -> dict:
         "INSERT OR REPLACE INTO one_time_tokens (token, scope, expiry) VALUES (?, ?, ?)",
         (token, data["scope"], data["expiry"]))
     db.commit()
-    return get_ott(token)
+
+    if ott := get_ott(token):
+        return ott
+
+    raise Exception(f"Something went very wrong: OTT did not save correctly")
