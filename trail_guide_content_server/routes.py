@@ -18,37 +18,6 @@ from .assets import detect_asset_type, make_asset_list
 from .auth import requires_auth, SCOPE_READ_CONTENT, SCOPE_READ_RELEASES, SCOPE_MANAGE_CONTENT, SCOPE_EDIT_RELEASES
 from .bundles import make_bundle_path, make_release_bundle
 from .config import public_config
-from .db import (
-    get_db,
-
-    station_model,
-
-    get_asset_types,
-    get_asset,
-    set_asset,
-    delete_asset,
-
-    page_model,
-    modal_model,
-
-    get_layers,
-    get_layer,
-    set_layer,
-    delete_layer,
-
-    get_releases,
-    get_release,
-    get_latest_release,
-    set_release,
-
-    get_settings,
-    set_settings,
-
-    get_feedback_items,
-    set_feedback_item,
-
-    set_ott,
-)
 from .object_schemas import (
     section_validator,
     station_validator,
@@ -185,7 +154,7 @@ def stations_revision(station_id: str, revision_id: int):
 
 @api_v1.route("/stations/<string:station_id>/qr", methods=["GET"])
 def stations_qr(station_id: str):
-    s = station_model.get_one(station_id)
+    s = db.station_model.get_one(station_id)
 
     if s is None:
         return current_app.response_class(status=404)
@@ -202,7 +171,7 @@ def stations_qr(station_id: str):
 @api_v1.route("/asset_types", methods=["GET"])
 @requires_auth()
 def asset_types():
-    return jsonify(get_asset_types())
+    return jsonify(db.get_asset_types())
 
 
 @api_v1.route("/assets", methods=["GET", "POST"])
@@ -221,7 +190,7 @@ def asset_list():
         file_name = f"{int(datetime.now().timestamp() * 1000)}-{secure_filename(file.filename)}"
         file_path = pathlib.Path(current_app.config["ASSET_DIR"]) / file_name
 
-        get_db()  # Make sure the DB can be initialized before we start doing file stuff
+        db.get_db()  # Make sure the DB can be initialized before we start doing file stuff
 
         file.save(file_path)
 
@@ -238,7 +207,7 @@ def asset_list():
         if errs:
             return err_validation_failed(errs)
 
-        return jsonify(set_asset(a["id"], a))
+        return jsonify(db.set_asset(a["id"], a))
 
     only_used = request.args.get("only_used", "").strip() != ""
     as_js = request.args.get("as_js", "").strip() != ""
@@ -250,7 +219,7 @@ def asset_list():
 @api_v1.route("/assets/<string:asset_id>", methods=["GET", "PUT", "DELETE"])
 @requires_auth()
 def asset_detail(asset_id):
-    a = get_asset(asset_id)
+    a = db.get_asset(asset_id)
 
     if a is None:
         return {"message": f"Could not find asset with ID {asset_id}"}, 404
@@ -259,7 +228,7 @@ def asset_detail(asset_id):
         asset_path = pathlib.Path(current_app.config["ASSET_DIR"]) / a["file_name"]
         if asset_path.exists():
             asset_path.unlink()
-        delete_asset(asset_id)
+        db.delete_asset(asset_id)
         return jsonify({"message": "Deleted."})
 
     if request.method == "PUT":
@@ -290,7 +259,7 @@ def asset_detail(asset_id):
             file_name = f"{''.join(file_parts[:-1])}-{int(datetime.now().timestamp() * 1000)}.{file_parts[-1]}"
             file_path = asset_dir / file_name
 
-            get_db()  # Make sure the DB can be initialized before we start doing file stuff
+            db.get_db()  # Make sure the DB can be initialized before we start doing file stuff
 
             old_file_name = a["file_name"]
             file.save(file_path)
@@ -311,7 +280,7 @@ def asset_detail(asset_id):
             if errs := list(asset_validator.iter_errors(a)):
                 return err_validation_failed(errs)
 
-        a = set_asset(asset_id, a)
+        a = db.set_asset(asset_id, a)
 
     return jsonify(a)
 
@@ -320,9 +289,9 @@ def asset_detail(asset_id):
 @requires_auth()
 def asset_usage(asset_id: str):
     return {
-        "modals": modal_model.get_asset_usage(asset_id),
-        "pages": page_model.get_asset_usage(asset_id),
-        "stations": station_model.get_asset_usage(asset_id),
+        "modals": db.modal_model.get_asset_usage(asset_id),
+        "pages": db.page_model.get_asset_usage(asset_id),
+        "stations": db.station_model.get_asset_usage(asset_id),
     }
 
 
@@ -357,7 +326,7 @@ def _get_content_type(asset_type: str, file_ext: str) -> str:
 
 @api_v1.route("/assets/<string:asset_id>/bytes", methods=["GET"])
 def assets_bytes(asset_id: str):
-    a = get_asset(asset_id)
+    a = db.get_asset(asset_id)
 
     if a is None:
         return {"message": f"Could not find asset with ID {asset_id}"}, 404
@@ -381,14 +350,14 @@ def assets_bytes(asset_id: str):
 @api_v1.route("/pages", methods=["GET"])
 @requires_auth()
 def pages():
-    return jsonify(page_model.get_all())
+    return jsonify(db.page_model.get_all())
 
 
 # TODO: Delete page functionality when create page is done
 @api_v1.route("/pages/<string:page_id>", methods=["GET", "PUT"])
 @requires_auth()
 def pages_detail(page_id: str):
-    p = page_model.get_one(page_id)
+    p = db.page_model.get_one(page_id)
 
     if p is None:
         return {"message": f"Could not find page with ID {page_id}"}, 404
@@ -405,7 +374,7 @@ def pages_detail(page_id: str):
         if errs := list(section_validator.iter_errors(p)):
             return err_validation_failed(errs)
 
-        p = page_model.set_obj(page_id, p)
+        p = db.page_model.set_obj(page_id, p)
 
     return jsonify(p)
 
@@ -413,7 +382,7 @@ def pages_detail(page_id: str):
 @api_v1.route("/pages/<string:page_id>/revision/<int:revision_id>", methods=["GET"])
 @requires_auth()
 def pages_revision(page_id: str, revision_id: int):
-    p = page_model.get_one(page_id, revision=revision_id)
+    p = db.page_model.get_one(page_id, revision=revision_id)
     if p is None:
         return {"message": f"Could not find either page {page_id} or revision {revision_id}"}, 404
     return jsonify(p)
@@ -421,7 +390,7 @@ def pages_revision(page_id: str, revision_id: int):
 
 @api_v1.route("/pages/<string:page_id>/qr", methods=["GET"])
 def pages_qr(page_id: str):
-    p = page_model.get_one(page_id)
+    p = db.page_model.get_one(page_id)
 
     if p is None:
         return current_app.response_class(status=404)
@@ -447,21 +416,21 @@ def modals():
         if errs := list(modal_validator.iter_errors(m)):
             return err_validation_failed(errs)
 
-        return jsonify(modal_model.set_obj(m["id"], m))
+        return jsonify(db.modal_model.set_obj(m["id"], m))
 
-    return jsonify(modal_model.get_all())
+    return jsonify(db.modal_model.get_all())
 
 
 @api_v1.route("/modals/<string:modal_id>", methods=["DELETE", "GET", "PUT"])
 @requires_auth()
 def modals_detail(modal_id: str):
-    m = modal_model.get_one(modal_id)
+    m = db.modal_model.get_one(modal_id)
 
     if m is None:
         return {"message": f"Could not find modal with ID {modal_id}"}, 404
 
     if request.method == "DELETE":
-        modal_model.delete_obj(modal_id)
+        db.modal_model.delete_obj(modal_id)
         return jsonify({"message": "Deleted."})
 
     if request.method == "PUT":
@@ -476,7 +445,7 @@ def modals_detail(modal_id: str):
         if errs := list(modal_validator.iter_errors(m)):
             return err_validation_failed(errs)
 
-        m = modal_model.set_obj(modal_id, m)
+        m = db.modal_model.set_obj(modal_id, m)
 
     return jsonify(m)
 
@@ -484,7 +453,7 @@ def modals_detail(modal_id: str):
 @api_v1.route("/modals/<string:modal_id>/revision/<int:revision_id>", methods=["GET"])
 @requires_auth()
 def modals_revision(modal_id: str, revision_id: int):
-    m = modal_model.get_one(modal_id, revision=revision_id)
+    m = db.modal_model.get_one(modal_id, revision=revision_id)
     if m is None:
         return {"message": f"Could not find either modal {modal_id} or revision {revision_id}"}, 404
     return jsonify(m)
@@ -503,21 +472,21 @@ def layers():
         if errs:
             return err_validation_failed(errs)
 
-        return jsonify(set_layer(layer["id"], layer))
+        return jsonify(db.set_layer(layer["id"], layer))
 
-    return jsonify(get_layers())
+    return jsonify(db.get_layers())
 
 
 @api_v1.route("/layers/<string:layer_id>", methods=["DELETE", "GET", "PUT"])
 @requires_auth()
 def layers_detail(layer_id: str):
-    layer = get_layer(layer_id)
+    layer = db.get_layer(layer_id)
 
     if layer is None:  # doesn't exist, or deleted
         return {"message": f"Could not find layer with ID {layer_id}"}, 404
 
     if request.method == "DELETE":
-        delete_layer(layer_id)
+        db.delete_layer(layer_id)
         return jsonify({"message": "Deleted."})
 
     if request.method == "PUT":
@@ -533,7 +502,7 @@ def layers_detail(layer_id: str):
         if errs:
             return err_validation_failed(errs)
 
-        layer = set_layer(layer_id, layer)
+        layer = db.set_layer(layer_id, layer)
 
     return jsonify(layer)
 
@@ -541,7 +510,7 @@ def layers_detail(layer_id: str):
 @api_v1.route("/ad-hoc-bundle", methods=["GET"])
 @requires_auth(read_scopes=(SCOPE_READ_CONTENT, SCOPE_READ_RELEASES))
 def ad_hoc_bundle():
-    rel = get_latest_release()
+    rel = db.get_latest_release()
 
     bundle_path = make_bundle_path()
     make_release_bundle(rel, bundle_path)
@@ -574,21 +543,21 @@ def releases():
         if errs := list(release_validator.iter_errors(r)):
             return err_validation_failed(errs)
 
-        db = get_db()
-        c = db.cursor()
+        dbc = db.get_db()
+        c = dbc.cursor()
 
         try:
             c.execute("BEGIN TRANSACTION")  # Put SQLite into manual commit mode
             # First insert the row with no bundle create, to trigger any early errors and rollback if necessary
             # without wasting disk space.
-            r = set_release(None, r, commit=False)
+            r = db.set_release(None, r, commit=False)
             r["bundle_size"] = make_release_bundle(r, bundle_path)  # Side effect: write bundle file
-            r = set_release(r["version"], r, commit=False)  # Update release row with bundle size
-            db.commit()  # Finally, commit
+            r = db.set_release(r["version"], r, commit=False)  # Update release row with bundle size
+            dbc.commit()  # Finally, commit
         except Exception as e:
             print("Warning: encountered exception while making bundle", e, file=sys.stderr)
             traceback.print_exc()
-            db.rollback()
+            dbc.rollback()
             return {
                 "message": "Error encountered while generating release",
                 "errors": [traceback.format_exc()],
@@ -596,14 +565,14 @@ def releases():
 
         return jsonify(r)
 
-    return jsonify(get_releases())
+    return jsonify(db.get_releases())
 
 
 @api_v1.route("/releases/<int:version>", methods=["GET", "PUT"])
 @requires_auth(read_scopes=(SCOPE_READ_CONTENT, SCOPE_READ_RELEASES),
                alter_scopes=(SCOPE_MANAGE_CONTENT, SCOPE_EDIT_RELEASES))
 def releases_detail(version: int):
-    r = get_release(version)
+    r = db.get_release(version)
 
     if r is None:
         return {"message": f"Could not find release {version}"}, 404
@@ -632,7 +601,7 @@ def releases_detail(version: int):
         if errs := list(release_validator.iter_errors(r)):
             return err_validation_failed(errs)
 
-        r = set_release(version, r)
+        r = db.set_release(version, r)
 
     return jsonify(r)
 
@@ -640,7 +609,7 @@ def releases_detail(version: int):
 @api_v1.route("/releases/<int:version>/bundle", methods=["GET"])
 @requires_auth(read_scopes=(SCOPE_READ_CONTENT, SCOPE_READ_RELEASES))
 def releases_bundle(version: int):
-    r = get_release(version)
+    r = db.get_release(version)
 
     if r is None:
         return {"message": f"Could not find release {version}"}, 404
@@ -652,7 +621,7 @@ def releases_bundle(version: int):
 @api_v1.route("/releases/latest", methods=["GET"])
 @requires_auth(read_scopes=(SCOPE_READ_CONTENT, SCOPE_READ_RELEASES))
 def latest_release():
-    r = get_latest_release()
+    r = db.get_latest_release()
 
     if r is None:
         return {"message": f"No releases exist"}, 404
@@ -669,22 +638,22 @@ def search():
         return {"message": "No query specified"}, 400
 
     return {
-        "modals": modal_model.search(q),
-        "pages": page_model.search(q),
-        "stations": station_model.search(q),
+        "modals": db.modal_model.search(q),
+        "pages": db.page_model.search(q),
+        "stations": db.station_model.search(q),
     }
 
 
 @api_v1.route("/settings", methods=["GET", "PUT"])
 @requires_auth()
 def settings():
-    s = get_settings()
+    s = db.get_settings()
 
     if request.method == "PUT":
         if not isinstance(request.json, dict):
             return err_must_be_object
 
-        s = set_settings({str(k): v for k, v in request.json.items()})
+        s = db.set_settings({str(k): v for k, v in request.json.items()})
 
     return jsonify(s)
 
@@ -705,9 +674,9 @@ def feedback():
         if errs := list(feedback_item_validator.iter_errors(f)):
             return err_validation_failed(errs)
 
-        return jsonify(set_feedback_item(f["id"], f))
+        return jsonify(db.set_feedback_item(f["id"], f))
 
-    return jsonify(get_feedback_items())
+    return jsonify(db.get_feedback_items())
 
 
 @api_v1.route("/ott", methods=["POST"])
@@ -719,7 +688,7 @@ def ott():
         "scope": SCOPE_READ_CONTENT,  # Currently: ignore Bearer scope
         "expiry": (datetime.utcnow().replace(microsecond=0, tzinfo=timezone.utc) + timedelta(seconds=60)).isoformat()
     }
-    return jsonify(set_ott(new_token, t))
+    return jsonify(db.set_ott(new_token, t))
 
 
 # TODO: Move this into app web distribution
