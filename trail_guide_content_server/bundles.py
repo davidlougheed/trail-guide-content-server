@@ -12,16 +12,9 @@ import zipfile
 
 from flask import current_app
 
+from . import db
 from .assets import make_asset_list
 from .config import public_config
-from .db import (
-    get_assets,
-    get_layers,
-    modal_model,
-    page_model,
-    get_sections_with_stations,
-    get_settings,
-)
 
 __all__ = [
     "make_bundle_path",
@@ -34,8 +27,7 @@ def make_bundle_path() -> pathlib.Path:
 
 
 def make_release_bundle(release: dict, final_bundle_path: pathlib.Path) -> int:
-    assets_to_include = get_assets(filter_disabled=True)
-
+    assets_to_include = db.get_assets_used()
     asset_js, _ = make_asset_list(assets_to_include, as_js=True)
 
     with tempfile.TemporaryDirectory() as td:
@@ -62,7 +54,7 @@ def make_release_bundle(release: dict, final_bundle_path: pathlib.Path) -> int:
             json.dump(public_config, cfh, indent=2)
 
         with open(layers_path, "w") as lfh:
-            json.dump(get_layers(), lfh, indent=2)
+            json.dump(db.get_layers(), lfh, indent=2)
 
         with open(metadata_path, "w") as mfh:
             json.dump({
@@ -70,16 +62,16 @@ def make_release_bundle(release: dict, final_bundle_path: pathlib.Path) -> int:
             }, mfh, indent=2)
 
         with open(modals_path, "w") as mfh:
-            json.dump({m["id"]: m for m in modal_model.get_all()}, mfh, indent=2)
+            json.dump({m["id"]: m for m in db.modal_model.get_all()}, mfh, indent=2)
 
         with open(pages_path, "w") as pfh:
-            json.dump(page_model.get_all(enabled_only=True), pfh, indent=2)
+            json.dump(db.page_model.get_all(enabled_only=True), pfh, indent=2)
 
         with open(settings_path, "w") as sfh:
-            json.dump(get_settings(), sfh, indent=2)
+            json.dump(db.get_settings(), sfh, indent=2)
 
         with open(stations_path, "w") as sfh:
-            json.dump(get_sections_with_stations(enabled_only=True), sfh, indent=2)
+            json.dump(db.get_sections_with_stations(enabled_only=True), sfh, indent=2)
 
         with open(bundle_path, "wb") as zfh:
             with zipfile.ZipFile(zfh, mode="w") as zf:
