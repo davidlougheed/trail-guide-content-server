@@ -270,6 +270,7 @@ def asset_detail(asset_id):
                 "asset_type": asset_type,
                 "file_name": file_name,
                 "file_size": os.path.getsize(file_path),
+                "sha1_checksum": get_file_hash_hex(file_path),
             }
 
             if errs := list(asset_validator.iter_errors(a)):
