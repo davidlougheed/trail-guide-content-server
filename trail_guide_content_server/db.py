@@ -469,15 +469,53 @@ def _row_to_asset(r: Row) -> dict:
         "file_name": r["file_name"],
         "file_size": r["file_size"],
         "sha1_checksum": r["sha1_checksum"],
-        "enabled": bool(r["enabled"]),
+        "times_used": r["times_used"],
     }
 
 
-def get_assets(filter_disabled: bool = False) -> list[dict]:
+ASSET_USAGE_QUERY = """(
+SELECT COUNT(asset) AS times_used, asset FROM (
+    SELECT asset FROM (
+        SELECT mau.asset 
+        FROM modals_assets_used AS mau 
+        INNER JOIN modals 
+            ON mau.obj = modals.id
+        INNER JOIN modals_current_revision AS cr 
+            ON cr.id = modals.id AND cr.revision = modals.revision 
+        WHERE modals.deleted = 0
+    )
+    UNION ALL
+    SELECT asset FROM (
+        SELECT pau.asset
+        FROM pages_assets_used AS pau
+        INNER JOIN pages 
+            ON pau.obj = pages.id
+        INNER JOIN pages_current_revision AS cr 
+            ON cr.id = pages.id AND cr.revision = pages.revision
+        WHERE pages.deleted = 0 AND pages.enabled = 1
+    )
+    UNION ALL
+    SELECT asset FROM (
+        SELECT sau.asset 
+        FROM stations_assets_used AS sau
+        INNER JOIN stations 
+            ON sau.obj = stations.id
+        INNER JOIN stations_current_revision AS cr 
+            ON cr.id = stations.id AND cr.revision = stations.revision
+        WHERE stations.deleted = 0 AND stations.enabled = 1
+    )
+)
+GROUP BY asset
+)"""
+
+
+def get_assets() -> list[dict]:
     c = get_db().cursor()
     q = c.execute(f"""
-        SELECT id, asset_type, file_name, file_size, sha1_checksum, enabled
-        FROM assets WHERE deleted = 0 {'AND enabled = 1' if filter_disabled else ''}
+        SELECT id, asset_type, file_name, file_size, sha1_checksum, IFNULL(asset_usage.times_used, 0) AS times_used
+        FROM assets LEFT JOIN {ASSET_USAGE_QUERY} AS asset_usage
+        ON assets.id = asset_usage.asset
+        WHERE deleted = 0
     """)
     return [_row_to_asset(r) for r in q.fetchall()]
 
@@ -490,29 +528,8 @@ def get_assets_used() -> list[dict]:
 
     c = get_db().cursor()
     q = c.execute(f"""
-        SELECT id, asset_type, file_name, file_size, sha1_checksum, enabled
-        FROM assets INNER JOIN (
-            SELECT asset FROM (
-                SELECT mau.asset 
-                FROM modals_assets_used AS mau 
-                INNER JOIN modals ON mau.obj = modals.id 
-                WHERE modals.deleted = 0
-            ) 
-            UNION
-            SELECT asset FROM (
-                SELECT pau.asset
-                FROM pages_assets_used AS pau
-                INNER JOIN pages ON pau.obj = pages.id
-                WHERE pages.deleted = 0 AND pages.enabled = 1
-            )
-            UNION 
-            SELECT asset FROM (
-                SELECT sau.asset 
-                FROM stations_assets_used AS sau
-                INNER JOIN stations ON sau.obj = stations.id
-                WHERE stations.deleted = 0 AND stations.enabled = 1
-            ) 
-        ) AS asset_usage 
+        SELECT id, asset_type, file_name, file_size, sha1_checksum, times_used
+        FROM assets INNER JOIN {ASSET_USAGE_QUERY} AS asset_usage 
         ON assets.id = asset_usage.asset
         WHERE deleted = 0
     """)
