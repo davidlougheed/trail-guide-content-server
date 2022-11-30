@@ -513,8 +513,8 @@ def get_assets() -> list[dict]:
     c = get_db().cursor()
     q = c.execute(f"""
         SELECT id, asset_type, file_name, file_size, sha1_checksum, IFNULL(asset_usage.times_used, 0) AS times_used
-        FROM assets LEFT JOIN {ASSET_USAGE_QUERY} AS asset_usage
-        ON assets.id = asset_usage.asset
+        FROM assets 
+        LEFT JOIN {ASSET_USAGE_QUERY} AS asset_usage ON assets.id = asset_usage.asset
         WHERE deleted = 0
     """)
     return [_row_to_asset(r) for r in q.fetchall()]
@@ -539,8 +539,10 @@ def get_assets_used() -> list[dict]:
 def get_asset(asset_id: str) -> Optional[dict]:
     c = get_db().cursor()
     q = c.execute(
-        """
-        SELECT id, asset_type, file_name, file_size, sha1_checksum, enabled FROM assets
+        f"""
+        SELECT id, asset_type, file_name, file_size, sha1_checksum, IFNULL(asset_usage.times_used, 0) AS times_used 
+        FROM assets
+        LEFT JOIN {ASSET_USAGE_QUERY} AS asset_usage ON assets.id = asset_usage.asset
         WHERE id = ? AND deleted = 0
         """, (asset_id,))
     r = q.fetchone()
