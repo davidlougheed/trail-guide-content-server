@@ -200,7 +200,7 @@ def asset_list():
             "file_name": file_name,
             "file_size": os.path.getsize(file_path),
             "sha1_checksum": get_file_hash_hex(file_path),
-            "enabled": request.form.get("enabled", "").strip() != "",
+            "times_used": 0,
         }
 
         errs = list(asset_validator.iter_errors(a))
@@ -239,11 +239,6 @@ def asset_detail(asset_id):
         # a document somewhere - which we cannot fix the markup for.
         if request_changed(a["asset_type"], form_data=True, field="asset_type"):
             return {"message": "Cannot change asset type."}, 400
-
-        a = {
-            **a,
-            "enabled": request.form.get("enabled", "").strip() != "",
-        }
 
         if "file" in request.files:
             # Changing file, so handle the upload

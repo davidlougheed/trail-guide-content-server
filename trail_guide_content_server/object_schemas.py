@@ -188,7 +188,7 @@ section_validator = jsonschema.Draft7Validator(SECTION_SCHEMA)
 
 ASSET_SCHEMA = {
     "type": "object",
-    "required": ["id", "asset_type", "file_name", "file_size", "sha1_checksum", "enabled"],
+    "required": ["id", "asset_type", "file_name", "file_size", "sha1_checksum", "times_used"],
     "properties": {
         "id": {
             "type": "string",
@@ -210,8 +210,9 @@ ASSET_SCHEMA = {
             "minLength": 40,
             "maxLength": 40,
         },
-        "enabled": {
-            "type": "boolean",
+        "times_used": {
+            "type": "integer",
+            "minimum": 0,
         },
     },
 }
