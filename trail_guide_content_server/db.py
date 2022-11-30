@@ -4,12 +4,13 @@
 
 import json
 import os.path
+import re
 import sqlite3
 
 from collections import defaultdict
 from flask import current_app, g
 from sqlite3 import Connection, Row  # for typing hints and row factory
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Type
 
 __all__ = [
     "get_db",
@@ -55,6 +56,15 @@ __all__ = [
 ]
 
 
+ASSET_URI_PATTERN_FRAGMENT = r"https?://[a-zA-Z\d.\-_:]{1,127}/api/v1/assets/([a-zA-Z\d\-]{36})/bytes/?"
+ASSET_PATTERN = re.compile(
+    fr'src=\\"({ASSET_URI_PATTERN_FRAGMENT})\\"|'
+    fr'source=\\"({ASSET_URI_PATTERN_FRAGMENT})\\"|'
+    fr'poster=\\"({ASSET_URI_PATTERN_FRAGMENT})\\"|'
+    fr'"asset": ?"([a-z0-9\-]{{36}})"'
+)
+
+
 def get_db() -> Connection:
     db = getattr(g, "_database", None)
     if db is None:
@@ -65,14 +75,30 @@ def get_db() -> Connection:
     return db
 
 
+def map_to_id(rows: list[sqlite3.Row]) -> list[Any]:
+    return [r["id"] for r in rows]
+
+
 # TODO: JSON schema
 class ModelWithRevision:
-    def __init__(self, table: str, get_fields, set_fields, insert_tuple_from_data_fn, row_to_dict, order: str = '',
-                 search_fields: tuple[str, ...] = ("id",)):
+    def __init__(
+        self,
+        table: str,
+        get_fields: tuple[str, ...],
+        set_fields: tuple[str, ...],
+        asset_fields: tuple[str, ...],
+        asset_search_fields: tuple[str, ...],
+        insert_tuple_from_data_fn: Callable[[dict], tuple],
+        row_to_dict: Callable[[Row], dict] | Type[dict],
+        order: str = '',
+        search_fields: tuple[str, ...] = ("id",)
+    ):
         self.table: str = table
         self.get_fields: tuple[str, ...] = get_fields
         self.set_fields: tuple[str, ...] = set_fields
-        self.insert_tuple_from_data_fn: Callable[[dict], tuple] = insert_tuple_from_data_fn
+        self.asset_fields: tuple[str, ...] = asset_fields
+        self.asset_search_fields: tuple[str, ...] = asset_search_fields
+        self.insert_tuple_from_data_fn: Callable[[dict], tuple] | Type[dict] = insert_tuple_from_data_fn
         self._row_to_dict_partial: Callable[[Row], dict] = row_to_dict
         self._order = order
         self._search_fields = search_fields
@@ -165,11 +191,62 @@ class ModelWithRevision:
         cr_num = (current_revision["revision"] + 1) if current_revision else 1
         return cr_num
 
+    def _set_asset_usage(self, c: sqlite3.Cursor, obj_id: Any, revision: int, data: dict) -> None:
+        asset_usages = set()
+
+        for f in self.asset_fields:
+            # TODO: Debug logging
+            if fv := data.get(f):
+                asset_usages.add(fv)
+
+        for f in self.asset_search_fields:
+            if fv := data.get(f):
+                matches = [m[-1] for m in ASSET_PATTERN.findall(json.dumps(fv))]
+                asset_usages.update(set(matches))
+
+        asset_usage_rows = [(obj_id, revision, a) for a in asset_usages if a.strip()]
+        # TODO: Debug logging
+        c.executemany(
+            f"INSERT OR REPLACE INTO {self.table}_assets_used (obj, revision, asset) VALUES (?, ?, ?)",
+            asset_usage_rows)
+
+    def get_asset_usage(self, asset_id: str) -> dict[str, list[Any]]:
+        """
+        Fetch all usages (active and inactive, if relevant) of a particular asset by objects of this model.
+        :param asset_id: ID of the asset to fetch usage details for.
+        :return: A dictionary with keys being either 'active'/'inactive' (the latter is optional)
+                 and a list of object IDs using the asset.
+        """
+
+        has_enabled = "enabled" in self.get_fields
+        c = get_db().cursor()
+
+        def _get_usage(enabled: int = 1) -> list[sqlite3.Row]:
+            c.execute(
+                f"""
+                SELECT td.id AS id FROM {self.table} AS td 
+                    INNER JOIN {self.table}_current_revision AS cr ON td.id = cr.id AND td.revision = cr.revision 
+                    INNER JOIN {self.table}_assets_used AS au ON td.id = au.obj AND cr.revision = au.revision 
+                WHERE au.asset = ? AND td.deleted = 0 AND {'td.enabled = ?' if has_enabled else '1'}
+                """,
+                (asset_id, enabled) if has_enabled else (asset_id,)
+            )
+            return c.fetchall()
+
+        return {
+            "active": map_to_id(_get_usage(1)),
+            **({
+                "inactive": map_to_id(_get_usage(0)),
+            } if "enabled" in self.get_fields else {}),
+        }
+
     def set_obj(self, obj_id: Any, data: dict, extra_fields: tuple[str, ...] = (), extra_data: tuple[Any, ...] = ()):
         db = get_db()
         c = db.cursor()
 
         c.execute("BEGIN EXCLUSIVE TRANSACTION")
+
+        # Insert object into database -----------
 
         cr_num = self._get_new_revision(c, obj_id)
         default_msg = "deleted" if data.get("deleted") else ("updated" if cr_num > 1 else "created")
@@ -186,6 +263,12 @@ class ModelWithRevision:
             f"INSERT OR REPLACE INTO {self.table}_current_revision (id, revision) VALUES (?, ?)",
             (obj_id, cr_num))
 
+        # Collect asset usage -------------------
+
+        self._set_asset_usage(c, obj_id, cr_num, data)
+
+        # Commit --------------------------------
+
         db.commit()
 
         return self.get_one(obj_id)
@@ -199,6 +282,9 @@ class ModelWithRevision:
             **obj,
             "revision": {**obj.get("revision", {}), "message": "deleted"},
         }, extra_fields=("deleted",), extra_data=(1,))
+
+    def __str__(self) -> str:
+        return self.table
 
 
 # Access methods
@@ -316,6 +402,8 @@ station_model = ModelWithRevision(
     "stations",
     station_content_fields,
     station_content_fields,
+    ("header_image",),
+    ("contents",),
     _station_data_to_insert_tuple,
     _row_to_station,
     "ORDER BY section, rank",
@@ -441,6 +529,8 @@ page_model = ModelWithRevision(
     "pages",
     page_content_fields,
     page_content_fields,
+    ("header_image",),
+    ("content",),
     lambda d: (
         d["title"],
         d["icon"],
@@ -473,6 +563,8 @@ modal_model = ModelWithRevision(
     "modals",
     modal_content_fields,
     modal_content_fields,
+    (),
+    ("content",),
     lambda d: (d["title"], d["content"], d["close_text"]),
     dict,
     search_fields=("id", "title"),

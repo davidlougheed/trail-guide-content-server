@@ -29,6 +29,35 @@ INSERT OR IGNORE INTO categories VALUES
     ('research');
 
 
+CREATE TABLE IF NOT EXISTS asset_types (
+    id VARCHAR(31) PRIMARY KEY
+);
+
+-- Pre-populate asset types
+INSERT OR IGNORE INTO asset_types VALUES
+    ('image'),
+    ('audio'),
+    ('video'),
+    ('video_text_track'),
+    ('pdf');
+
+
+CREATE TABLE IF NOT EXISTS assets (
+    id VARCHAR(36) PRIMARY KEY,
+    asset_type VARCHAR(31) NOT NULL,
+    file_name TEXT NOT NULL,
+    file_size INTEGER NOT NULL CHECK (file_size > 0),
+    sha1_checksum VARCHAR(40) NOT NULL,  -- Checksum for checking for duplicates, etc.
+
+    enabled INTEGER NOT NULL CHECK (enabled in (0, 1)),
+
+    -- Deleted -> file is no longer available, but keep record
+    deleted INTEGER NOT NULL CHECK (deleted in (0, 1)) DEFAULT 0,
+
+    FOREIGN KEY (asset_type) REFERENCES asset_types
+);
+
+
 CREATE TABLE IF NOT EXISTS stations (
     id VARCHAR(36),
 
@@ -74,33 +103,15 @@ CREATE TABLE IF NOT EXISTS stations_current_revision (
     FOREIGN KEY (id, revision) REFERENCES stations (id, revision) DEFERRABLE INITIALLY DEFERRED
 );
 
+CREATE TABLE IF NOT EXISTS stations_assets_used (
+    obj VARCHAR(36),
+    revision INTEGER NOT NULL,
+    asset VARCHAR(36),
 
-CREATE TABLE IF NOT EXISTS asset_types (
-    id VARCHAR(31) PRIMARY KEY
-);
+    PRIMARY KEY (obj, revision, asset),
 
--- Pre-populate asset types
-INSERT OR IGNORE INTO asset_types VALUES
-    ('image'),
-    ('audio'),
-    ('video'),
-    ('video_text_track'),
-    ('pdf');
-
-
-CREATE TABLE IF NOT EXISTS assets (
-    id VARCHAR(36) PRIMARY KEY,
-    asset_type VARCHAR(31) NOT NULL,
-    file_name TEXT NOT NULL,
-    file_size INTEGER NOT NULL CHECK (file_size > 0),
-    sha1_checksum VARCHAR(40) NOT NULL,  -- Checksum for checking for duplicates, etc.
-
-    enabled INTEGER NOT NULL CHECK (enabled in (0, 1)),
-
-    -- Deleted -> file is no longer available, but keep record
-    deleted INTEGER NOT NULL CHECK (deleted in (0, 1)) DEFAULT 0,
-
-    FOREIGN KEY (asset_type) REFERENCES asset_types
+    FOREIGN KEY (obj, revision) REFERENCES stations (id, revision) DEFERRABLE INITIALLY DEFERRED,
+    FOREIGN KEY (asset) REFERENCES assets
 );
 
 
@@ -135,6 +146,17 @@ CREATE TABLE IF NOT EXISTS pages_current_revision (
     revision INTEGER NOT NULL,
 
     FOREIGN KEY (id, revision) REFERENCES pages (id, revision) DEFERRABLE INITIALLY DEFERRED
+);
+
+CREATE TABLE IF NOT EXISTS pages_assets_used (
+    obj VARCHAR(36),
+    revision INTEGER NOT NULL,
+    asset VARCHAR(36),
+
+    PRIMARY KEY (obj, revision, asset),
+
+    FOREIGN KEY (obj, revision) REFERENCES pages (id, revision) DEFERRABLE INITIALLY DEFERRED,
+    FOREIGN KEY (asset) REFERENCES assets
 );
 
 -- Pre-populate pages with about page
@@ -177,6 +199,17 @@ CREATE TABLE IF NOT EXISTS modals_current_revision (
     revision INTEGER NOT NULL,
 
     FOREIGN KEY (id, revision) REFERENCES modals (id, revision) DEFERRABLE INITIALLY DEFERRED
+);
+
+CREATE TABLE IF NOT EXISTS modals_assets_used (
+    obj VARCHAR(36),
+    revision INTEGER NOT NULL,
+    asset VARCHAR(36),
+
+    PRIMARY KEY (obj, revision, asset),
+
+    FOREIGN KEY (obj, revision) REFERENCES modals (id, revision) DEFERRABLE INITIALLY DEFERRED,
+    FOREIGN KEY (asset) REFERENCES assets
 );
 
 

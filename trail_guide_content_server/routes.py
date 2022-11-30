@@ -322,6 +322,16 @@ def asset_detail(asset_id):
     return jsonify(a)
 
 
+@api_v1.route("/assets/<string:asset_id>/usage", methods=["GET"])
+@requires_auth()
+def asset_usage(asset_id: str):
+    return {
+        "modals": modal_model.get_asset_usage(asset_id),
+        "pages": page_model.get_asset_usage(asset_id),
+        "stations": station_model.get_asset_usage(asset_id),
+    }
+
+
 CT_OCTET_STREAM = "application/octet-stream"
 
 
