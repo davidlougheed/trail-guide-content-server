@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, timezone
 from flask import after_this_request, Blueprint, jsonify, current_app, request, Response, send_file
 from werkzeug.utils import secure_filename
 
-from . import __version__
+from . import __version__, db
 from .assets import detect_asset_type, make_asset_list
 from .auth import requires_auth, SCOPE_READ_CONTENT, SCOPE_READ_RELEASES, SCOPE_MANAGE_CONTENT, SCOPE_EDIT_RELEASES
 from .bundles import make_bundle_path, make_release_bundle
@@ -21,17 +21,9 @@ from .config import public_config
 from .db import (
     get_db,
 
-    get_categories,
-
-    get_sections,
-    get_sections_with_stations,
-    get_section,
-    set_section,
-
     station_model,
 
     get_asset_types,
-    get_assets,
     get_asset,
     set_asset,
     delete_asset,
@@ -101,20 +93,20 @@ def config():
 @api_v1.route("/categories", methods=["GET"])
 @requires_auth()
 def categories():
-    return jsonify(get_categories())
+    return jsonify(db.get_categories())
 
 
 @api_v1.route("/sections", methods=["GET"])
 @requires_auth()
 def sections():
     nest_stations = request.args.get("nest_stations")
-    return jsonify(get_sections_with_stations() if nest_stations else get_sections())
+    return jsonify(db.get_sections_with_stations() if nest_stations else db.get_sections())
 
 
 @api_v1.route("/sections/<string:section_id>", methods=["GET", "PUT"])
 @requires_auth()
 def sections_detail(section_id: str):
-    s = get_section(section_id)
+    s = db.get_section(section_id)
 
     if s is None:
         return {"message": f"Could not find section with ID {section_id}"}, 404
@@ -131,7 +123,7 @@ def sections_detail(section_id: str):
         if errs := list(section_validator.iter_errors(s)):
             return err_validation_failed(errs)
 
-        s = set_section(section_id, s)
+        s = db.set_section(section_id, s)
 
     return jsonify(s)
 
@@ -148,21 +140,21 @@ def stations():
         if errs := list(station_validator.iter_errors(s)):
             return err_validation_failed(errs)
 
-        return jsonify(station_model.set_obj(s["id"], s))
+        return jsonify(db.station_model.set_obj(s["id"], s))
 
-    return jsonify(station_model.get_all())
+    return jsonify(db.station_model.get_all())
 
 
 @api_v1.route("/stations/<string:station_id>", methods=["GET", "PUT", "DELETE"])
 @requires_auth()
 def stations_detail(station_id: str):
-    s = station_model.get_one(station_id)
+    s = db.station_model.get_one(station_id)
 
     if s is None:
         return {"message": f"Could not find station with ID {station_id}"}, 404
 
     if request.method == "DELETE":
-        station_model.delete_obj(station_id)
+        db.station_model.delete_obj(station_id)
         return jsonify({"message": "Deleted."})
 
     if request.method == "PUT":
@@ -177,7 +169,7 @@ def stations_detail(station_id: str):
         if errs := list(section_validator.iter_errors(s)):
             return err_validation_failed(errs)
 
-        s = station_model.set_obj(station_id, s)
+        s = db.station_model.set_obj(station_id, s)
 
     return jsonify(s)
 
@@ -185,7 +177,7 @@ def stations_detail(station_id: str):
 @api_v1.route("/stations/<string:station_id>/revision/<int:revision_id>", methods=["GET"])
 @requires_auth()
 def stations_revision(station_id: str, revision_id: int):
-    s = station_model.get_one(station_id, revision=revision_id)
+    s = db.station_model.get_one(station_id, revision=revision_id)
     if s is None:
         return {"message": f"Could not find either station {station_id} or revision {revision_id}"}, 404
     return jsonify(s)
@@ -248,8 +240,10 @@ def asset_list():
 
         return jsonify(set_asset(a["id"], a))
 
+    only_used = request.args.get("only_used", "").strip() != ""
     as_js = request.args.get("as_js", "").strip() != ""
-    rt, ct = make_asset_list(get_assets(), as_js=as_js)
+
+    rt, ct = make_asset_list((db.get_assets_used if only_used else db.get_assets)(), as_js=as_js)
     return current_app.response_class(rt, content_type=ct)
 
 

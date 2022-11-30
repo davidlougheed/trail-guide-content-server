@@ -26,6 +26,7 @@ __all__ = [
 
     "get_asset_types",
     "get_assets",
+    "get_assets_used",
     "get_asset",
     "set_asset",
     "delete_asset",
@@ -477,6 +478,43 @@ def get_assets(filter_disabled: bool = False) -> list[dict]:
     q = c.execute(f"""
         SELECT id, asset_type, file_name, file_size, sha1_checksum, enabled
         FROM assets WHERE deleted = 0 {'AND enabled = 1' if filter_disabled else ''}
+    """)
+    return [_row_to_asset(r) for r in q.fetchall()]
+
+
+def get_assets_used() -> list[dict]:
+    """
+    Gets all assets which are used by one or more enabled stations, pages, or modals.
+    :return: A list of assets, represented by dictionaries.
+    """
+
+    c = get_db().cursor()
+    q = c.execute(f"""
+        SELECT id, asset_type, file_name, file_size, sha1_checksum, enabled
+        FROM assets INNER JOIN (
+            SELECT asset FROM (
+                SELECT mau.asset 
+                FROM modals_assets_used AS mau 
+                INNER JOIN modals ON mau.obj = modals.id 
+                WHERE modals.deleted = 0
+            ) 
+            UNION
+            SELECT asset FROM (
+                SELECT pau.asset
+                FROM pages_assets_used AS pau
+                INNER JOIN pages ON pau.obj = pages.id
+                WHERE pages.deleted = 0 AND pages.enabled = 1
+            )
+            UNION 
+            SELECT asset FROM (
+                SELECT sau.asset 
+                FROM stations_assets_used AS sau
+                INNER JOIN stations ON sau.obj = stations.id
+                WHERE stations.deleted = 0 AND stations.enabled = 1
+            ) 
+        ) AS asset_usage 
+        ON assets.id = asset_usage.asset
+        WHERE deleted = 0
     """)
     return [_row_to_asset(r) for r in q.fetchall()]
 
