@@ -1,8 +1,4 @@
-from pathlib import Path
+from importlib import metadata
 
-__all__ = [
-    "__version__",
-]
-
-with open(Path(__file__).parent / "VERSION", "r") as vf:
-    __version__ = vf.read().strip()
+__all__ = ["__version__"]
+__version__ = metadata.version(__package__)

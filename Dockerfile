@@ -1,15 +1,23 @@
-FROM python:3.10-slim-bullseye
+FROM python:3.11-slim-bullseye
 ENV PYTHONUNBUFFERED 1
 
 RUN mkdir -p /to_import && \
     mkdir -p /data/assets && \
     mkdir -p /data/bundles
-RUN pip install gunicorn[gevent]==20.1.0
+RUN pip install "poetry==1.3.2" "gunicorn[gevent]==20.1.0"
 
-COPY requirements.prod.txt /requirements.prod.txt
-RUN pip install -r requirements.prod.txt
+COPY pyproject.toml .
+COPY poetry.lock .
+COPY poetry.toml .
 
+# Install the dependencies without the code in place & cache the layer
+RUN poetry install --no-root --without dev
+
+# Copy the code in
 COPY trail_guide_content_server /trail_guide_content_server
+
+# Install the package
+RUN poetry install  --without dev
 
 EXPOSE 8000
 
