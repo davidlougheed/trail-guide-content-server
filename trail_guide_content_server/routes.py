@@ -350,10 +350,11 @@ def assets_bytes(asset_id: str) -> ResponseType:
         return r
 
 
-# TODO: Create page functionality
 @api_v1.route("/pages", methods=["GET"])
 @requires_auth()
 def pages() -> ResponseType:
+    # This endpoint isn't used for page creation, since page IDs are user-generated.
+    # The PUT endpoint for the detail function (below) can be used instead.
     return jsonify(db.page_model.get_all())
 
 
@@ -363,22 +364,24 @@ def pages() -> ResponseType:
 def pages_detail(page_id: str) -> ResponseType:
     p = db.page_model.get_one(page_id)
 
-    if p is None:
-        return {"message": f"Could not find page with ID {page_id}"}, 404
+    match request.method:
+        case "GET":
+            if p is None:
+                return {"message": f"Could not find page with ID {page_id}"}, 404
 
-    if request.method == "PUT":
-        if not isinstance(request.json, dict):
-            return err_must_be_object
+        case "PUT":
+            if not isinstance(request.json, dict):
+                return err_must_be_object
 
-        if request_changed(p["id"]):
-            return err_cannot_alter_id
+            if p and request_changed(p["id"]):
+                return err_cannot_alter_id
 
-        p = {**p, **request.json}
+            p = {**(p or {}), **request.json}
 
-        if errs := list(section_validator.iter_errors(p)):
-            return err_validation_failed(errs)
+            if errs := list(section_validator.iter_errors(p)):
+                return err_validation_failed(errs)
 
-        p = db.page_model.set_obj(page_id, p)
+            p = db.page_model.set_obj(page_id, p)
 
     return jsonify(p)
 
@@ -430,33 +433,35 @@ def modals() -> ResponseType:
 def modals_detail(modal_id: str) -> ResponseType:
     m = db.modal_model.get_one(modal_id)
 
-    if m is None:
-        return {"message": f"Could not find modal with ID {modal_id}"}, 404
+    match request.method:
+        case "GET":
+            if m is None:
+                return {"message": f"Could not find modal with ID {modal_id}"}, 404
 
-    if request.method == "DELETE":
-        db.modal_model.delete_obj(modal_id)
-        return jsonify({"message": "Deleted."})
+        case "DELETE":
+            db.modal_model.delete_obj(modal_id)
+            return jsonify({"message": "Deleted."})
 
-    if request.method == "PUT":
-        if not isinstance(request.json, dict):
-            return err_must_be_object
+        case "PUT":
+            if not isinstance(request.json, dict):
+                return err_must_be_object
 
-        if request_changed(m["id"]):
-            return err_cannot_alter_id
+            if m and request_changed(m["id"]):
+                return err_cannot_alter_id
 
-        m = {**m, **request.json}
+            m = {**(m or {}), **request.json}
 
-        if errs := list(modal_validator.iter_errors(m)):
-            return err_validation_failed(errs)
+            if errs := list(modal_validator.iter_errors(m)):
+                return err_validation_failed(errs)
 
-        m = db.modal_model.set_obj(modal_id, m)
+            m = db.modal_model.set_obj(modal_id, m)
 
     return jsonify(m)
 
 
 @api_v1.route("/modals/<string:modal_id>/revision/<int:revision_id>", methods=["GET"])
 @requires_auth()
-def modals_revision(modal_id: str, revision_id: int):
+def modals_revision(modal_id: str, revision_id: int) -> ResponseType:
     m = db.modal_model.get_one(modal_id, revision=revision_id)
     if m is None:
         return {"message": f"Could not find either modal {modal_id} or revision {revision_id}"}, 404
@@ -485,27 +490,29 @@ def layers() -> ResponseType:
 def layers_detail(layer_id: str) -> ResponseType:
     layer: dict | None = db.get_layer(layer_id)
 
-    if layer is None:  # doesn't exist, or deleted
-        return {"message": f"Could not find layer with ID {layer_id}"}, 404
+    match request.method:
+        case "GET":
+            if layer is None:  # doesn't exist, or deleted
+                return {"message": f"Could not find layer with ID {layer_id}"}, 404
 
-    if request.method == "DELETE":
-        db.delete_layer(layer_id)
-        return jsonify({"message": "Deleted."})
+        case "DELETE":
+            db.delete_layer(layer_id)
+            return jsonify({"message": "Deleted."})
 
-    if request.method == "PUT":
-        if not isinstance(request.json, dict):
-            return err_must_be_object
+        case "PUT":
+            if not isinstance(request.json, dict):
+                return err_must_be_object
 
-        if request_changed(layer["id"]):
-            return err_cannot_alter_id
+            if layer and request_changed(layer["id"]):
+                return err_cannot_alter_id
 
-        layer = {**layer, **request.json}
+            layer = {**(layer or {}), **request.json}
 
-        errs = list(layer_validator.iter_errors(layer))
-        if errs:
-            return err_validation_failed(errs)
+            errs = list(layer_validator.iter_errors(layer))
+            if errs:
+                return err_validation_failed(errs)
 
-        layer = db.set_layer(layer_id, layer)
+            layer = db.set_layer(layer_id, layer)
 
     return jsonify(layer)
 
