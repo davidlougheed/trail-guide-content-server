@@ -10,7 +10,7 @@ import sqlite3
 from collections import defaultdict
 from flask import current_app, g
 from sqlite3 import Connection, Row  # for typing hints and row factory
-from typing import Any, Callable, Optional, Type
+from typing import Any, Callable, Type
 
 __all__ = [
     "get_db",
@@ -115,7 +115,7 @@ class ModelWithRevision:
             },
         }
 
-    def get_one(self, obj_id: Any, include_deleted: bool = False, revision: Optional[int] = None) -> Optional[dict]:
+    def get_one(self, obj_id: Any, include_deleted: bool = False, revision: int | None = None) -> dict | None:
         db = get_db()
         c = db.cursor()
 
@@ -181,7 +181,7 @@ class ModelWithRevision:
             {"q": q}
         ).fetchall()))
 
-    def _get_revision(self, c: sqlite3.Cursor, obj_id: Any) -> Optional[dict]:
+    def _get_revision(self, c: sqlite3.Cursor, obj_id: Any) -> dict | None:
         # Get current revision
         c.execute(f"SELECT id, revision FROM {self.table}_current_revision WHERE id = ?", (obj_id,))
         current_revision = c.fetchone()
@@ -307,7 +307,7 @@ def get_sections() -> list[dict]:
     return [_row_to_section(r) for r in q.fetchall()]
 
 
-def get_section(section_id: str) -> dict:
+def get_section(section_id: str) -> dict | None:
     c = get_db().cursor()
     q = c.execute("SELECT id, title, rank FROM sections WHERE id = ?", (section_id,))
     r = q.fetchone()
@@ -325,7 +325,7 @@ def set_section(section_id: str, data: dict) -> dict:
 
 
 def _row_to_station(r: Row, prefix: str = "") -> dict:
-    def p(s: str):
+    def p(s: str) -> str:
         return f"{prefix}.{s}" if prefix else s
 
     c_ew = r[p("coordinates_utm_ew")]
@@ -536,7 +536,7 @@ def get_assets_used() -> list[dict]:
     return [_row_to_asset(r) for r in q.fetchall()]
 
 
-def get_asset(asset_id: str) -> Optional[dict]:
+def get_asset(asset_id: str) -> dict | None:
     c = get_db().cursor()
     q = c.execute(
         f"""
@@ -655,7 +655,7 @@ def get_layer(layer_id: str, include_deleted: bool = False) -> dict | None:
     return _row_to_layer(r) if r else None
 
 
-def set_layer(layer_id: str, data: dict) -> Optional[dict]:
+def set_layer(layer_id: str, data: dict) -> dict | None:
     db = get_db()
     c = db.cursor()
 
@@ -718,7 +718,7 @@ def get_latest_release() -> dict | None:
     return get_release(r["latest_version"]) if r else None
 
 
-def set_release(version: Optional[int], data: dict, commit: bool = True) -> Optional[dict]:
+def set_release(version: int | None, data: dict, commit: bool = True) -> dict | None:
     db = get_db()
     c = db.cursor()
 

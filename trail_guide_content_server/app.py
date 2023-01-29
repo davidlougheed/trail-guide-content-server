@@ -29,7 +29,7 @@ SRC_PATTERN = re.compile(r"src=\\?\"([A-Za-z0-9/._\-]+)\\?\"")
 POSTER_PATTERN = re.compile(r"poster=\\?\"([A-Za-z0-9/._\-]+)\\?\"")
 
 application = Flask(__name__)
-application.config.from_mapping(**config)
+application.config.from_mapping(config)
 
 CORS(application, resources={r"/api/v1/*": {"origins": "*"}})
 
@@ -134,7 +134,7 @@ def import_stations(base_path, stations_json, manifest_json):
 
             contents = []
 
-            def _replace_assets(string, direct=False):
+            def _replace_assets(string: str, direct=False) -> str:
                 if not string:
                     return string
 

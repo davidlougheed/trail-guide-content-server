@@ -30,5 +30,9 @@ def get_utc_str() -> str:
 
 
 def request_changed(old_val, form_data: bool = False, field: str = "id") -> bool:
+    # Assume old object was a dict
+    if request.json is None or isinstance(request.json, str):
+        return True
+
     obj_to_check = request.form if form_data else request.json
     return field in obj_to_check and obj_to_check[field] != old_val

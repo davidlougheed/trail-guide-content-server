@@ -32,6 +32,8 @@ from .utils import get_file_hash_hex, get_utc_str, request_changed
 
 __all__ = ["api_v1", "well_known"]
 
+ResponseType = Response | dict | tuple[dict, int]
+
 api_v1 = Blueprint("api", __name__)
 well_known = Blueprint("well_known", __name__)
 
@@ -48,33 +50,33 @@ def err_validation_failed(errs):
 
 
 @api_v1.route("/info", methods=["GET"])
-def service_info():
+def service_info() -> ResponseType:
     return {
         "version": __version__,
     }
 
 
 @api_v1.route("/config", methods=["GET"])
-def config():
+def config() -> ResponseType:
     return jsonify(public_config)
 
 
 @api_v1.route("/categories", methods=["GET"])
 @requires_auth()
-def categories():
+def categories() -> ResponseType:
     return jsonify(db.get_categories())
 
 
 @api_v1.route("/sections", methods=["GET"])
 @requires_auth()
-def sections():
+def sections() -> ResponseType:
     nest_stations = request.args.get("nest_stations")
     return jsonify(db.get_sections_with_stations() if nest_stations else db.get_sections())
 
 
 @api_v1.route("/sections/<string:section_id>", methods=["GET", "PUT"])
 @requires_auth()
-def sections_detail(section_id: str):
+def sections_detail(section_id: str) -> ResponseType:
     s = db.get_section(section_id)
 
     if s is None:
@@ -99,7 +101,7 @@ def sections_detail(section_id: str):
 
 @api_v1.route("/stations", methods=["GET", "POST"])
 @requires_auth()
-def stations():
+def stations() -> ResponseType:
     if request.method == "POST":
         if not isinstance(request.json, dict):
             return err_must_be_object
@@ -116,7 +118,7 @@ def stations():
 
 @api_v1.route("/stations/<string:station_id>", methods=["GET", "PUT", "DELETE"])
 @requires_auth()
-def stations_detail(station_id: str):
+def stations_detail(station_id: str) -> ResponseType:
     s = db.station_model.get_one(station_id)
 
     if s is None:
@@ -145,7 +147,7 @@ def stations_detail(station_id: str):
 
 @api_v1.route("/stations/<string:station_id>/revision/<int:revision_id>", methods=["GET"])
 @requires_auth()
-def stations_revision(station_id: str, revision_id: int):
+def stations_revision(station_id: str, revision_id: int) -> ResponseType:
     s = db.station_model.get_one(station_id, revision=revision_id)
     if s is None:
         return {"message": f"Could not find either station {station_id} or revision {revision_id}"}, 404
@@ -153,7 +155,7 @@ def stations_revision(station_id: str, revision_id: int):
 
 
 @api_v1.route("/stations/<string:station_id>/qr", methods=["GET"])
-def stations_qr(station_id: str):
+def stations_qr(station_id: str) -> ResponseType:
     s = db.station_model.get_one(station_id)
 
     if s is None:
@@ -170,18 +172,21 @@ def stations_qr(station_id: str):
 
 @api_v1.route("/asset_types", methods=["GET"])
 @requires_auth()
-def asset_types():
+def asset_types() -> ResponseType:
     return jsonify(db.get_asset_types())
 
 
 @api_v1.route("/assets", methods=["GET", "POST"])
 @requires_auth()
-def asset_list():
+def asset_list() -> ResponseType:
     if request.method == "POST":
         if "file" not in request.files:
             return err_no_file
 
         file = request.files["file"]
+
+        if not file.filename:
+            return {"message": "missing filename for file"}, 400
 
         asset_type, err = detect_asset_type(file.filename, request.form)
         if err:
@@ -194,7 +199,7 @@ def asset_list():
 
         file.save(file_path)
 
-        a = {
+        a: dict = {
             "id": str(uuid.uuid4()),
             "asset_type": asset_type,
             "file_name": file_name,
@@ -218,7 +223,7 @@ def asset_list():
 
 @api_v1.route("/assets/<string:asset_id>", methods=["GET", "PUT", "DELETE"])
 @requires_auth()
-def asset_detail(asset_id):
+def asset_detail(asset_id) -> ResponseType:
     a = db.get_asset(asset_id)
 
     if a is None:
@@ -244,6 +249,9 @@ def asset_detail(asset_id):
             # Changing file, so handle the upload
 
             file = request.files["file"]
+
+            if not file.filename:
+                return {"message": "missing filename for file"}, 400
 
             asset_type, err = detect_asset_type(file.filename, request.form)
             if err:
@@ -283,7 +291,7 @@ def asset_detail(asset_id):
 
 @api_v1.route("/assets/<string:asset_id>/usage", methods=["GET"])
 @requires_auth()
-def asset_usage(asset_id: str):
+def asset_usage(asset_id: str) -> ResponseType:
     return {
         "modals": db.modal_model.get_asset_usage(asset_id),
         "pages": db.page_model.get_asset_usage(asset_id),
@@ -321,7 +329,7 @@ def _get_content_type(asset_type: str, file_ext: str) -> str:
 
 
 @api_v1.route("/assets/<string:asset_id>/bytes", methods=["GET"])
-def assets_bytes(asset_id: str):
+def assets_bytes(asset_id: str) -> ResponseType:
     a = db.get_asset(asset_id)
 
     if a is None:
@@ -345,14 +353,14 @@ def assets_bytes(asset_id: str):
 # TODO: Create page functionality
 @api_v1.route("/pages", methods=["GET"])
 @requires_auth()
-def pages():
+def pages() -> ResponseType:
     return jsonify(db.page_model.get_all())
 
 
 # TODO: Delete page functionality when create page is done
 @api_v1.route("/pages/<string:page_id>", methods=["GET", "PUT"])
 @requires_auth()
-def pages_detail(page_id: str):
+def pages_detail(page_id: str) -> ResponseType:
     p = db.page_model.get_one(page_id)
 
     if p is None:
@@ -377,7 +385,7 @@ def pages_detail(page_id: str):
 
 @api_v1.route("/pages/<string:page_id>/revision/<int:revision_id>", methods=["GET"])
 @requires_auth()
-def pages_revision(page_id: str, revision_id: int):
+def pages_revision(page_id: str, revision_id: int) -> ResponseType:
     p = db.page_model.get_one(page_id, revision=revision_id)
     if p is None:
         return {"message": f"Could not find either page {page_id} or revision {revision_id}"}, 404
@@ -385,7 +393,7 @@ def pages_revision(page_id: str, revision_id: int):
 
 
 @api_v1.route("/pages/<string:page_id>/qr", methods=["GET"])
-def pages_qr(page_id: str):
+def pages_qr(page_id: str) -> ResponseType:
     p = db.page_model.get_one(page_id)
 
     if p is None:
@@ -402,7 +410,7 @@ def pages_qr(page_id: str):
 
 @api_v1.route("/modals", methods=["GET", "POST"])
 @requires_auth()
-def modals():
+def modals() -> ResponseType:
     if request.method == "POST":
         if not isinstance(request.json, dict):
             return err_must_be_object
@@ -419,7 +427,7 @@ def modals():
 
 @api_v1.route("/modals/<string:modal_id>", methods=["DELETE", "GET", "PUT"])
 @requires_auth()
-def modals_detail(modal_id: str):
+def modals_detail(modal_id: str) -> ResponseType:
     m = db.modal_model.get_one(modal_id)
 
     if m is None:
@@ -457,15 +465,14 @@ def modals_revision(modal_id: str, revision_id: int):
 
 @api_v1.route("/layers", methods=["GET", "POST"])
 @requires_auth()
-def layers():
+def layers() -> ResponseType:
     if request.method == "POST":
         if not isinstance(request.json, dict):
             return err_must_be_object
 
         layer = {"id": str(uuid.uuid4()), **request.json}
 
-        errs = list(layer_validator.iter_errors(layer))
-        if errs:
+        if errs := list(layer_validator.iter_errors(layer)):
             return err_validation_failed(errs)
 
         return jsonify(db.set_layer(layer["id"], layer))
@@ -475,8 +482,8 @@ def layers():
 
 @api_v1.route("/layers/<string:layer_id>", methods=["DELETE", "GET", "PUT"])
 @requires_auth()
-def layers_detail(layer_id: str):
-    layer = db.get_layer(layer_id)
+def layers_detail(layer_id: str) -> ResponseType:
+    layer: dict | None = db.get_layer(layer_id)
 
     if layer is None:  # doesn't exist, or deleted
         return {"message": f"Could not find layer with ID {layer_id}"}, 404
@@ -505,8 +512,12 @@ def layers_detail(layer_id: str):
 
 @api_v1.route("/ad-hoc-bundle", methods=["GET"])
 @requires_auth(read_scopes=(SCOPE_READ_CONTENT, SCOPE_READ_RELEASES))
-def ad_hoc_bundle():
+def ad_hoc_bundle() -> ResponseType:
     rel = db.get_latest_release()
+
+    if rel is None:  # no release yet
+        # TODO: more elegant way to do this - without needing at least 1 release first...
+        return {"message": "no release to base ad-hoc bundle off of"}, 404
 
     bundle_path = make_bundle_path()
     make_release_bundle(rel, bundle_path)
@@ -521,7 +532,7 @@ def ad_hoc_bundle():
 
 @api_v1.route("/releases", methods=["GET", "POST"])
 @requires_auth(read_scopes=(SCOPE_READ_CONTENT, SCOPE_READ_RELEASES))
-def releases():
+def releases() -> ResponseType:
     if request.method == "POST":
         if not isinstance(request.json, dict):
             return err_must_be_object
@@ -567,13 +578,13 @@ def releases():
 @api_v1.route("/releases/<int:version>", methods=["GET", "PUT"])
 @requires_auth(read_scopes=(SCOPE_READ_CONTENT, SCOPE_READ_RELEASES),
                alter_scopes=(SCOPE_MANAGE_CONTENT, SCOPE_EDIT_RELEASES))
-def releases_detail(version: int):
+def releases_detail(version: int) -> ResponseType:
     r = db.get_release(version)
 
     if r is None:
         return {"message": f"Could not find release {version}"}, 404
 
-    if request.method == "PUT":
+    if request.method == "PUT":  # non-standard: don't allow PUT if release does not already exist
         if not isinstance(request.json, dict):
             return err_must_be_object
 
@@ -604,7 +615,7 @@ def releases_detail(version: int):
 
 @api_v1.route("/releases/<int:version>/bundle", methods=["GET"])
 @requires_auth(read_scopes=(SCOPE_READ_CONTENT, SCOPE_READ_RELEASES))
-def releases_bundle(version: int):
+def releases_bundle(version: int) -> ResponseType:
     r = db.get_release(version)
 
     if r is None:
@@ -616,7 +627,7 @@ def releases_bundle(version: int):
 
 @api_v1.route("/releases/latest", methods=["GET"])
 @requires_auth(read_scopes=(SCOPE_READ_CONTENT, SCOPE_READ_RELEASES))
-def latest_release():
+def latest_release() -> ResponseType:
     r = db.get_latest_release()
 
     if r is None:
@@ -627,7 +638,7 @@ def latest_release():
 
 @api_v1.route("/search", methods=["GET"])
 @requires_auth()
-def search():
+def search() -> ResponseType:
     q = request.args.get("q", "").strip()
 
     if not q:
@@ -642,8 +653,8 @@ def search():
 
 @api_v1.route("/settings", methods=["GET", "PUT"])
 @requires_auth()
-def settings():
-    s = db.get_settings()
+def settings() -> ResponseType:
+    s: dict = db.get_settings()
 
     if request.method == "PUT":
         if not isinstance(request.json, dict):
@@ -656,7 +667,7 @@ def settings():
 
 @api_v1.route("/feedback", methods=["GET", "POST"])
 @requires_auth()
-def feedback():
+def feedback() -> ResponseType:
     if request.method == "POST":
         if not isinstance(request.json, dict):
             return err_must_be_object
@@ -677,7 +688,7 @@ def feedback():
 
 @api_v1.route("/ott", methods=["POST"])
 @requires_auth()
-def ott():
+def ott() -> ResponseType:
     new_token = str(uuid.uuid4())
     t = {
         "token": new_token,
@@ -689,7 +700,7 @@ def ott():
 
 # TODO: Move this into app web distribution
 @well_known.route("/apple-app-site-association")
-def asaa():
+def asaa() -> ResponseType:
     return {
         "applinks": {
             "apps": [],
@@ -707,7 +718,7 @@ def asaa():
 
 # TODO: move this into app web distribution
 @well_known.route("/assetlinks.json")
-def android_asset_links():
+def android_asset_links() -> ResponseType:
     return jsonify([{
         "relation": ["delegate_permission/common.handle_all_urls"],
         "target": {
