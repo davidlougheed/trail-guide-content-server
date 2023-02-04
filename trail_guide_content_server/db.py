@@ -469,58 +469,73 @@ def _row_to_asset(r: Row) -> dict:
         "file_name": r["file_name"],
         "file_size": r["file_size"],
         "sha1_checksum": r["sha1_checksum"],
-        "times_used": r["times_used"],
+        "times_used_by_all": r["times_used_by_all"],
+        "times_used_by_enabled": r["times_used_by_enabled"],
     }
 
 
-ASSET_USAGE_QUERY = """(
-SELECT COUNT(asset) AS times_used, asset FROM (
-    SELECT asset FROM (
-        SELECT mau.asset 
-        FROM modals_assets_used AS mau 
-        INNER JOIN modals 
-            ON mau.obj = modals.id
-        INNER JOIN modals_current_revision AS cr 
-            ON cr.id = modals.id AND cr.revision = modals.revision 
-        WHERE modals.deleted = 0
-    )
-    UNION ALL
-    SELECT asset FROM (
-        SELECT pau.asset
-        FROM pages_assets_used AS pau
-        INNER JOIN pages 
-            ON pau.obj = pages.id
-        INNER JOIN pages_current_revision AS cr 
-            ON cr.id = pages.id AND cr.revision = pages.revision
-        WHERE pages.deleted = 0 AND pages.enabled = 1
-    )
-    UNION ALL
-    SELECT asset FROM (
-        SELECT sau.asset 
-        FROM stations_assets_used AS sau
-        INNER JOIN stations 
-            ON sau.obj = stations.id
-        INNER JOIN stations_current_revision AS cr 
-            ON cr.id = stations.id AND cr.revision = stations.revision
-        WHERE stations.deleted = 0 AND stations.enabled = 1
-    )
-)
-GROUP BY asset
-)"""
+def get_asset_usage_query(only_enabled: bool) -> str:
+    pages_extra = " AND pages.enabled = 1" if only_enabled else ""
+    stations_extra = " AND stations.enabled = 1" if only_enabled else ""
+
+    return f"""(
+        SELECT COUNT(asset) AS times_used, asset FROM (
+            SELECT asset FROM (
+                SELECT mau.asset 
+                FROM modals_assets_used AS mau 
+                INNER JOIN modals 
+                    ON mau.obj = modals.id
+                INNER JOIN modals_current_revision AS cr 
+                    ON cr.id = modals.id AND cr.revision = modals.revision 
+                WHERE modals.deleted = 0
+            )
+            UNION ALL
+            SELECT asset FROM (
+                SELECT pau.asset
+                FROM pages_assets_used AS pau
+                INNER JOIN pages 
+                    ON pau.obj = pages.id
+                INNER JOIN pages_current_revision AS cr 
+                    ON cr.id = pages.id AND cr.revision = pages.revision
+                WHERE pages.deleted = 0{pages_extra}
+            )
+            UNION ALL
+            SELECT asset FROM (
+                SELECT sau.asset 
+                FROM stations_assets_used AS sau
+                INNER JOIN stations 
+                    ON sau.obj = stations.id
+                INNER JOIN stations_current_revision AS cr 
+                    ON cr.id = stations.id AND cr.revision = stations.revision
+                WHERE stations.deleted = 0{stations_extra}
+            )
+        )
+        GROUP BY asset
+    )"""
 
 
 def get_assets() -> list[dict]:
     c = get_db().cursor()
     q = c.execute(f"""
-        SELECT id, asset_type, file_name, file_size, sha1_checksum, IFNULL(asset_usage.times_used, 0) AS times_used
+        SELECT 
+            id, 
+            asset_type, 
+            file_name, 
+            file_size, 
+            sha1_checksum, 
+            IFNULL(asset_usage.times_used, 0) AS times_used_by_all,
+            IFNULL(asset_usage_enabled.times_used, 0) AS times_used_by_enabled
         FROM assets 
-        LEFT JOIN {ASSET_USAGE_QUERY} AS asset_usage ON assets.id = asset_usage.asset
+        LEFT JOIN {get_asset_usage_query(only_enabled=False)} AS asset_usage 
+               ON assets.id = asset_usage.asset
+        LEFT JOIN {get_asset_usage_query(only_enabled=True)} AS asset_usage_enabled 
+               ON assets.id = asset_usage_enabled.asset
         WHERE deleted = 0
     """)
     return [_row_to_asset(r) for r in q.fetchall()]
 
 
-def get_assets_used() -> list[dict]:
+def get_assets_used(only_enabled: bool = False) -> list[dict]:
     """
     Gets all assets which are used by one or more enabled stations, pages, or modals.
     :return: A list of assets, represented by dictionaries.
@@ -528,8 +543,14 @@ def get_assets_used() -> list[dict]:
 
     c = get_db().cursor()
     q = c.execute(f"""
-        SELECT id, asset_type, file_name, file_size, sha1_checksum, times_used
-        FROM assets INNER JOIN {ASSET_USAGE_QUERY} AS asset_usage 
+        SELECT 
+            id, 
+            asset_type, 
+            file_name, 
+            file_size, 
+            sha1_checksum, 
+            times_used_by_all
+        FROM assets INNER JOIN {get_asset_usage_query(only_enabled)} AS asset_usage 
         ON assets.id = asset_usage.asset
         WHERE deleted = 0
     """)
@@ -540,9 +561,19 @@ def get_asset(asset_id: str) -> dict | None:
     c = get_db().cursor()
     q = c.execute(
         f"""
-        SELECT id, asset_type, file_name, file_size, sha1_checksum, IFNULL(asset_usage.times_used, 0) AS times_used 
+        SELECT 
+            id, 
+            asset_type, 
+            file_name, 
+            file_size, 
+            sha1_checksum, 
+            IFNULL(asset_usage.times_used, 0) AS times_used_by_all, 
+            IFNULL(asset_usage_enabled.times_used, 0) AS times_used_by_enabled
         FROM assets
-        LEFT JOIN {ASSET_USAGE_QUERY} AS asset_usage ON assets.id = asset_usage.asset
+        LEFT JOIN {get_asset_usage_query(only_enabled=False)} AS asset_usage 
+               ON assets.id = asset_usage.asset
+        LEFT JOIN {get_asset_usage_query(only_enabled=True)} AS asset_usage_enabled
+               ON assets.id = asset_usage_enabled.asset
         WHERE id = ? AND deleted = 0
         """, (asset_id,))
     r = q.fetchone()

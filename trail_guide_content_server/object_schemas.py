@@ -210,7 +210,11 @@ ASSET_SCHEMA = {
             "minLength": 40,
             "maxLength": 40,
         },
-        "times_used": {
+        "times_used_by_all": {
+            "type": "integer",
+            "minimum": 0,
+        },
+        "times_used_by_enabled": {
             "type": "integer",
             "minimum": 0,
         },
