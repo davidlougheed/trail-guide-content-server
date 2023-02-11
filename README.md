@@ -19,6 +19,9 @@ by default, without additional configuration.
 The following is an example `docker-compose.yml` which includes both the server
 and the web interface.
 
+In production, I recommend changing the `latest` tags for a specific version (either full version, `X.Y.Z`, or a minor 
+version, `X.Y`) in order to control version updates.
+
 ```yaml
 services:
   web:
