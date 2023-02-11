@@ -381,6 +381,7 @@ def pages_detail(page_id: str) -> ResponseType:
             if errs := list(section_validator.iter_errors(p)):
                 return err_validation_failed(errs)
 
+            current_app.logger.info(f"updating page {page_id}")
             p = db.page_model.set_obj(page_id, p)
 
     return jsonify(p)
@@ -423,6 +424,7 @@ def modals() -> ResponseType:
         if errs := list(modal_validator.iter_errors(m)):
             return err_validation_failed(errs)
 
+        current_app.logger.info(f"creating modal {m['id']}")
         return jsonify(db.modal_model.set_obj(m["id"], m))
 
     return jsonify(db.modal_model.get_all())
@@ -439,6 +441,7 @@ def modals_detail(modal_id: str) -> ResponseType:
                 return {"message": f"Could not find modal with ID {modal_id}"}, 404
 
         case "DELETE":
+            current_app.logger.info(f"deleting modal {modal_id}")
             db.modal_model.delete_obj(modal_id)
             return jsonify({"message": "Deleted."})
 
@@ -454,6 +457,7 @@ def modals_detail(modal_id: str) -> ResponseType:
             if errs := list(modal_validator.iter_errors(m)):
                 return err_validation_failed(errs)
 
+            current_app.logger.info(f"updating modal {modal_id}")
             m = db.modal_model.set_obj(modal_id, m)
 
     return jsonify(m)
@@ -480,6 +484,7 @@ def layers() -> ResponseType:
         if errs := list(layer_validator.iter_errors(layer)):
             return err_validation_failed(errs)
 
+        current_app.logger.info(f"creating layer {layer['id']}")
         return jsonify(db.set_layer(layer["id"], layer))
 
     return jsonify(db.get_layers())
@@ -512,6 +517,7 @@ def layers_detail(layer_id: str) -> ResponseType:
             if errs:
                 return err_validation_failed(errs)
 
+            current_app.logger.info(f"updating layer {layer_id}")
             layer = db.set_layer(layer_id, layer)
 
     return jsonify(layer)
@@ -567,6 +573,7 @@ def releases() -> ResponseType:
             r = db.set_release(None, r, commit=False)
             r["bundle_size"] = make_release_bundle(r, bundle_path)  # Side effect: write bundle file
             r = db.set_release(r["version"], r, commit=False)  # Update release row with bundle size
+            current_app.logger.info(f"creating release v{r['version']} with bundle size {r['bundle_size']}")
             dbc.commit()  # Finally, commit
         except Exception as e:
             print("Warning: encountered exception while making bundle", e, file=sys.stderr)

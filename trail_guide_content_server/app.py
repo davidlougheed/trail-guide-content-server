@@ -89,7 +89,7 @@ def _import_file(c: sqlite3.Cursor, file_path, file_match) -> str:
     file_name = f"{int(datetime.now().timestamp() * 1000)}-{secure_filename(file_match)}"
     new_file_path = pathlib.Path(application.config["ASSET_DIR"]) / file_name
 
-    print("\tImporting", file_name)
+    application.logger.info(f"\tImporting {file_name}")
 
     shutil.copyfile(file_path, new_file_path)
 
@@ -112,6 +112,8 @@ def _import_file(c: sqlite3.Cursor, file_path, file_match) -> str:
 @click.argument("stations_json")
 @click.argument("manifest_json")
 def import_stations(base_path, stations_json, manifest_json):
+    logger = application.logger
+
     with open(stations_json, "r") as stf:
         data = json.load(stf)
 
@@ -124,7 +126,7 @@ def import_stations(base_path, stations_json, manifest_json):
     for section in data:
         # TODO: Import section too
         for station_path, station in zip(manifest["stations"][section["id"]], section["data"]):
-            print(f"Working on station: {station['title']}")
+            logger.info(f"Working on station: {station['title']}")
             # TODO: Validate station
 
             header_path = os.path.join(base_path, station_path, "header.jpg")
@@ -140,14 +142,14 @@ def import_stations(base_path, stations_json, manifest_json):
 
                 if direct:
                     matches = [string]
-                    print(f"\tmatches: {matches}")
+                    logger.info(f"\tmatches: {matches}")
                 else:
                     href_data = HREF_PATTERN.findall(string)
                     src_data = SRC_PATTERN.findall(string)
                     poster_data = POSTER_PATTERN.findall(string)
-                    print(f"\t  href matches: {href_data}")
-                    print(f"\t   src matches: {src_data}")
-                    print(f"\tposter matches: {poster_data}")
+                    logger.info(f"\t  href matches: {href_data}")
+                    logger.info(f"\t   src matches: {src_data}")
+                    logger.info(f"\tposter matches: {poster_data}")
                     matches = [*href_data, *src_data, *poster_data]
 
                 for match in matches:
@@ -159,7 +161,7 @@ def import_stations(base_path, stations_json, manifest_json):
                     if match_path.endswith(".html"):
                         # Skip importing HTML files for now
                         # TODO: Import these as modals...
-                        print("Skipping", match_path, "(unsupported asset type)")
+                        logger.info(f"Skipping {match_path} (unsupported asset type)")
                         continue
 
                     asset_id = _import_file(c, match_path, match)
@@ -189,10 +191,10 @@ def import_stations(base_path, stations_json, manifest_json):
                 for key in keys:
                     if isinstance(key, tuple):
                         for i in range(len(ci[key[0]])):
-                            print(f"\tWorking on key: {key[0]}.{i}.{key[1]}")
+                            logger.info(f"\tWorking on key: {key[0]}.{i}.{key[1]}")
                             ci[key[0]][i][key[1]] = _replace_assets(ci[key[0]][i][key[1]], direct=True)
                     else:
-                        print(f"\tWorking on key: {key}")
+                        logger.info(f"\tWorking on key: {key}")
                         ci[key] = _replace_assets(ci[key])
 
                 contents.append(ci)
