@@ -23,10 +23,21 @@ __all__ = [
 
 
 def make_bundle_path() -> pathlib.Path:
+    """
+    Generates a randomly-named ZIP file path into which a new bundle's contents can be put.
+    :return: The generated file path
+    """
     return pathlib.Path(current_app.config["BUNDLE_DIR"]) / f"{str(uuid.uuid4())}.zip"
 
 
 def make_release_bundle(release: dict, final_bundle_path: pathlib.Path) -> int:
+    """
+    Creates a release bundle from release metadata and database contents.
+    :param release: Release metadata
+    :param final_bundle_path: The path to put the final bundle with all contents
+    :return: The size of the final bundle, in bytes
+    """
+
     assets_to_include = db.get_assets_used()
     asset_js, _ = make_asset_list(assets_to_include, as_js=True)
 
