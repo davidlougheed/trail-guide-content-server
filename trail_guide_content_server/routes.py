@@ -32,7 +32,7 @@ from .utils import get_file_hash_hex, get_utc_str, request_changed
 
 __all__ = ["api_v1", "well_known"]
 
-ResponseType = Response | dict | tuple[dict, int]
+ResponseType = Response | dict | tuple[Response | dict, int]
 
 api_v1 = Blueprint("api", __name__)
 well_known = Blueprint("well_known", __name__)
@@ -111,7 +111,7 @@ def stations() -> ResponseType:
         if errs := list(station_validator.iter_errors(s)):
             return err_validation_failed(errs)
 
-        return jsonify(db.station_model.set_obj(s["id"], s))
+        return jsonify(db.station_model.set_obj(s["id"], s)), 201
 
     return jsonify(db.station_model.get_all())
 
@@ -212,7 +212,7 @@ def asset_list() -> ResponseType:
         if errs:
             return err_validation_failed(errs)
 
-        return jsonify(db.set_asset(a["id"], a))
+        return jsonify(db.set_asset(a["id"], a)), 201
 
     only_used = request.args.get("only_used", "").strip() != ""
     as_js = request.args.get("as_js", "").strip() != ""
@@ -365,6 +365,7 @@ def pages() -> ResponseType:
 @requires_auth()
 def pages_detail(page_id: str) -> ResponseType:
     p = db.page_model.get_one(page_id)
+    is_creating: bool = False
 
     match request.method:
         case "GET":
@@ -375,7 +376,9 @@ def pages_detail(page_id: str) -> ResponseType:
             if not isinstance(request.json, dict):
                 return err_must_be_object
 
-            if p and request_changed(p["id"]):
+            is_creating = p is None
+
+            if not is_creating and request_changed(p["id"]):
                 return err_cannot_alter_id
 
             p = {**(p or {}), **request.json}
@@ -386,7 +389,7 @@ def pages_detail(page_id: str) -> ResponseType:
             current_app.logger.info(f"updating page {page_id}")
             p = db.page_model.set_obj(page_id, p)
 
-    return jsonify(p)
+    return jsonify(p), 201 if is_creating else 200
 
 
 @api_v1.route("/pages/<string:page_id>/revision/<int:revision_id>", methods=["GET"])
@@ -427,7 +430,7 @@ def modals() -> ResponseType:
             return err_validation_failed(errs)
 
         current_app.logger.info(f"creating modal {m['id']}")
-        return jsonify(db.modal_model.set_obj(m["id"], m))
+        return jsonify(db.modal_model.set_obj(m["id"], m)), 201
 
     return jsonify(db.modal_model.get_all())
 
@@ -436,6 +439,7 @@ def modals() -> ResponseType:
 @requires_auth()
 def modals_detail(modal_id: str) -> ResponseType:
     m = db.modal_model.get_one(modal_id)
+    is_creating: bool = False
 
     match request.method:
         case "GET":
@@ -451,7 +455,9 @@ def modals_detail(modal_id: str) -> ResponseType:
             if not isinstance(request.json, dict):
                 return err_must_be_object
 
-            if m and request_changed(m["id"]):
+            is_creating = m is None
+
+            if not is_creating and request_changed(m["id"]):
                 return err_cannot_alter_id
 
             m = {**(m or {}), **request.json}
@@ -462,7 +468,7 @@ def modals_detail(modal_id: str) -> ResponseType:
             current_app.logger.info(f"updating modal {modal_id}")
             m = db.modal_model.set_obj(modal_id, m)
 
-    return jsonify(m)
+    return jsonify(m), 201 if is_creating else 200
 
 
 @api_v1.route("/modals/<string:modal_id>/revision/<int:revision_id>", methods=["GET"])
@@ -487,7 +493,7 @@ def layers() -> ResponseType:
             return err_validation_failed(errs)
 
         current_app.logger.info(f"creating layer {layer['id']}")
-        return jsonify(db.set_layer(layer["id"], layer))
+        return jsonify(db.set_layer(layer["id"], layer)), 201
 
     return jsonify(db.get_layers())
 
@@ -496,6 +502,7 @@ def layers() -> ResponseType:
 @requires_auth()
 def layers_detail(layer_id: str) -> ResponseType:
     layer: dict | None = db.get_layer(layer_id)
+    is_creating: bool = False
 
     match request.method:
         case "GET":
@@ -510,7 +517,9 @@ def layers_detail(layer_id: str) -> ResponseType:
             if not isinstance(request.json, dict):
                 return err_must_be_object
 
-            if layer and request_changed(layer["id"]):
+            is_creating = layer is None
+
+            if not is_creating and request_changed(layer["id"]):
                 return err_cannot_alter_id
 
             layer = {**(layer or {}), **request.json}
@@ -522,7 +531,7 @@ def layers_detail(layer_id: str) -> ResponseType:
             current_app.logger.info(f"updating layer {layer_id}")
             layer = db.set_layer(layer_id, layer)
 
-    return jsonify(layer)
+    return jsonify(layer), 201 if is_creating else 200
 
 
 @api_v1.route("/ad-hoc-bundle", methods=["GET"])
@@ -586,7 +595,7 @@ def releases() -> ResponseType:
                 "errors": [traceback.format_exc()],
             }, 500
 
-        return jsonify(r)
+        return jsonify(r), 201
 
     return jsonify(db.get_releases())
 
@@ -697,7 +706,7 @@ def feedback() -> ResponseType:
         if errs := list(feedback_item_validator.iter_errors(f)):
             return err_validation_failed(errs)
 
-        return jsonify(db.set_feedback_item(f["id"], f))
+        return jsonify(db.set_feedback_item(f["id"], f)), 201
 
     return jsonify(db.get_feedback_items())
 
@@ -711,7 +720,7 @@ def ott() -> ResponseType:
         "scope": SCOPE_READ_CONTENT,  # Currently: ignore Bearer scope
         "expiry": (datetime.utcnow().replace(microsecond=0, tzinfo=timezone.utc) + timedelta(seconds=60)).isoformat()
     }
-    return jsonify(db.set_ott(new_token, t))
+    return jsonify(db.set_ott(new_token, t)), 201
 
 
 # TODO: Move this into app web distribution
