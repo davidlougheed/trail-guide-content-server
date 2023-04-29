@@ -43,7 +43,7 @@ def detect_asset_type(file_name: Union[str, Path], form_data=None) -> tuple[str,
     return asset_type, ""
 
 
-def _make_asset_list_js(assets):
+def _make_asset_list_js(assets: list[dict]) -> tuple[str, str]:
     def _asset_type(a):
         return a["asset_type"]
 
@@ -71,7 +71,7 @@ def _make_asset_list_js(assets):
     return rt, "application/js"
 
 
-def make_asset_list(assets, as_js: bool = False):
+def make_asset_list(assets: list[dict], as_js: bool = False) -> tuple[str, str]:
     if as_js:
         return _make_asset_list_js(assets)
 

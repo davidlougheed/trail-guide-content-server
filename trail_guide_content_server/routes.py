@@ -410,7 +410,7 @@ def pages_detail(page_id: str) -> ResponseType:
 
             is_creating = p is None
 
-            if not is_creating and request_changed(p["id"]):
+            if p is not None and request_changed(p["id"]):
                 return err_cannot_alter_id
 
             p = {**(p or {}), **request.json}
@@ -489,7 +489,7 @@ def modals_detail(modal_id: str) -> ResponseType:
 
             is_creating = m is None
 
-            if not is_creating and request_changed(m["id"]):
+            if m is not None and request_changed(m["id"]):
                 return err_cannot_alter_id
 
             m = {**(m or {}), **request.json}
@@ -551,7 +551,7 @@ def layers_detail(layer_id: str) -> ResponseType:
 
             is_creating = layer is None
 
-            if not is_creating and request_changed(layer["id"]):
+            if layer is not None and request_changed(layer["id"]):
                 return err_cannot_alter_id
 
             layer = {**(layer or {}), **request.json}
@@ -595,7 +595,7 @@ def releases() -> ResponseType:
 
         bundle_path = make_bundle_path()
 
-        r = {
+        r: dict = {
             "version": 0,  # Dummy ID for validation
             **request.json,
             "bundle_path": str(bundle_path),
@@ -613,11 +613,20 @@ def releases() -> ResponseType:
             c.execute("BEGIN TRANSACTION")  # Put SQLite into manual commit mode
             # First insert the row with no bundle create, to trigger any early errors and rollback if necessary
             # without wasting disk space.
-            r = db.set_release(None, r, commit=False)
+
+            r_db: dict | None = db.set_release(None, r, commit=False)
+            if r_db is None:
+                raise ValueError("release is null immediately after dry-run creation")
+            r = r_db
             r["bundle_size"] = make_release_bundle(r, bundle_path)  # Side effect: write bundle file
-            r = db.set_release(r["version"], r, commit=False)  # Update release row with bundle size
+
+            r_db = db.set_release(r["version"], r, commit=False)  # Update release row with bundle size
+            if r_db is None:
+                raise ValueError("release is null immediately after creation")
+            r = r_db
             current_app.logger.info(f"creating release v{r['version']} with bundle size {r['bundle_size']}")
             dbc.commit()  # Finally, commit
+
         except Exception as e:
             print("Warning: encountered exception while making bundle", e, file=sys.stderr)
             traceback.print_exc()

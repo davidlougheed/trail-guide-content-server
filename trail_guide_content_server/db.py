@@ -307,7 +307,7 @@ def get_category(category_id: str) -> dict | None:
     return _row_to_category(r) if r else None
 
 
-def set_category(category_id: str, data: dict) -> dict:
+def set_category(category_id: str, data: dict) -> dict | None:
     db = get_db()
     c = db.cursor()
     c.execute("INSERT OR REPLACE INTO categories (id, icon_svg) VALUES (?, ?)", (category_id, data["icon_svg"]))
@@ -339,7 +339,7 @@ def get_section(section_id: str) -> dict | None:
     return _row_to_section(r) if r else None
 
 
-def set_section(section_id: str, data: dict) -> dict:
+def set_section(section_id: str, data: dict) -> dict | None:
     db = get_db()
     c = db.cursor()
     c.execute(
@@ -471,7 +471,7 @@ def get_sections_with_stations(enabled_only: bool = False) -> list[dict]:
         {'WHERE st.enabled = 1' if enabled_only else ''}
         ORDER BY sc.rank, st.rank""")
 
-    sections_of_stations = defaultdict(lambda: {"data": []})
+    sections_of_stations: defaultdict[str, dict] = defaultdict(lambda: {"data": []})
 
     for r in q.fetchall():
         sections_of_stations[r["sc_id"]]["title"] = r["sc_title"]
@@ -605,7 +605,7 @@ def get_asset(asset_id: str) -> dict | None:
     return _row_to_asset(r) if r else None
 
 
-def set_asset(asset_id: str, data: dict) -> dict:
+def set_asset(asset_id: str, data: dict) -> dict | None:
     db = get_db()
     c = db.cursor()
     c.execute("""
@@ -616,7 +616,7 @@ def set_asset(asset_id: str, data: dict) -> dict:
     return get_asset(asset_id)
 
 
-def delete_asset(asset_id: str):
+def delete_asset(asset_id: str) -> None:
     obj = get_asset(asset_id)
     if not obj:
         return
