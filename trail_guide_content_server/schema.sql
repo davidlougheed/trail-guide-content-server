@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS stations (
 
     PRIMARY KEY (id, revision),
     FOREIGN KEY (section) REFERENCES sections,
-    FOREIGN KEY (category) REFERENCES categories,
+    FOREIGN KEY (category) REFERENCES categories ON DELETE RESTRICT,
     FOREIGN KEY (header_image) REFERENCES assets
 );
 
