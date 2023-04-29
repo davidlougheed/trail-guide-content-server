@@ -9,15 +9,6 @@ CREATE TABLE IF NOT EXISTS sections (
     rank INTEGER NOT NULL CHECK (rank >= 0)
 );
 
--- Pre-populate sections
-INSERT OR IGNORE INTO sections VALUES
-    ('acc', 'Accessible Trail', 0),
-    ('red', 'Red Trail', 1),
-    ('blue', 'Blue Trail', 2),
-    ('orange', 'Orange Trail', 3),
-    ('green', 'Green Trail', 4),
-    ('other', 'Main Facility and Off the Trails', 5);
-
 
 CREATE TABLE IF NOT EXISTS categories (
     id VARCHAR(31) PRIMARY KEY,
