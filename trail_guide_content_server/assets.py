@@ -60,6 +60,9 @@ def detect_asset_type(file_name: str | Path, form_data=None) -> tuple[str, str]:
 
             asset_type = form_data["asset_type"]
 
+            if asset_type not in ASSET_TYPES:
+                return "", f"'{asset_type}' is not a valid asset type"
+
     return asset_type, ""
 
 
