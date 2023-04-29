@@ -330,13 +330,13 @@ _row_to_section = dict
 
 def get_sections() -> list[dict]:
     c = get_db().cursor()
-    q = c.execute("SELECT id, title, rank FROM sections ORDER BY rank")
+    q = c.execute("SELECT id, title, color, rank FROM sections ORDER BY rank")
     return [_row_to_section(r) for r in q.fetchall()]
 
 
 def get_section(section_id: str) -> dict | None:
     c = get_db().cursor()
-    q = c.execute("SELECT id, title, rank FROM sections WHERE id = ?", (section_id,))
+    q = c.execute("SELECT id, title, color, rank FROM sections WHERE id = ?", (section_id,))
     r = q.fetchone()
     return _row_to_section(r) if r else None
 
@@ -345,8 +345,8 @@ def set_section(section_id: str, data: dict) -> dict | None:
     db = get_db()
     c = db.cursor()
     c.execute(
-        "INSERT OR REPLACE INTO sections (id, title, rank) VALUES (?, ?, ?)",
-        (section_id, data["title"], int(data["rank"])))
+        "INSERT OR REPLACE INTO sections (id, title, color, rank) VALUES (?, ?, ?, ?)",
+        (section_id, data["title"], data["color"], int(data["rank"])))
     db.commit()
     return get_section(section_id)
 

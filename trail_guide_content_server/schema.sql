@@ -5,6 +5,7 @@
 CREATE TABLE IF NOT EXISTS sections (
     id VARCHAR(31) PRIMARY KEY,
     title TEXT NOT NULL CHECK (length(title) > 0),
+    color VARCHAR(6) NOT NULL,  -- RGB hex code for color
     rank INTEGER NOT NULL CHECK (rank >= 0)
 );
 
