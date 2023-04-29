@@ -112,25 +112,28 @@ def sections() -> ResponseType:
 @requires_auth()
 def sections_detail(section_id: str) -> ResponseType:
     s = db.get_section(section_id)
+    is_creating: bool = False
 
-    if s is None:
+    if request.method != "PUT" and s is None:
         return {"message": f"Could not find section with ID {section_id}"}, 404
 
     if request.method == "PUT":
         if not isinstance(request.json, dict):
             return err_must_be_object
 
-        if request_changed(s["id"]):
+        is_creating = s is None
+
+        if s is not None and request_changed(s["id"]):
             return err_cannot_alter_id
 
-        s = {**s, **request.json}
+        s = {**(s or {}), **request.json}
 
         if errs := list(section_validator.iter_errors(s)):
             return err_validation_failed(errs)
 
         s = db.set_section(section_id, s)
 
-    return jsonify(s)
+    return jsonify(s), 201 if is_creating else 200
 
 
 @api_v1.route("/stations", methods=["GET", "POST"])
