@@ -8,8 +8,6 @@ from datetime import datetime, timezone
 from flask import request
 from pathlib import Path
 
-from typing import Union
-
 __all__ = [
     "get_file_hash_hex",
     "get_utc_str",
@@ -17,7 +15,7 @@ __all__ = [
 ]
 
 
-def get_file_hash_hex(path: Union[str, Path]) -> str:
+def get_file_hash_hex(path: str | Path) -> str:
     file_hash = hashlib.new("sha1", usedforsecurity=False)
     with open(path, "rb") as hfh:
         while data := hfh.read(1024):
