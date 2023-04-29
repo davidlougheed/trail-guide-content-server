@@ -22,12 +22,6 @@ CREATE TABLE IF NOT EXISTS categories (
     id VARCHAR(31) PRIMARY KEY
 );
 
--- Pre-populate categories
-INSERT OR IGNORE INTO categories VALUES
-    ('culture'),
-    ('environment'),
-    ('research');
-
 
 CREATE TABLE IF NOT EXISTS asset_types (
     id VARCHAR(31) PRIMARY KEY
