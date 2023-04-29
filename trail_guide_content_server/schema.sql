@@ -154,7 +154,7 @@ VALUES (
     1,
     'About',
     'help-circle-outline',
-    'Introduction to the Elbow Lake Interpretive App',
+    'About the app',
     '',
     NULL,
     '',
