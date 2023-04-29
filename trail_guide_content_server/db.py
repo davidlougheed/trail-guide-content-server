@@ -16,6 +16,8 @@ __all__ = [
     "get_db",
 
     "get_categories",
+    "get_category",
+    "set_category",
 
     "get_sections",
     "get_sections_with_stations",
