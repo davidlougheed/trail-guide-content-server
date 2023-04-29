@@ -9,17 +9,37 @@ from datetime import datetime
 from itertools import groupby
 from pathlib import Path
 
-from typing import Union
-
 from .db import get_asset_types
 
 __all__ = [
+    "ASSET_TYPE_IMAGE",
+    "ASSET_TYPE_AUDIO",
+    "ASSET_TYPE_VIDEO",
+    "ASSET_TYPE_VIDEO_TEXT_TRACK",
+    "ASSET_TYPE_PDF",
+    "ASSET_TYPES",
+
     "detect_asset_type",
     "make_asset_list",
 ]
 
 
-def detect_asset_type(file_name: Union[str, Path], form_data=None) -> tuple[str, str]:
+ASSET_TYPE_IMAGE = "image"
+ASSET_TYPE_AUDIO = "audio"
+ASSET_TYPE_VIDEO = "video"
+ASSET_TYPE_VIDEO_TEXT_TRACK = "video_text_track"
+ASSET_TYPE_PDF = "pdf"
+
+ASSET_TYPES: frozenset[str] = frozenset({
+    ASSET_TYPE_IMAGE,
+    ASSET_TYPE_AUDIO,
+    ASSET_TYPE_VIDEO,
+    ASSET_TYPE_VIDEO_TEXT_TRACK,
+    ASSET_TYPE_PDF,
+})
+
+
+def detect_asset_type(file_name: str | Path, form_data=None) -> tuple[str, str]:
     form_data = form_data or {}
     file_ext = os.path.splitext(file_name)[1].lower().lstrip(".")
 
