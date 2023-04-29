@@ -70,7 +70,7 @@ def categories() -> ResponseType:
 
 @api_v1.route("/categories/<string:category_id>", methods=["GET", "PUT", "DELETE"])
 @requires_auth()
-def categories(category_id: str) -> ResponseType:
+def categories_detail(category_id: str) -> ResponseType:
     c = db.get_category(category_id)
     is_creating: bool = False
 
