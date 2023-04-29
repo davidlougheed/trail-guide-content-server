@@ -242,8 +242,7 @@ def asset_list() -> ResponseType:
             "times_used": 0,
         }
 
-        errs = list(asset_validator.iter_errors(a))
-        if errs:
+        if errs := list(asset_validator.iter_errors(a)):
             return err_validation_failed(errs)
 
         return jsonify(db.set_asset(a["id"], a)), 201
@@ -264,8 +263,7 @@ def asset_detail(asset_id) -> ResponseType:
         return {"message": f"Could not find asset with ID {asset_id}"}, 404
 
     if request.method == "DELETE":
-        asset_path = pathlib.Path(current_app.config["ASSET_DIR"]) / a["file_name"]
-        if asset_path.exists():
+        if (asset_path := pathlib.Path(current_app.config["ASSET_DIR"]) / a["file_name"]).exists():
             asset_path.unlink()
         db.delete_asset(asset_id)
         return jsonify({"message": "Deleted."})
