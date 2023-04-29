@@ -67,7 +67,7 @@ def detect_asset_type(file_name: str | Path, form_data=None) -> tuple[str, str]:
 
 
 def _make_asset_list_js(assets: list[dict]) -> tuple[str, str]:
-    def _asset_type(a):
+    def _asset_type(a: dict) -> str:
         return a["asset_type"]
 
     assets_by_type = {
