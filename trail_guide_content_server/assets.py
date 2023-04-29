@@ -45,15 +45,15 @@ def detect_asset_type(file_name: str | Path, form_data=None) -> tuple[str, str]:
 
     match file_ext:
         case "jpg" | "jpeg" | "png" | "gif":
-            asset_type = "image"
+            asset_type = ASSET_TYPE_IMAGE
         case "mp3" | "m4a":
-            asset_type = "audio"
+            asset_type = ASSET_TYPE_AUDIO
         case "mp4" | "mov":
-            asset_type = "video"
+            asset_type = ASSET_TYPE_VIDEO
         case "vtt":
-            asset_type = "video_text_track"
+            asset_type = ASSET_TYPE_VIDEO_TEXT_TRACK
         case "pdf":
-            asset_type = "pdf"
+            asset_type = ASSET_TYPE_PDF
         case _:
             if "asset_type" not in form_data:
                 return "", "No asset_type provided, and could not figure it out automatically"
