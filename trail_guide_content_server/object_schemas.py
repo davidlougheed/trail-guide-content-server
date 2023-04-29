@@ -5,6 +5,9 @@
 import jsonschema
 
 __all__ = [
+    "CATEGORY_SCHEMA",
+    "category_validator",
+
     "STATION_SCHEMA",
     "station_validator",
 
@@ -26,6 +29,17 @@ __all__ = [
     "FEEDBACK_ITEM_SCHEMA",
     "feedback_item_validator",
 ]
+
+CATEGORY_SCHEMA = {
+    "type": "object",
+    "required": ["id", "icon-svg"],
+    "properties": {
+        "id": {"type": "string"},
+        "icon_svg": {"type": "string"},
+    },
+}
+
+category_validator = jsonschema.Draft7Validator(CATEGORY_SCHEMA)
 
 STATION_SCHEMA = {
     "type": "object",

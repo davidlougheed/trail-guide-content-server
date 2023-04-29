@@ -290,11 +290,36 @@ class ModelWithRevision:
 
 # Access methods
 
+# Nothing special to do here, just convert to dict
+_row_to_category = dict
 
-def get_categories() -> list[str]:
+
+def get_categories() -> list[dict]:
     c = get_db().cursor()
-    q = c.execute("SELECT id FROM categories")
-    return [r["id"] for r in q.fetchall()]
+    q = c.execute("SELECT id, icon_svg FROM categories")
+    return [_row_to_category(r) for r in q.fetchall()]
+
+
+def get_category(category_id: str) -> dict | None:
+    c = get_db().cursor()
+    q = c.execute("SELECT id, icon_svg FROM categories WHERE id = ?", (category_id,))
+    r = q.fetchone()
+    return _row_to_category(r) if r else None
+
+
+def set_category(category_id: str, data: dict) -> dict:
+    db = get_db()
+    c = db.cursor()
+    c.execute("INSERT OR REPLACE INTO categories (id, icon_svg) VALUES (?, ?)", (category_id, data["icon_svg"]))
+    db.commit()
+    return get_category(category_id)
+
+
+def delete_category(category_id: str) -> None:
+    db = get_db()
+    c = db.cursor()
+    c.execute("DELETE FROM categories WHERE id = ? LIMIT 1", (category_id,))
+    db.commit()
 
 
 # Nothing special to do here, just convert to dict

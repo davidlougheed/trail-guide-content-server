@@ -19,6 +19,7 @@ from .auth import requires_auth, SCOPE_READ_CONTENT, SCOPE_READ_RELEASES, SCOPE_
 from .bundles import make_bundle_path, make_release_bundle
 from .config import public_config
 from .object_schemas import (
+    category_validator,
     section_validator,
     station_validator,
     asset_validator,
@@ -65,6 +66,39 @@ def config() -> ResponseType:
 @requires_auth()
 def categories() -> ResponseType:
     return jsonify(db.get_categories())
+
+
+@api_v1.route("/categories/<string:category_id>", methods=["GET", "PUT", "DELETE"])
+@requires_auth()
+def categories(category_id: str) -> ResponseType:
+    c = db.get_category(category_id)
+    is_creating: bool = False
+
+    if request.method != "PUT" and c is None:
+        return {"message": f"Could not find category with ID {category_id}"}, 404
+
+    if request.method == "PUT":
+        if not isinstance(request.json, dict):
+            return err_must_be_object
+
+        is_creating = c is None
+
+        if not is_creating and request_changed(c["id"]):
+            return err_cannot_alter_id  # TODO: allow this, eventually
+
+        c = {**(c or {}), **request.json}
+
+        if errs := list(category_validator.iter_errors(c)):
+            return err_validation_failed(errs)
+
+        c = db.set_category(category_id, c)
+
+    elif request.method == "DELETE":
+        # TODO: check for stations using the category
+        db.delete_category(category_id)
+        return current_app.response_class(status=204)
+
+    return jsonify(c), 201 if is_creating else 200
 
 
 @api_v1.route("/sections", methods=["GET"])

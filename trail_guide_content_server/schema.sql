@@ -19,7 +19,8 @@ INSERT OR IGNORE INTO sections VALUES
 
 
 CREATE TABLE IF NOT EXISTS categories (
-    id VARCHAR(31) PRIMARY KEY
+    id VARCHAR(31) PRIMARY KEY,
+    icon_svg TEXT NOT NULL
 );
 
 
