@@ -83,7 +83,7 @@ def categories_detail(category_id: str) -> ResponseType:
 
         is_creating = c is None
 
-        if not is_creating and request_changed(c["id"]):
+        if c is not None and request_changed(c["id"]):
             return err_cannot_alter_id  # TODO: allow this, eventually
 
         c = {**(c or {}), **request.json}
