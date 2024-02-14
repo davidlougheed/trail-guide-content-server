@@ -4,7 +4,7 @@ ENV PYTHONUNBUFFERED 1
 RUN mkdir -p /to_import && \
     mkdir -p /data/assets && \
     mkdir -p /data/bundles
-RUN pip install "poetry==1.3.2" "gunicorn[gevent]==20.1.0"
+RUN pip install "poetry==1.7.1" "gunicorn[gevent]==21.2.0"
 
 COPY pyproject.toml .
 COPY poetry.lock .
