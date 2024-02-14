@@ -1,5 +1,5 @@
 -- A server for hosting a trail guide mobile app's content and data.
--- Copyright (C) 2021-2022  David Lougheed
+-- Copyright (C) 2021-2024  David Lougheed
 -- See NOTICE for more information.
 
 CREATE TABLE IF NOT EXISTS sections (
@@ -58,8 +58,8 @@ CREATE TABLE IF NOT EXISTS stations (
 
     coordinates_utm_crs TEXT NOT NULL DEFAULT 'NAD83',
     coordinates_utm_zone TEXT NOT NULL DEFAULT '18T',
-    coordinates_utm_ew TEXT NOT NULL,
-    coordinates_utm_ns TEXT NOT NULL,
+    coordinates_utm_e TEXT NOT NULL,
+    coordinates_utm_n TEXT NOT NULL,
 
     -- month-day inclusive, left side of interval (or null)
     visible_from TEXT CHECK (visible_from IS NULL OR length(visible_from) = 5),

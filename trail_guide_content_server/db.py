@@ -355,8 +355,8 @@ def _row_to_station(r: Row, prefix: str = "") -> dict:
     def p(s: str) -> str:
         return f"{prefix}.{s}" if prefix else s
 
-    c_ew = r[p("coordinates_utm_ew")]
-    c_ns = r[p("coordinates_utm_ns")]
+    c_e = r[p("coordinates_utm_e")]
+    c_n = r[p("coordinates_utm_n")]
 
     return {
         "title": r[p("title")],
@@ -365,8 +365,8 @@ def _row_to_station(r: Row, prefix: str = "") -> dict:
         "coordinates_utm": {
             "crs": r[p("coordinates_utm_crs")],
             "zone": r[p("coordinates_utm_zone")],
-            **({"east": int(c_ew[:-1])} if c_ew[-1] == "E" else {"west": int(c_ew[:-1])}),
-            **({"north": int(c_ns[:-1])} if c_ns[-1] == "N" else {"south": int(c_ns[:-1])}),
+            "east": int(c_e[:-1]) if c_e[-1] == "E" else int(c_e),
+            "north": int(c_n[:-1]) if c_n[-1] == "N" else int(c_n),
         },
         "visible": {
             "from": r[p("visible_from")],
@@ -390,11 +390,9 @@ def _station_data_to_insert_tuple(data: dict) -> tuple:
         data["coordinates_utm"]["crs"],
         data["coordinates_utm"]["zone"],
 
-        # UTM Coordinates; these should be guaranteed to be set from the JSON schema checking earlier
-        str(data["coordinates_utm"].get("east", data["coordinates_utm"].get("west"))) + (
-            "E" if "east" in data["coordinates_utm"] else "W"),
-        str(data["coordinates_utm"].get("north", data["coordinates_utm"].get("south"))) + (
-            "N" if "north" in data["coordinates_utm"] else "S"),
+        # TODO: Some future SQLite migration - convert east/north strings to integers
+        str(data["coordinates_utm"]["east"]).rstrip("E"),  # gradually convert to integer-strings
+        str(data["coordinates_utm"]["north"]).rstrip("N"),  # gradually convert to integer-strings
 
         data.get("visible", {}).get("from") or None,
         data.get("visible", {}).get("to") or None,
@@ -415,8 +413,8 @@ station_content_fields = (
     "subtitle",
     "coordinates_utm_crs",
     "coordinates_utm_zone",
-    "coordinates_utm_ew",
-    "coordinates_utm_ns",
+    "coordinates_utm_e",
+    "coordinates_utm_n",
     "visible_from",
     "visible_to",
     "section",
@@ -454,8 +452,8 @@ def get_sections_with_stations(enabled_only: bool = False) -> list[dict]:
             
             st.coordinates_utm_crs,
             st.coordinates_utm_zone,
-            st.coordinates_utm_ew,
-            st.coordinates_utm_ns,
+            st.coordinates_utm_e,
+            st.coordinates_utm_n,
             
             st.visible_from,
             st.visible_to,

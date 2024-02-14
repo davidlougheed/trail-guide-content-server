@@ -61,8 +61,7 @@ STATION_SCHEMA = {
         },
         "coordinates_utm": {
             "type": "object",
-            "required": ["zone"],
-            # TODO: Proper required with east/west and north/south
+            "required": ["zone", "east", "north"],
             "properties": {
                 "zone": {
                     "type": "string",
@@ -70,13 +69,7 @@ STATION_SCHEMA = {
                 "east": {
                     "type": "integer",
                 },
-                "west": {
-                    "type": "integer",
-                },
                 "north": {
-                    "type": "integer",
-                },
-                "south": {
                     "type": "integer",
                 },
             }
