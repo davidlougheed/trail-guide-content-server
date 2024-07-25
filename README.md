@@ -44,3 +44,12 @@ services:
     volumes:
       - ${PWD}/server/data:/data
 ```
+
+
+## Developing
+
+After setting up a Python virtual environment, you can start the development server with the following command:
+
+```bash
+flask run
+```
