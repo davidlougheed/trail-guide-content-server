@@ -233,7 +233,8 @@ CREATE TABLE IF NOT EXISTS settings (
 
 -- Pre-populate settings
 INSERT OR IGNORE INTO settings VALUES
-    ('terms_modal', NULL);
+    ('terms_modal', NULL),
+    ('privacy_policy', '');
 
 
 CREATE TABLE IF NOT EXISTS feedback (
