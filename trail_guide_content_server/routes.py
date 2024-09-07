@@ -38,9 +38,14 @@ ResponseType = Response | dict | tuple[Response | dict, int]
 api_v1 = Blueprint("api", __name__)
 well_known = Blueprint("well_known", __name__)
 
-err_must_be_object = Response(json.dumps({"message": "Request body must be an object"}), status=400)
-err_cannot_alter_id = Response(json.dumps({"message": "Cannot alter object ID"}), status=400)
-err_no_file = Response(json.dumps({"message": "No file provided"}), status=400)
+err_must_be_object = Response(
+    json.dumps({"message": "Request body must be an object"}), content_type="application/json", status=400)
+err_cannot_alter_id = Response(
+    json.dumps({"message": "Cannot alter object ID"}), content_type="application/json", status=400)
+err_no_file = Response(
+    json.dumps({"message": "No file provided"}), content_type="application/json", status=400)
+
+response_deleted = Response(json.dumps({"message": "Deleted."}), content_type="application/json")
 
 
 def err_validation_failed(errs):
@@ -163,7 +168,7 @@ def stations_detail(station_id: str) -> ResponseType:
 
     if request.method == "DELETE":
         db.station_model.delete_obj(station_id)
-        return jsonify({"message": "Deleted."})
+        return response_deleted
 
     if request.method == "PUT":
         if not isinstance(request.json, dict):
@@ -269,7 +274,7 @@ def asset_detail(asset_id) -> ResponseType:
         if (asset_path := pathlib.Path(current_app.config["ASSET_DIR"]) / a["file_name"]).exists():
             asset_path.unlink()
         db.delete_asset(asset_id)
-        return jsonify({"message": "Deleted."})
+        return response_deleted
 
     if request.method == "PUT":
         if request_changed(a["id"], form_data=True):
@@ -484,7 +489,7 @@ def modals_detail(modal_id: str) -> ResponseType:
         case "DELETE":
             current_app.logger.info(f"deleting modal {modal_id}")
             db.modal_model.delete_obj(modal_id)
-            return jsonify({"message": "Deleted."})
+            return response_deleted
 
         case "PUT":
             if not isinstance(request.json, dict):
@@ -546,7 +551,7 @@ def layers_detail(layer_id: str) -> ResponseType:
 
         case "DELETE":
             db.delete_layer(layer_id)
-            return jsonify({"message": "Deleted."})
+            return response_deleted
 
         case "PUT":
             if not isinstance(request.json, dict):
