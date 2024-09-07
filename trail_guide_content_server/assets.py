@@ -8,8 +8,10 @@ import os
 from datetime import datetime
 from itertools import groupby
 from pathlib import Path
+from typing import Literal
 
 from .db import get_asset_types
+from .types import AssetType, AssetWithUsage
 
 __all__ = [
     "ASSET_TYPE_IMAGE",
@@ -19,18 +21,19 @@ __all__ = [
     "ASSET_TYPE_PDF",
     "ASSET_TYPES",
 
+    "AssetTypeError",
     "detect_asset_type",
     "make_asset_list",
 ]
 
 
-ASSET_TYPE_IMAGE = "image"
-ASSET_TYPE_AUDIO = "audio"
-ASSET_TYPE_VIDEO = "video"
-ASSET_TYPE_VIDEO_TEXT_TRACK = "video_text_track"
-ASSET_TYPE_PDF = "pdf"
+ASSET_TYPE_IMAGE: Literal["image"] = "image"
+ASSET_TYPE_AUDIO: Literal["audio"] = "audio"
+ASSET_TYPE_VIDEO: Literal["video"] = "video"
+ASSET_TYPE_VIDEO_TEXT_TRACK: Literal["video_text_track"] = "video_text_track"
+ASSET_TYPE_PDF: Literal["pdf"] = "pdf"
 
-ASSET_TYPES: frozenset[str] = frozenset({
+ASSET_TYPES: frozenset[AssetType] = frozenset({
     ASSET_TYPE_IMAGE,
     ASSET_TYPE_AUDIO,
     ASSET_TYPE_VIDEO,
@@ -39,35 +42,39 @@ ASSET_TYPES: frozenset[str] = frozenset({
 })
 
 
-def detect_asset_type(file_name: str | Path, form_data=None) -> tuple[str, str]:
+class AssetTypeError(Exception):
+    pass
+
+
+def detect_asset_type(file_name: str | Path, form_data=None) -> AssetType:
     form_data = form_data or {}
     file_ext = os.path.splitext(file_name)[1].lower().lstrip(".")
 
     match file_ext:
         case "jpg" | "jpeg" | "png" | "gif":
-            asset_type = ASSET_TYPE_IMAGE
+            return ASSET_TYPE_IMAGE
         case "mp3" | "m4a":
-            asset_type = ASSET_TYPE_AUDIO
+            return ASSET_TYPE_AUDIO
         case "mp4" | "mov":
-            asset_type = ASSET_TYPE_VIDEO
+            return ASSET_TYPE_VIDEO
         case "vtt":
-            asset_type = ASSET_TYPE_VIDEO_TEXT_TRACK
+            return ASSET_TYPE_VIDEO_TEXT_TRACK
         case "pdf":
-            asset_type = ASSET_TYPE_PDF
+            return ASSET_TYPE_PDF
         case _:
             if "asset_type" not in form_data:
-                return "", "No asset_type provided, and could not figure it out automatically"
+                raise AssetTypeError("No asset_type provided, and could not figure it out automatically")
 
             asset_type = form_data["asset_type"]
 
             if asset_type not in ASSET_TYPES:
-                return "", f"'{asset_type}' is not a valid asset type"
+                raise AssetTypeError(f"'{asset_type}' is not a valid asset type")
 
-    return asset_type, ""
+            return asset_type
 
 
-def _make_asset_list_js(assets: list[dict]) -> tuple[str, str]:
-    def _asset_type(a: dict) -> str:
+def _make_asset_list_js(assets: list[AssetWithUsage]) -> tuple[str, str]:
+    def _asset_type(a: AssetWithUsage) -> AssetType:
         return a["asset_type"]
 
     assets_by_type = {
@@ -94,7 +101,7 @@ def _make_asset_list_js(assets: list[dict]) -> tuple[str, str]:
     return rt, "application/js"
 
 
-def make_asset_list(assets: list[dict], as_js: bool = False) -> tuple[str, str]:
+def make_asset_list(assets: list[AssetWithUsage], as_js: bool = False) -> tuple[str, str]:
     if as_js:
         return _make_asset_list_js(assets)
 

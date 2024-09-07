@@ -14,7 +14,7 @@ from flask import after_this_request, Blueprint, jsonify, current_app, request, 
 from werkzeug.utils import secure_filename
 
 from . import __version__, db
-from .assets import detect_asset_type, make_asset_list
+from .assets import AssetTypeError, detect_asset_type, make_asset_list
 from .auth import requires_auth, SCOPE_READ_CONTENT, SCOPE_READ_RELEASES, SCOPE_MANAGE_CONTENT, SCOPE_EDIT_RELEASES
 from .bundles import make_bundle_path, make_release_bundle
 from .config import public_config
@@ -29,6 +29,7 @@ from .object_schemas import (
     feedback_item_validator,
 )
 from .qr import make_station_qr, make_page_qr
+from .types import Asset, AssetWithUsage
 from .utils import get_file_hash_hex, get_utc_str, request_changed
 
 __all__ = ["api_v1", "well_known"]
@@ -230,9 +231,10 @@ def asset_list() -> ResponseType:
         if not file.filename:
             return {"message": "missing filename for file"}, 400
 
-        asset_type, err = detect_asset_type(file.filename, request.form)
-        if err:
-            return {"message": err}, 400
+        try:
+            asset_type = detect_asset_type(file.filename, request.form)
+        except AssetTypeError as e:
+            return {"message": str(e)}, 400
 
         file_name = f"{int(datetime.now().timestamp() * 1000)}-{secure_filename(file.filename)}"
         file_path = pathlib.Path(current_app.config["ASSET_DIR"]) / file_name
@@ -241,7 +243,7 @@ def asset_list() -> ResponseType:
 
         file.save(file_path)
 
-        a: dict = {
+        a: Asset = {
             "id": str(uuid.uuid4()),
             "asset_type": asset_type,
             "file_name": file_name,
@@ -264,7 +266,7 @@ def asset_list() -> ResponseType:
 @api_v1.route("/assets/<string:asset_id>", methods=["GET", "PUT", "DELETE"])
 @requires_auth()
 def asset_detail(asset_id) -> ResponseType:
-    a = db.get_asset(asset_id)
+    a: AssetWithUsage | None = db.get_asset(asset_id)
 
     if a is None:
         return {"message": f"Could not find asset with ID {asset_id}"}, 404
@@ -292,9 +294,10 @@ def asset_detail(asset_id) -> ResponseType:
             if not file.filename:
                 return {"message": "missing filename for file"}, 400
 
-            asset_type, err = detect_asset_type(file.filename, request.form)
-            if err:
-                return {"message": err}, 400
+            try:
+                asset_type = detect_asset_type(file.filename, request.form)
+            except AssetTypeError as e:
+                return {"message": str(e)}, 400
 
             asset_dir = pathlib.Path(current_app.config["ASSET_DIR"])
             file_parts = secure_filename(file.filename).split(".")
@@ -307,8 +310,7 @@ def asset_detail(asset_id) -> ResponseType:
             file.save(file_path)
             os.remove(asset_dir / old_file_name)
 
-            a = {
-                **a,
+            a: Asset = a | {
                 "asset_type": asset_type,
                 "file_name": file_name,
                 "file_size": os.path.getsize(file_path),

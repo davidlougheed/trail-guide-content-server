@@ -17,7 +17,7 @@ classifiers=[
 ]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 click = "^8.1.7"
 Flask = "^3.0.2"
 Flask-Cors = "^4.0.1"
@@ -27,6 +27,7 @@ python-dotenv = "^1.0.1"
 qrcode = {extras = ["pil"], version = "^7.3.1"}
 requests = "^2.31.0"
 Werkzeug = "^3.0.1"
+pydantic = "^2.9.0"
 
 
 [tool.poetry.group.dev.dependencies]

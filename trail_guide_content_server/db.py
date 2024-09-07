@@ -12,6 +12,8 @@ from flask import current_app, g
 from sqlite3 import Connection, Row  # for typing hints and row factory
 from typing import Any, Callable, Type
 
+from .types import Asset, AssetWithUsage
+
 __all__ = [
     "get_db",
 
@@ -487,7 +489,7 @@ def get_asset_types():
     return [r["id"] for r in q.fetchall()]
 
 
-def _row_to_asset(r: Row) -> dict:
+def _row_to_asset(r: Row) -> AssetWithUsage:
     return {
         "id": r["id"],
         "asset_type": r["asset_type"],
@@ -539,7 +541,7 @@ def get_asset_usage_query(only_enabled: bool) -> str:
     )"""
 
 
-def get_assets() -> list[dict]:
+def get_assets() -> list[AssetWithUsage]:
     c = get_db().cursor()
     q = c.execute(f"""
         SELECT 
@@ -560,7 +562,7 @@ def get_assets() -> list[dict]:
     return [_row_to_asset(r) for r in q.fetchall()]
 
 
-def get_assets_used(only_enabled: bool = False) -> list[dict]:
+def get_assets_used(only_enabled: bool = False) -> list[AssetWithUsage]:
     """
     Gets all assets which are used by one or more enabled stations, pages, or modals.
     :return: A list of assets, represented by dictionaries.
@@ -587,7 +589,7 @@ def get_assets_used(only_enabled: bool = False) -> list[dict]:
     return [_row_to_asset(r) for r in q.fetchall()]
 
 
-def get_asset(asset_id: str) -> dict | None:
+def get_asset(asset_id: str) -> AssetWithUsage | None:
     c = get_db().cursor()
     q = c.execute(
         f"""
@@ -610,7 +612,7 @@ def get_asset(asset_id: str) -> dict | None:
     return _row_to_asset(r) if r else None
 
 
-def set_asset(asset_id: str, data: dict) -> dict | None:
+def set_asset(asset_id: str, data: Asset) -> AssetWithUsage | None:
     db = get_db()
     c = db.cursor()
     c.execute("""

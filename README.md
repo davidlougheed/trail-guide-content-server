@@ -48,8 +48,15 @@ services:
 
 ## Developing
 
-After setting up a Python virtual environment, you can start the development server with the following command:
+After installing Poetry (outside a virtual environment) and setting up a Python virtual environment, you can
+install the dependencies with the command:
 
 ```bash
-flask run
+poetry install
+```
+
+Then, you can start the development server with the following command:
+
+```bash
+poetry run flask run
 ```

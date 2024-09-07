@@ -94,10 +94,11 @@ def _import_file(c: sqlite3.Cursor, file_path, file_match) -> str:
     shutil.copyfile(file_path, new_file_path)
 
     new_id = str(uuid.uuid4())
+    asset_type = detect_asset_type(new_file_path)
 
     set_asset(new_id, {
         "id": new_id,
-        "asset_type": detect_asset_type(new_file_path)[0],
+        "asset_type": asset_type,
         "file_name": file_name,
         "file_size": os.path.getsize(new_file_path),
         "sha1_checksum": checksum,
