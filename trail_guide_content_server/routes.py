@@ -661,10 +661,10 @@ def releases_detail(version: int) -> ResponseType:
             return err_cannot_alter_id
 
         if request_changed(r["bundle_path"], field="bundle_path"):
-            return {"message": f"Cannot alter bundle path"}, 400
+            return {"message": "Cannot alter bundle path"}, 400
 
         if request_changed(r["submitted_dt"], field="submitted_dt"):
-            return {"message": f"Cannot alter submitted date/time"}, 400
+            return {"message": "Cannot alter submitted date/time"}, 400
 
         published_dt = request.json.get("published_dt")
         published = request.json.get("published")  # Alternate boolean field - signal to generate published_dt timestamp
