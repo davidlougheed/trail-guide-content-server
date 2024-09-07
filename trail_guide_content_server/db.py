@@ -574,9 +574,14 @@ def get_assets_used(only_enabled: bool = False) -> list[dict]:
             file_name, 
             file_size, 
             sha1_checksum, 
-            times_used_by_all
-        FROM assets INNER JOIN {get_asset_usage_query(only_enabled)} AS asset_usage 
-        ON assets.id = asset_usage.asset
+            IFNULL(asset_usage.times_used, 0) AS times_used_by_all,
+            IFNULL(asset_usage_enabled.times_used, 0) AS times_used_by_enabled
+        FROM assets 
+        INNER JOIN {get_asset_usage_query(only_enabled=False)} AS asset_usage 
+            ON assets.id = asset_usage.asset
+        {"INNER JOIN" if only_enabled else "LEFT JOIN"} {get_asset_usage_query(only_enabled=True)} 
+            AS asset_usage_enabled 
+            ON assets.id = asset_usage_enabled.asset
         WHERE deleted = 0
     """)
     return [_row_to_asset(r) for r in q.fetchall()]
