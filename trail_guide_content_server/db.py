@@ -4,6 +4,7 @@
 
 import json
 import os.path
+import pathlib
 import re
 import sqlite3
 
@@ -16,6 +17,7 @@ from .types import Asset, AssetWithUsage
 
 __all__ = [
     "get_db",
+    "init_db",
 
     "get_categories",
     "get_category",
@@ -61,6 +63,8 @@ __all__ = [
 ]
 
 
+SCHEMA_PATH = pathlib.Path(__file__).parent.resolve() / "schema.sql"
+
 ASSET_URI_PATTERN_FRAGMENT = r"https?://[a-zA-Z\d.\-_:]{1,127}/api/v1/assets/([a-zA-Z\d\-]{36})/bytes/?"
 ASSET_PATTERN = re.compile(
     fr'src=\\"({ASSET_URI_PATTERN_FRAGMENT})\\"|'
@@ -78,6 +82,13 @@ def get_db() -> Connection:
         c = db.cursor()
         c.execute("PRAGMA foreign_keys = ON")  # By default, FKs are off in SQLite; turn them on
     return db
+
+
+def init_db():
+    with open(SCHEMA_PATH, "r") as sf:
+        current_app.logger.info(f"Initializing database at {current_app.config['DATABASE']}")
+        current_app.logger.info(f"    Schema location: {SCHEMA_PATH}")
+        get_db().executescript(sf.read())
 
 
 def map_to_id(rows: list[sqlite3.Row]) -> list[Any]:

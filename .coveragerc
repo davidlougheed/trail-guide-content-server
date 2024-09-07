@@ -1,0 +1,4 @@
+[run]
+branch = True
+source = trail_guide_content_server
+omit = trail_guide_content_server/migrations/*

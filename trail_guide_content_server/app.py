@@ -20,7 +20,7 @@ from werkzeug.utils import secure_filename
 from .assets import detect_asset_type
 from .auth import AuthError
 from .config import config
-from .db import get_db, set_asset, station_model
+from .db import get_db, init_db, set_asset, station_model
 from .routes import api_v1, well_known
 from .utils import get_file_hash_hex
 
@@ -207,11 +207,6 @@ def import_stations(base_path, stations_json, manifest_json):
             })
 
 
-SCHEMA_PATH = pathlib.Path(__file__).parent.resolve() / "schema.sql"
-
-
 # Initialize the DB on startup
-with application.app_context(), open(SCHEMA_PATH, "r") as sf:
-    application.logger.info(f"Initializing database at {application.config['DATABASE']}")
-    application.logger.info(f"    Schema location: {SCHEMA_PATH}")
-    get_db().executescript(sf.read())
+with application.app_context():
+    init_db()

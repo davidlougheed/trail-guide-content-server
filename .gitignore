@@ -13,4 +13,6 @@
 /env
 __pycache__
 /.env
+.coverage
 .mypy_cache
+/htmlcov
