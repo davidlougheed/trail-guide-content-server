@@ -36,8 +36,6 @@ CREATE TABLE IF NOT EXISTS assets (
     file_size INTEGER NOT NULL CHECK (file_size > 0),
     sha1_checksum VARCHAR(40) NOT NULL,  -- Checksum for checking for duplicates, etc.
 
-    enabled INTEGER NOT NULL CHECK (enabled in (0, 1)),
-
     -- Deleted -> file is no longer available, but keep record
     deleted INTEGER NOT NULL CHECK (deleted in (0, 1)) DEFAULT 0,
 

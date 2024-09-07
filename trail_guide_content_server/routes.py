@@ -247,7 +247,6 @@ def asset_list() -> ResponseType:
             "file_name": file_name,
             "file_size": os.path.getsize(file_path),
             "sha1_checksum": get_file_hash_hex(file_path),
-            "times_used": 0,
         }
 
         if errs := list(asset_validator.iter_errors(a)):

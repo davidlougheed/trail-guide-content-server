@@ -101,7 +101,6 @@ def _import_file(c: sqlite3.Cursor, file_path, file_match) -> str:
         "file_name": file_name,
         "file_size": os.path.getsize(new_file_path),
         "sha1_checksum": checksum,
-        "enabled": True,
     })
 
     return new_id
