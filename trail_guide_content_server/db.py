@@ -22,6 +22,7 @@ __all__ = [
     "get_categories",
     "get_category",
     "set_category",
+    "delete_category",
 
     "get_sections",
     "get_sections_with_stations",
@@ -333,7 +334,7 @@ def set_category(category_id: str, data: dict) -> dict | None:
 def delete_category(category_id: str) -> None:
     db = get_db()
     c = db.cursor()
-    c.execute("DELETE FROM categories WHERE id = ? LIMIT 1", (category_id,))
+    c.execute("DELETE FROM categories WHERE id = ?", (category_id,))
     db.commit()
 
 
