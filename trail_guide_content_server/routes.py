@@ -53,7 +53,7 @@ def err_validation_failed(errs):
     return current_app.response_class(json.dumps({
         "message": "Object validation failed",
         "errors": [str(e) for e in errs],
-    }), status=400)
+    }), content_type="application/json", status=400)
 
 
 @api_v1.route("/info", methods=["GET"])
