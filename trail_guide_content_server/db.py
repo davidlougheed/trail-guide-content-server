@@ -13,7 +13,7 @@ from flask import current_app, g
 from sqlite3 import Connection, Row  # for typing hints and row factory
 from typing import Any, Callable, Type
 
-from .types import Asset, AssetWithIDAndUsage
+from .types import Asset, AssetWithIDAndUsage, Category, CategoryWithID
 
 __all__ = [
     "get_db",
@@ -310,20 +310,20 @@ class ModelWithRevision:
 _row_to_category = dict
 
 
-def get_categories() -> list[dict]:
+def get_categories() -> list[CategoryWithID]:
     c = get_db().cursor()
     q = c.execute("SELECT id, icon_svg FROM categories")
     return [_row_to_category(r) for r in q.fetchall()]
 
 
-def get_category(category_id: str) -> dict | None:
+def get_category(category_id: str) -> CategoryWithID | None:
     c = get_db().cursor()
     q = c.execute("SELECT id, icon_svg FROM categories WHERE id = ?", (category_id,))
     r = q.fetchone()
     return _row_to_category(r) if r else None
 
 
-def set_category(category_id: str, data: dict) -> dict | None:
+def set_category(category_id: str, data: Category) -> CategoryWithID | None:
     db = get_db()
     c = db.cursor()
     c.execute("INSERT OR REPLACE INTO categories (id, icon_svg) VALUES (?, ?)", (category_id, data["icon_svg"]))

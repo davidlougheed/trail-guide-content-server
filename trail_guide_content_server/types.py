@@ -8,6 +8,8 @@ __all__ = [
     "AssetType",
     "Asset",
     "AssetWithIDAndUsage",
+    "Category",
+    "CategoryWithID",
 ]
 
 
@@ -25,3 +27,11 @@ class AssetWithIDAndUsage(Asset):
     id: str
     times_used_by_all: int
     times_used_by_enabled: int
+
+
+class Category(TypedDict):
+    icon_svg: str
+
+
+class CategoryWithID(Category):
+    id: str

@@ -29,7 +29,7 @@ from .object_schemas import (
     feedback_item_validator,
 )
 from .qr import make_station_qr, make_page_qr
-from .types import Asset, AssetWithIDAndUsage
+from .types import Asset, AssetWithIDAndUsage, Category, CategoryWithID
 from .utils import get_file_hash_hex, get_utc_str, request_changed
 
 __all__ = ["api_v1", "well_known"]
@@ -77,7 +77,7 @@ def categories() -> ResponseType:
 @api_v1.route("/categories/<string:category_id>", methods=["GET", "PUT", "DELETE"])
 @requires_auth()
 def categories_detail(category_id: str) -> ResponseType:
-    c = db.get_category(category_id)
+    c: CategoryWithID | None = db.get_category(category_id)
     is_creating: bool = False
 
     if request.method != "PUT" and c is None:
@@ -92,12 +92,13 @@ def categories_detail(category_id: str) -> ResponseType:
         if c is not None and request_changed(c["id"]):
             return err_cannot_alter_id  # TODO: allow this, eventually
 
-        c = {**(c or {}), **request.json}
+        # noinspection PyTypeChecker
+        edited_category: Category = {**(c or {}), **request.json}
 
-        if errs := list(category_validator.iter_errors(c)):
+        if errs := list(category_validator.iter_errors(edited_category)):
             return err_validation_failed(errs)
 
-        c = db.set_category(category_id, c)
+        c = db.set_category(category_id, edited_category)
 
     elif request.method == "DELETE":
         # TODO: check for stations using the category
