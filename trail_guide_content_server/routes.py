@@ -40,7 +40,7 @@ api_v1 = Blueprint("api", __name__)
 well_known = Blueprint("well_known", __name__)
 
 err_must_be_object = Response(
-    json.dumps({"message": "Request body must be an object"}), content_type="application/json", status=400)
+    json.dumps({"message": "Request body must be a JSON object"}), content_type="application/json", status=400)
 err_cannot_alter_id = Response(
     json.dumps({"message": "Cannot alter object ID"}), content_type="application/json", status=400)
 err_no_file = Response(
