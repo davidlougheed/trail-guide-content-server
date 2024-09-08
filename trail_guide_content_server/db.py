@@ -482,7 +482,7 @@ def get_sections_with_stations(enabled_only: bool = False) -> list[dict]:
         FROM sections AS sc
         LEFT JOIN stations AS st ON sc.id = st.section
         INNER JOIN stations_current_revision AS cr ON st.id = cr.id AND st.revision = cr.revision
-        {'WHERE st.enabled = 1' if enabled_only else ''}
+        WHERE st.deleted = 0 {'AND st.enabled = 1' if enabled_only else ''}
         ORDER BY sc.rank, st.rank""")
 
     sections_of_stations: defaultdict[str, dict] = defaultdict(lambda: {"data": []})
