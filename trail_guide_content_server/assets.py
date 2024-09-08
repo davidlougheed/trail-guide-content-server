@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Literal
 
 from .db import get_asset_types
-from .types import AssetType, AssetWithUsage
+from .types import AssetType, AssetWithIDAndUsage
 
 __all__ = [
     "ASSET_TYPE_IMAGE",
@@ -73,8 +73,8 @@ def detect_asset_type(file_name: str | Path, form_data=None) -> AssetType:
             return asset_type
 
 
-def _make_asset_list_js(assets: list[AssetWithUsage]) -> tuple[str, str]:
-    def _asset_type(a: AssetWithUsage) -> AssetType:
+def _make_asset_list_js(assets: list[AssetWithIDAndUsage]) -> tuple[str, str]:
+    def _asset_type(a: AssetWithIDAndUsage) -> AssetType:
         return a["asset_type"]
 
     assets_by_type = {
@@ -101,7 +101,7 @@ def _make_asset_list_js(assets: list[AssetWithUsage]) -> tuple[str, str]:
     return rt, "application/js"
 
 
-def make_asset_list(assets: list[AssetWithUsage], as_js: bool = False) -> tuple[str, str]:
+def make_asset_list(assets: list[AssetWithIDAndUsage], as_js: bool = False) -> tuple[str, str]:
     if as_js:
         return _make_asset_list_js(assets)
 

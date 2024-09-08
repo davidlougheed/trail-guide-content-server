@@ -97,7 +97,6 @@ def _import_file(c: sqlite3.Cursor, file_path, file_match) -> str:
     asset_type = detect_asset_type(new_file_path)
 
     set_asset(new_id, {
-        "id": new_id,
         "asset_type": asset_type,
         "file_name": file_name,
         "file_size": os.path.getsize(new_file_path),

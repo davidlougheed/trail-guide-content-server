@@ -29,7 +29,7 @@ from .object_schemas import (
     feedback_item_validator,
 )
 from .qr import make_station_qr, make_page_qr
-from .types import Asset, AssetWithUsage
+from .types import Asset, AssetWithIDAndUsage
 from .utils import get_file_hash_hex, get_utc_str, request_changed
 
 __all__ = ["api_v1", "well_known"]
@@ -244,7 +244,6 @@ def asset_list() -> ResponseType:
         file.save(file_path)
 
         a: Asset = {
-            "id": str(uuid.uuid4()),
             "asset_type": asset_type,
             "file_name": file_name,
             "file_size": os.path.getsize(file_path),
@@ -254,7 +253,9 @@ def asset_list() -> ResponseType:
         if errs := list(asset_validator.iter_errors(a)):
             return err_validation_failed(errs)
 
-        return jsonify(db.set_asset(a["id"], a)), 201
+        # Create the new asset in the database, minting a new UUID for it in the process, and then return its JSON
+        # representation with ID and usage details; usage will of course be 0.
+        return jsonify(db.set_asset(str(uuid.uuid4()), a)), 201
 
     only_used = request.args.get("only_used", "").strip() != ""
     as_js = request.args.get("as_js", "").strip() != ""
@@ -265,8 +266,8 @@ def asset_list() -> ResponseType:
 
 @api_v1.route("/assets/<string:asset_id>", methods=["GET", "PUT", "DELETE"])
 @requires_auth()
-def asset_detail(asset_id) -> ResponseType:
-    a: AssetWithUsage | None = db.get_asset(asset_id)
+def asset_detail(asset_id: str) -> ResponseType:
+    a: AssetWithIDAndUsage | None = db.get_asset(asset_id)
 
     if a is None:
         return {"message": f"Could not find asset with ID {asset_id}"}, 404
