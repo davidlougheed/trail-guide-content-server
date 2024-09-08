@@ -71,6 +71,7 @@ ASSET_PATTERN = re.compile(
     fr'src=\\"({ASSET_URI_PATTERN_FRAGMENT})\\"|'
     fr'source=\\"({ASSET_URI_PATTERN_FRAGMENT})\\"|'
     fr'poster=\\"({ASSET_URI_PATTERN_FRAGMENT})\\"|'
+    fr'href=\\"({ASSET_URI_PATTERN_FRAGMENT})\\"|'
     fr'"asset": ?"([a-z0-9\-]{{36}})"'
 )
 
@@ -94,6 +95,10 @@ def init_db():
 
 def map_to_id(rows: list[sqlite3.Row]) -> list[Any]:
     return [r["id"] for r in rows]
+
+
+def remove_blank(x: tuple[str, ...]) -> tuple[str, ...]:
+    return tuple(filter(lambda z: z != "", x))
 
 
 # TODO: JSON schema
@@ -218,7 +223,7 @@ class ModelWithRevision:
 
         for f in self.asset_search_fields:
             if fv := data.get(f):
-                matches = [m[-1] for m in ASSET_PATTERN.findall(json.dumps(fv))]
+                matches = [remove_blank(m)[-1] for m in ASSET_PATTERN.findall(json.dumps(fv))]
                 asset_usages.update(set(matches))
 
         asset_usage_rows = [(obj_id, revision, a) for a in asset_usages if a.strip()]
