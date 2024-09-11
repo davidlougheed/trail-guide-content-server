@@ -1,9 +1,9 @@
 [tool.poetry]
 name = "trail-guide-content-server"
-version = "0.16.0"
+version = "0.16.1"
 description = "A server for storing content for a trail guide app."
 authors = ["David Lougheed <david.lougheed@gmail.com>"]
-license = "GPLv3"
+license = "GPL-3.0"
 readme = "README.md"
 packages = [{include = "trail_guide_content_server"}]
 include = [
