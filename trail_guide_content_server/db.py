@@ -28,6 +28,7 @@ __all__ = [
     "get_sections_with_stations",
     "get_section",
     "set_section",
+    "delete_section",
 
     "station_model",
 
@@ -368,6 +369,13 @@ def set_section(section_id: str, data: dict) -> dict | None:
         (section_id, data["title"], data["color"], int(data["rank"])))
     db.commit()
     return get_section(section_id)
+
+
+def delete_section(section_id: str) -> None:
+    db = get_db()
+    c = db.cursor()
+    c.execute("DELETE FROM sections WHERE id = ?", (section_id,))
+    db.commit()
 
 
 def _row_to_station(r: Row, prefix: str = "") -> dict:
