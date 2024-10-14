@@ -115,7 +115,7 @@ def sections() -> ResponseType:
     return jsonify(db.get_sections_with_stations() if nest_stations else db.get_sections())
 
 
-@api_v1.route("/sections/<string:section_id>", methods=["GET", "PUT"])
+@api_v1.route("/sections/<string:section_id>", methods=["GET", "PUT", "DELETE"])
 @requires_auth()
 def sections_detail(section_id: str) -> ResponseType:
     s = db.get_section(section_id)
@@ -139,6 +139,18 @@ def sections_detail(section_id: str) -> ResponseType:
             return err_validation_failed(errs)
 
         s = db.set_section(section_id, s)
+
+    elif request.method == "DELETE":
+        sws = db.get_sections_with_stations()
+
+        for section in sws:
+            if section["id"] == section_id:
+                if (ns := len(section["data"])) > 0:
+                    return {"message": f"Could not delete section {section} with {ns} stations"}, 400
+                break
+
+        db.delete_section(section_id)
+        return response_deleted
 
     return jsonify(s), 201 if is_creating else 200
 
