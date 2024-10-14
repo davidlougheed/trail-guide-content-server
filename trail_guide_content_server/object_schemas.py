@@ -184,13 +184,17 @@ station_validator = jsonschema.Draft7Validator(STATION_SCHEMA)
 
 SECTION_SCHEMA = {
     "type": "object",
-    "required": ["id", "title", "rank"],
+    "required": ["title", "rank"],
     "properties": {
         "id": {
             "type": "string",
         },
         "title": {
             "type": "string",
+        },
+        "color": {
+            "type": "string",
+            "pattern": r"^[0-9a-fA-F]{6}$",
         },
         "rank": {
             "type": "integer",
