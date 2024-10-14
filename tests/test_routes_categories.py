@@ -60,7 +60,8 @@ def test_delete_category(client: FlaskClient):
     mk_category()
 
     res = client.delete("/api/v1/categories/test")
-    assert res.status_code == 204
+    assert res.status_code == 200
+    assert res.json == {"message": "Deleted."}
 
     from trail_guide_content_server.db import get_category
     assert get_category("test") is None  # make sure category was actually deleted

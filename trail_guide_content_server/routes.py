@@ -103,7 +103,7 @@ def categories_detail(category_id: str) -> ResponseType:
     elif request.method == "DELETE":
         # TODO: check for stations using the category
         db.delete_category(category_id)
-        return current_app.response_class(status=204)
+        return response_deleted
 
     return jsonify(c), 201 if is_creating else 200
 
