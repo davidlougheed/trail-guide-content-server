@@ -141,15 +141,19 @@ def sections_detail(section_id: str) -> ResponseType:
         s = db.set_section(section_id, s)
 
     elif request.method == "DELETE":
-        sws = db.get_sections_with_stations()
-
-        for section in sws:
+        for section in db.get_sections_with_stations():
             if section["id"] == section_id:
                 if (ns := len(section["data"])) > 0:
                     return {"message": f"Could not delete section {section} with {ns} stations"}, 400
                 break
 
+        # May have some marked-deleted stations which we have to perma-delete now that we're deleting the section
+        # record from the database. We don't want to just use mark-deleted for sections, since they have natural keys.
+        db.perma_delete_section_stations(section_id)
+
+        # Then, we delete the section record.
         db.delete_section(section_id)
+
         return response_deleted
 
     return jsonify(s), 201 if is_creating else 200

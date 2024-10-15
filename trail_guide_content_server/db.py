@@ -508,6 +508,17 @@ def get_sections_with_stations(enabled_only: bool = False) -> list[dict]:
     return [{"id": k, **v} for k, v in sections_of_stations.items()]
 
 
+def perma_delete_section_stations(section_id: str):
+    db = get_db()
+    c = db.cursor()
+    # TODO: use model definition
+    p = (section_id,)
+    c.execute("DELETE FROM stations_current_revision WHERE id IN (SELECT id FROM stations WHERE section = ?)", p)
+    c.execute("DELETE FROM stations_assets_used WHERE obj IN (SELECT id FROM stations WHERE section = ?)", p)
+    c.execute("DELETE FROM stations WHERE section = ?", p)
+    db.commit()
+
+
 def get_asset_types():
     c = get_db().cursor()
     q = c.execute("SELECT id FROM asset_types")
