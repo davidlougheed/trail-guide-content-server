@@ -4,7 +4,7 @@ ENV PYTHONUNBUFFERED=1
 RUN mkdir -p /to_import && \
     mkdir -p /data/assets && \
     mkdir -p /data/bundles
-RUN pip install "poetry==1.8.3" "gunicorn[gevent]==23.0.0"
+RUN pip install "poetry==1.8.5" "gunicorn[gevent]==23.0.0"
 
 # Set up the code/package in /app
 WORKDIR /app
