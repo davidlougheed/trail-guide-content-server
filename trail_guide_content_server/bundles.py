@@ -47,6 +47,7 @@ def make_release_bundle(release: dict, final_bundle_path: pathlib.Path) -> int:
         os.mkdir(tdp / "assets")
 
         asset_path = tdp / "assets" / "assets.js"
+        categories_path = tdp / "categories.json"
         config_path = tdp / "config.json"
         layers_path = tdp / "layers.json"
         metadata_path = tdp / "metadata.json"
@@ -60,6 +61,9 @@ def make_release_bundle(release: dict, final_bundle_path: pathlib.Path) -> int:
 
         with open(asset_path, "w") as afh:
             afh.write(asset_js)
+
+        with open(categories_path, "w") as cfh:
+            json.dump({c["id"]: c for c in db.get_categories()}, cfh, indent=2)
 
         with open(config_path, "w") as cfh:
             json.dump(public_config, cfh, indent=2)
@@ -86,6 +90,7 @@ def make_release_bundle(release: dict, final_bundle_path: pathlib.Path) -> int:
 
         with open(bundle_path, "wb") as zfh:
             with zipfile.ZipFile(zfh, mode="w") as zf:
+                zf.write(categories_path, "categories.json")
                 zf.write(config_path, "config.json")
                 zf.write(layers_path, "layers.json")
                 zf.write(metadata_path, "metadata.json")
