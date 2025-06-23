@@ -20,7 +20,6 @@ __all__ = [
     "ASSET_TYPE_VIDEO_TEXT_TRACK",
     "ASSET_TYPE_PDF",
     "ASSET_TYPES",
-
     "AssetTypeError",
     "detect_asset_type",
     "make_asset_list",
@@ -33,13 +32,15 @@ ASSET_TYPE_VIDEO: Literal["video"] = "video"
 ASSET_TYPE_VIDEO_TEXT_TRACK: Literal["video_text_track"] = "video_text_track"
 ASSET_TYPE_PDF: Literal["pdf"] = "pdf"
 
-ASSET_TYPES: frozenset[AssetType] = frozenset({
-    ASSET_TYPE_IMAGE,
-    ASSET_TYPE_AUDIO,
-    ASSET_TYPE_VIDEO,
-    ASSET_TYPE_VIDEO_TEXT_TRACK,
-    ASSET_TYPE_PDF,
-})
+ASSET_TYPES: frozenset[AssetType] = frozenset(
+    {
+        ASSET_TYPE_IMAGE,
+        ASSET_TYPE_AUDIO,
+        ASSET_TYPE_VIDEO,
+        ASSET_TYPE_VIDEO_TEXT_TRACK,
+        ASSET_TYPE_PDF,
+    }
+)
 
 
 class AssetTypeError(Exception):
@@ -78,7 +79,7 @@ def _make_asset_list_js(assets: list[AssetWithIDAndUsage]) -> tuple[str, str]:
         return a["asset_type"]
 
     assets_by_type = {
-        at: {aa["id"]: f"""require("./{at}/{aa['file_name']}")""" for aa in v}
+        at: {aa["id"]: f"""require("./{at}/{aa["file_name"]}")""" for aa in v}
         for at, v in groupby(sorted(assets, key=_asset_type), key=_asset_type)
     }
 

@@ -72,9 +72,13 @@ def make_release_bundle(release: dict, final_bundle_path: pathlib.Path) -> int:
             json.dump(db.get_layers(), lfh, indent=2)
 
         with open(metadata_path, "w") as mfh:
-            json.dump({
-                "release": {k: v for k, v in release.items() if not k.endswith("_dt")},
-            }, mfh, indent=2)
+            json.dump(
+                {
+                    "release": {k: v for k, v in release.items() if not k.endswith("_dt")},
+                },
+                mfh,
+                indent=2,
+            )
 
         with open(modals_path, "w") as mfh:
             json.dump({m["id"]: m for m in db.modal_model.get_all()}, mfh, indent=2)
@@ -104,7 +108,8 @@ def make_release_bundle(release: dict, final_bundle_path: pathlib.Path) -> int:
                 for asset in assets_to_include:
                     zf.write(
                         pathlib.Path(current_app.config["ASSET_DIR"]) / asset["file_name"],
-                        f"assets/{asset['asset_type']}/{asset['file_name']}")
+                        f"assets/{asset['asset_type']}/{asset['file_name']}",
+                    )
 
         shutil.copyfile(bundle_path, final_bundle_path)
 

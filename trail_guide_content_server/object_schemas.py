@@ -5,29 +5,30 @@
 import jsonschema
 
 __all__ = [
+    # Category
     "CATEGORY_SCHEMA",
     "CATEGORY_WITH_ID_SCHEMA",
     "category_validator",
     "category_with_id_validator",
-
+    # Station
     "STATION_SCHEMA",
     "station_validator",
-
+    # Section
     "SECTION_SCHEMA",
     "section_validator",
-
+    # Asset
     "ASSET_SCHEMA",
     "asset_validator",
-
+    # Modal
     "MODAL_SCHEMA",
     "modal_validator",
-
+    # Layer
     "LAYER_SCHEMA",
     "layer_validator",
-
+    # Release
     "RELEASE_SCHEMA",
     "release_validator",
-
+    # Feedback item
     "FEEDBACK_ITEM_SCHEMA",
     "feedback_item_validator",
 ]
@@ -52,8 +53,18 @@ category_with_id_validator = jsonschema.Draft7Validator(CATEGORY_WITH_ID_SCHEMA)
 STATION_SCHEMA = {
     "type": "object",
     "required": [
-        "id", "title", "long_title", "subtitle", "coordinates_utm", "section", "category", "header_image", "contents",
-        "enabled", "rank"],
+        "id",
+        "title",
+        "long_title",
+        "subtitle",
+        "coordinates_utm",
+        "section",
+        "category",
+        "header_image",
+        "contents",
+        "enabled",
+        "rank",
+    ],
     "properties": {
         "id": {
             "type": "string",
@@ -80,7 +91,7 @@ STATION_SCHEMA = {
                 "north": {
                     "type": "integer",
                 },
-            }
+            },
         },
         "visible": {
             "type": "object",
@@ -110,14 +121,11 @@ STATION_SCHEMA = {
                         "type": "string",
                         "enum": ["html", "quiz", "gallery"],
                     },
-
                     # TODO: We need proper if/else, but for now just list the different properties
-
                     # common
                     "title": {
                         "type": "string",
                     },
-
                     # html
                     "content_before_fold": {
                         "type": "string",
@@ -125,7 +133,6 @@ STATION_SCHEMA = {
                     "content_after_fold": {
                         "type": "string",
                     },
-
                     # gallery
                     "description": {
                         "type": "string",
@@ -144,7 +151,6 @@ STATION_SCHEMA = {
                             },
                         },
                     },
-
                     # quiz
                     "quiz_type": {
                         "type": "string",
@@ -164,7 +170,7 @@ STATION_SCHEMA = {
                                 "label": {"type": "string"},
                                 "answer": {
                                     "type": ["boolean", "string"],
-                                }
+                                },
                             },
                         },
                     },
@@ -177,7 +183,7 @@ STATION_SCHEMA = {
         "rank": {
             "type": "integer",
         },
-    }
+    },
 }
 
 station_validator = jsonschema.Draft7Validator(STATION_SCHEMA)
@@ -306,7 +312,7 @@ RELEASE_SCHEMA = {
         "published_dt": {
             "type": ["string", "null"],
         },
-    }
+    },
 }
 
 release_validator = jsonschema.Draft7Validator(RELEASE_SCHEMA)
@@ -330,11 +336,11 @@ FEEDBACK_ITEM_SCHEMA = {
             "properties": {
                 "name": {"type": "string"},
                 "email": {"type": "string"},
-            }
+            },
         },
         "content": {"type": "string"},
         "submitted": {"type": "string"},
-    }
+    },
 }
 
 feedback_item_validator = jsonschema.Draft7Validator(FEEDBACK_ITEM_SCHEMA)

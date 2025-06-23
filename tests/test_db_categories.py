@@ -1,10 +1,12 @@
 def test_get_categories_empty(ctx):
     from trail_guide_content_server.db import get_categories
+
     assert get_categories() == []
 
 
 def test_category_not_found(ctx):
     from trail_guide_content_server.db import get_category, delete_category
+
     assert get_category("does-not-exist") is None
 
     delete_category("does-not-exist")

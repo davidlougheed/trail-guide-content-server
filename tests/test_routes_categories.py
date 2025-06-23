@@ -19,6 +19,7 @@ def test_get_category_detail_none(client: FlaskClient):
 
 def mk_category():
     from trail_guide_content_server.db import set_category
+
     set_category("test", {"icon_svg": "some SVG path"})
 
 
@@ -64,6 +65,7 @@ def test_delete_category(client: FlaskClient):
     assert res.json == {"message": "Deleted."}
 
     from trail_guide_content_server.db import get_category
+
     assert get_category("test") is None  # make sure category was actually deleted
 
     assert_404_category_detail(client.get("/api/v1/categories/test"))

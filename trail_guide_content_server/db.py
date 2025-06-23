@@ -18,48 +18,47 @@ from .types import Asset, AssetWithIDAndUsage, Category, CategoryWithID
 __all__ = [
     "get_db",
     "init_db",
-
+    # categories
     "get_categories",
     "get_category",
     "set_category",
     "delete_category",
-
+    # sections / stations
     "get_sections",
     "get_sections_with_stations",
     "get_section",
     "set_section",
     "delete_section",
-
     "station_model",
-
+    # assets + asset types
     "get_asset_types",
     "get_assets",
     "get_assets_used",
     "get_asset",
     "set_asset",
     "delete_asset",
-
+    # pages
     "page_model",
-
+    # modals
     "modal_model",
-
+    # layers
     "get_layer",
     "get_layers",
     "set_layer",
     "delete_layer",
-
+    # releases
     "get_releases",
     "get_release",
     "get_latest_release",
     "set_release",
-
+    # settings
     "get_settings",
     "set_settings",
-
+    # feedback
     "get_feedback_items",
     "get_feedback_item",
     "set_feedback_item",
-
+    # OTTs
     "get_ott",
     "set_ott",
 ]
@@ -69,11 +68,11 @@ SCHEMA_PATH = pathlib.Path(__file__).parent.resolve() / "schema.sql"
 
 ASSET_URI_PATTERN_FRAGMENT = r"https?://[a-zA-Z\d.\-_:]{1,127}/api/v1/assets/([a-zA-Z\d\-]{36})/bytes/?"
 ASSET_PATTERN = re.compile(
-    fr'src=\\"({ASSET_URI_PATTERN_FRAGMENT})\\"|'
-    fr'source=\\"({ASSET_URI_PATTERN_FRAGMENT})\\"|'
-    fr'poster=\\"({ASSET_URI_PATTERN_FRAGMENT})\\"|'
-    fr'href=\\"({ASSET_URI_PATTERN_FRAGMENT})\\"|'
-    fr'"asset": ?"([a-z0-9\-]{{36}})"'
+    rf'src=\\"({ASSET_URI_PATTERN_FRAGMENT})\\"|'
+    rf'source=\\"({ASSET_URI_PATTERN_FRAGMENT})\\"|'
+    rf'poster=\\"({ASSET_URI_PATTERN_FRAGMENT})\\"|'
+    rf'href=\\"({ASSET_URI_PATTERN_FRAGMENT})\\"|'
+    rf'"asset": ?"([a-z0-9\-]{{36}})"'
 )
 
 
@@ -113,8 +112,8 @@ class ModelWithRevision:
         asset_search_fields: tuple[str, ...],
         insert_tuple_from_data_fn: Callable[[dict], tuple],
         row_to_dict: Callable[[Row], dict] | Type[dict],
-        order: str = '',
-        search_fields: tuple[str, ...] = ("id",)
+        order: str = "",
+        search_fields: tuple[str, ...] = ("id",),
     ):
         self.table: str = table
         self.get_fields: tuple[str, ...] = get_fields
@@ -144,22 +143,22 @@ class ModelWithRevision:
         if revision is None:
             obj = c.execute(
                 f"""
-                SELECT td.id AS id, td.revision AS revision, revision_dt, revision_msg, {', '.join(self.get_fields)} 
+                SELECT td.id AS id, td.revision AS revision, revision_dt, revision_msg, {", ".join(self.get_fields)} 
                 FROM {self.table} AS td INNER JOIN {self.table}_current_revision AS cr
                     ON td.id = cr.id AND td.revision = cr.revision
-                WHERE td.id = ?{'' if include_deleted else ' AND deleted = 0'}
+                WHERE td.id = ?{"" if include_deleted else " AND deleted = 0"}
                 """,
-                (obj_id,)
+                (obj_id,),
             ).fetchone()
         else:
             # Otherwise, return specified revision
             obj = c.execute(
                 f"""
-                SELECT td.id AS id, td.revision AS revision, revision_dt, revision_msg, {', '.join(self.get_fields)} 
+                SELECT td.id AS id, td.revision AS revision, revision_dt, revision_msg, {", ".join(self.get_fields)} 
                 FROM {self.table} AS td 
-                WHERE td.id = ? AND td.revision = ?{'' if include_deleted else ' AND deleted = 0'}
+                WHERE td.id = ? AND td.revision = ?{"" if include_deleted else " AND deleted = 0"}
                 """,
-                (obj_id, revision)
+                (obj_id, revision),
             ).fetchone()
 
         return self.row_to_dict(obj) if obj else None
@@ -171,15 +170,20 @@ class ModelWithRevision:
         # Special field: enabled
         enabled_only = "enabled" in self.get_fields and kwargs.get("enabled", False)
 
-        return list(map(self.row_to_dict, c.execute(
-            f"""
-            SELECT td.id AS id, td.revision AS revision, revision_dt, revision_msg, {', '.join(self.get_fields)} 
+        return list(
+            map(
+                self.row_to_dict,
+                c.execute(
+                    f"""
+            SELECT td.id AS id, td.revision AS revision, revision_dt, revision_msg, {", ".join(self.get_fields)} 
             FROM {self.table} AS td INNER JOIN {self.table}_current_revision AS cr
                 ON td.id = cr.id AND td.revision = cr.revision 
-            WHERE 1{'' if include_deleted else ' AND deleted = 0'}{' AND enabled = 1' if enabled_only else ''}
+            WHERE 1{"" if include_deleted else " AND deleted = 0"}{" AND enabled = 1" if enabled_only else ""}
             {self._order}
             """
-        ).fetchall()))
+                ).fetchall(),
+            )
+        )
 
     def search(self, q: str, include_deleted: bool = False, **kwargs) -> list[dict]:
         db = get_db()
@@ -191,17 +195,22 @@ class ModelWithRevision:
         q = f"%{q}%"
         search_conditions = " OR ".join((f"CAST(td.{sf} AS TEXT) LIKE :q" for sf in self._search_fields))
 
-        return list(map(self.row_to_dict, c.execute(
-            f"""
-            SELECT td.id AS id, td.revision AS revision, revision_dt, revision_msg, {', '.join(self.get_fields)} 
+        return list(
+            map(
+                self.row_to_dict,
+                c.execute(
+                    f"""
+            SELECT td.id AS id, td.revision AS revision, revision_dt, revision_msg, {", ".join(self.get_fields)} 
             FROM {self.table} AS td INNER JOIN {self.table}_current_revision AS cr
                 ON td.id = cr.id AND td.revision = cr.revision 
             WHERE ({search_conditions})
-            {'' if include_deleted else ' AND deleted = 0'}{' AND enabled = 1' if enabled_only else ''}
+            {"" if include_deleted else " AND deleted = 0"}{" AND enabled = 1" if enabled_only else ""}
             {self._order}
             """,
-            {"q": q}
-        ).fetchall()))
+                    {"q": q},
+                ).fetchall(),
+            )
+        )
 
     def _get_revision(self, c: sqlite3.Cursor, obj_id: Any) -> dict | None:
         # Get current revision
@@ -230,8 +239,8 @@ class ModelWithRevision:
         asset_usage_rows = [(obj_id, revision, a) for a in asset_usages if a.strip()]
         # TODO: Debug logging
         c.executemany(
-            f"INSERT OR REPLACE INTO {self.table}_assets_used (obj, revision, asset) VALUES (?, ?, ?)",
-            asset_usage_rows)
+            f"INSERT OR REPLACE INTO {self.table}_assets_used (obj, revision, asset) VALUES (?, ?, ?)", asset_usage_rows
+        )
 
     def get_asset_usage(self, asset_id: str) -> dict[str, list[Any]]:
         """
@@ -250,17 +259,21 @@ class ModelWithRevision:
                 SELECT td.id AS id FROM {self.table} AS td 
                     INNER JOIN {self.table}_current_revision AS cr ON td.id = cr.id AND td.revision = cr.revision 
                     INNER JOIN {self.table}_assets_used AS au ON td.id = au.obj AND cr.revision = au.revision 
-                WHERE au.asset = ? AND td.deleted = 0 AND {'td.enabled = ?' if has_enabled else '1'}
+                WHERE au.asset = ? AND td.deleted = 0 AND {"td.enabled = ?" if has_enabled else "1"}
                 """,
-                (asset_id, enabled) if has_enabled else (asset_id,)
+                (asset_id, enabled) if has_enabled else (asset_id,),
             )
             return c.fetchall()
 
         return {
             "active": map_to_id(_get_usage(1)),
-            **({
-                "inactive": map_to_id(_get_usage(0)),
-            } if "enabled" in self.get_fields else {}),
+            **(
+                {
+                    "inactive": map_to_id(_get_usage(0)),
+                }
+                if "enabled" in self.get_fields
+                else {}
+            ),
         }
 
     def set_obj(self, obj_id: Any, data: dict, extra_fields: tuple[str, ...] = (), extra_data: tuple[Any, ...] = ()):
@@ -277,14 +290,14 @@ class ModelWithRevision:
 
         c.execute(
             f"""
-            INSERT INTO {self.table} (id, {', '.join((*self.set_fields, *extra_fields))}, revision, revision_msg) 
-            VALUES ({', '.join(['?'] * (len(self.set_fields) + len(extra_fields) + 3))})
+            INSERT INTO {self.table} (id, {", ".join((*self.set_fields, *extra_fields))}, revision, revision_msg) 
+            VALUES ({", ".join(["?"] * (len(self.set_fields) + len(extra_fields) + 3))})
             """,
-            (obj_id, *self.insert_tuple_from_data_fn(data), *extra_data, cr_num, cr_msg)
+            (obj_id, *self.insert_tuple_from_data_fn(data), *extra_data, cr_num, cr_msg),
         )
         c.execute(
-            f"INSERT OR REPLACE INTO {self.table}_current_revision (id, revision) VALUES (?, ?)",
-            (obj_id, cr_num))
+            f"INSERT OR REPLACE INTO {self.table}_current_revision (id, revision) VALUES (?, ?)", (obj_id, cr_num)
+        )
 
         # Collect asset usage -------------------
 
@@ -301,10 +314,15 @@ class ModelWithRevision:
         if not obj:  # not present or already deleted
             return
 
-        self.set_obj(obj_id, {
-            **obj,
-            "revision": {**obj.get("revision", {}), "message": "deleted"},
-        }, extra_fields=("deleted",), extra_data=(1,))
+        self.set_obj(
+            obj_id,
+            {
+                **obj,
+                "revision": {**obj.get("revision", {}), "message": "deleted"},
+            },
+            extra_fields=("deleted",),
+            extra_data=(1,),
+        )
 
     def __str__(self) -> str:
         return self.table
@@ -366,7 +384,8 @@ def set_section(section_id: str, data: dict) -> dict | None:
     c = db.cursor()
     c.execute(
         "INSERT OR REPLACE INTO sections (id, title, color, rank) VALUES (?, ?, ?, ?)",
-        (section_id, data["title"], data["color"], int(data["rank"])))
+        (section_id, data["title"], data["color"], int(data["rank"])),
+    )
     db.commit()
     return get_section(section_id)
 
@@ -413,22 +432,22 @@ def _station_data_to_insert_tuple(data: dict) -> tuple:
         data["title"],
         data["long_title"],
         data["subtitle"],
-
+        # -----------------------------------------------------------------------------------------
         data["coordinates_utm"]["crs"],
         data["coordinates_utm"]["zone"],
-
+        # -----------------------------------------------------------------------------------------
         # TODO: Some future SQLite migration - convert east/north strings to integers
         str(data["coordinates_utm"]["east"]).rstrip("E"),  # gradually convert to integer-strings
         str(data["coordinates_utm"]["north"]).rstrip("N"),  # gradually convert to integer-strings
-
+        # -----------------------------------------------------------------------------------------
         data.get("visible", {}).get("from") or None,
         data.get("visible", {}).get("to") or None,
-
+        # -----------------------------------------------------------------------------------------
         data["section"],
         data["category"],
         data.get("header_image") or None,
         json.dumps(data["contents"]),
-
+        # -----------------------------------------------------------------------------------------
         data["enabled"],
         data["rank"],
     )
@@ -496,7 +515,7 @@ def get_sections_with_stations(enabled_only: bool = False) -> list[dict]:
         FROM sections AS sc
         LEFT JOIN stations AS st ON sc.id = st.section
         INNER JOIN stations_current_revision AS cr ON st.id = cr.id AND st.revision = cr.revision
-        WHERE st.deleted = 0 {'AND st.enabled = 1' if enabled_only else ''}
+        WHERE st.deleted = 0 {"AND st.enabled = 1" if enabled_only else ""}
         ORDER BY sc.rank, st.rank""")
 
     sections_of_stations: defaultdict[str, dict] = defaultdict(lambda: {"data": []})
@@ -646,7 +665,9 @@ def get_asset(asset_id: str) -> AssetWithIDAndUsage | None:
         LEFT JOIN {get_asset_usage_query(only_enabled=True)} AS asset_usage_enabled
                ON assets.id = asset_usage_enabled.asset
         WHERE id = ? AND deleted = 0
-        """, (asset_id,))
+        """,
+        (asset_id,),
+    )
     r = q.fetchone()
     return _row_to_asset(r) if r else None
 
@@ -654,10 +675,13 @@ def get_asset(asset_id: str) -> AssetWithIDAndUsage | None:
 def set_asset(asset_id: str, data: Asset) -> AssetWithIDAndUsage | None:
     db = get_db()
     c = db.cursor()
-    c.execute("""
+    c.execute(
+        """
         INSERT OR REPLACE INTO assets (id, asset_type, file_name, file_size, sha1_checksum)
         VALUES (?, ?, ?, ?, ?)
-    """, (asset_id, data["asset_type"], data["file_name"], data["file_size"], data["sha1_checksum"]))
+    """,
+        (asset_id, data["asset_type"], data["file_name"], data["file_size"], data["sha1_checksum"]),
+    )
     db.commit()
     return get_asset(asset_id)
 
@@ -702,12 +726,12 @@ page_model = ModelWithRevision(
     lambda r: {
         "title": r["title"],
         "icon": r["icon"],
-
+        # ---------------------------------------
         "long_title": r["long_title"],
         "subtitle": r["subtitle"],
         "header_image": r["header_image"],
         "content": r["content"],
-
+        # ---------------------------------------
         "enabled": bool(r["enabled"]),
         "rank": r["rank"],
     },
@@ -747,12 +771,15 @@ def get_layers() -> list[dict]:
 
 def get_layer(layer_id: str, include_deleted: bool = False) -> dict | None:
     c = get_db().cursor()
-    q = c.execute(f"""
+    q = c.execute(
+        f"""
         SELECT id, name, geojson, enabled, rank 
         FROM layers 
-        WHERE id = ?{'' if include_deleted else ' AND deleted = 0'}
+        WHERE id = ?{"" if include_deleted else " AND deleted = 0"}
         ORDER BY rank
-    """, (layer_id,))
+        """,
+        (layer_id,),
+    )
     r = q.fetchone()
     return _row_to_layer(r) if r else None
 
@@ -766,7 +793,8 @@ def set_layer(layer_id: str, data: dict) -> dict | None:
 
     c.execute(
         "INSERT OR REPLACE INTO layers (id, name, geojson, enabled, rank) VALUES (?, ?, ?, ?, ?)",
-        (layer_id, data["name"], data["geojson"], int(data["enabled"]), int(data["rank"])))
+        (layer_id, data["name"], data["geojson"], int(data["enabled"]), int(data["rank"])),
+    )
     db.commit()
     return get_layer(layer_id)
 
@@ -808,7 +836,8 @@ def get_release(version: int) -> dict | None:
         FROM releases 
         WHERE version = ?
         """,
-        (version,))
+        (version,),
+    )
     r = q.fetchone()
     return _row_to_release(r) if r else None
 
@@ -833,16 +862,29 @@ def set_release(version: int | None, data: dict, commit: bool = True) -> dict | 
             SET release_notes = ?, bundle_path = ?, bundle_size = ?, submitted_dt = ?, published_dt = ?
             WHERE version = ?
             """,
-            (data["release_notes"], data["bundle_path"], data.get("bundle_size"), data["submitted_dt"],
-             data["published_dt"], version))
+            (
+                data["release_notes"],
+                data["bundle_path"],
+                data.get("bundle_size"),
+                data["submitted_dt"],
+                data["published_dt"],
+                version,
+            ),
+        )
     else:
         c.execute(
             """
             INSERT INTO releases (release_notes, bundle_path, bundle_size, submitted_dt, published_dt) 
             VALUES (?, ?, ?, ?, ?)
             """,
-            (data["release_notes"], data["bundle_path"], data.get("bundle_size"), data["submitted_dt"],
-             data["published_dt"]))
+            (
+                data["release_notes"],
+                data["bundle_path"],
+                data.get("bundle_size"),
+                data["submitted_dt"],
+                data["published_dt"],
+            ),
+        )
         version = c.lastrowid
 
     if commit:
@@ -896,7 +938,8 @@ def set_feedback_item(feedback_id: str, data: dict) -> dict:
     c = db.cursor()
     c.execute(
         "INSERT OR REPLACE INTO feedback (id, from_name, from_email, content, submitted) VALUES (?, ?, ?, ?, ?)",
-        (feedback_id, data["from"]["name"], data["from"]["email"], data["content"], data["submitted"]))
+        (feedback_id, data["from"]["name"], data["from"]["email"], data["content"], data["submitted"]),
+    )
     db.commit()
 
     if fb := get_feedback_item(feedback_id):
@@ -921,10 +964,11 @@ def set_ott(token: str, data: dict) -> dict:
     c = db.cursor()
     c.execute(
         "INSERT OR REPLACE INTO one_time_tokens (token, scope, expiry) VALUES (?, ?, ?)",
-        (token, data["scope"], data["expiry"]))
+        (token, data["scope"], data["expiry"]),
+    )
     db.commit()
 
     if ott := get_ott(token):
         return ott
 
-    raise Exception(f"Something went very wrong: OTT did not save correctly")
+    raise Exception("Something went very wrong: OTT did not save correctly")

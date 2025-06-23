@@ -52,12 +52,15 @@ def test_section_set_get_delete(client: FlaskClient):
     assert res.status_code == 404
 
 
-@pytest.mark.parametrize("bad_body", [
-    ({"title": "test", "color": "#FF0000", "rank": 0},),
-    ({"title": "test", "color": "FF0000#", "rank": 0},),
-    ({"title": "test", "color": "FF000", "rank": 0},),
-    ({"title": "test", "color": "XYZFFF", "rank": 0},),
-])
+@pytest.mark.parametrize(
+    "bad_body",
+    [
+        ({"title": "test", "color": "#FF0000", "rank": 0},),
+        ({"title": "test", "color": "FF0000#", "rank": 0},),
+        ({"title": "test", "color": "FF000", "rank": 0},),
+        ({"title": "test", "color": "XYZFFF", "rank": 0},),
+    ],
+)
 def test_section_set_bad_color(client: FlaskClient, bad_body: dict):
     res = client.put("/api/v1/sections/test", json=bad_body)
     assert res.status_code == 400

@@ -40,20 +40,27 @@ api_v1 = Blueprint("api", __name__)
 well_known = Blueprint("well_known", __name__)
 
 err_must_be_object = Response(
-    json.dumps({"message": "Request body must be a JSON object"}), content_type="application/json", status=400)
+    json.dumps({"message": "Request body must be a JSON object"}), content_type="application/json", status=400
+)
 err_cannot_alter_id = Response(
-    json.dumps({"message": "Cannot alter object ID"}), content_type="application/json", status=400)
-err_no_file = Response(
-    json.dumps({"message": "No file provided"}), content_type="application/json", status=400)
+    json.dumps({"message": "Cannot alter object ID"}), content_type="application/json", status=400
+)
+err_no_file = Response(json.dumps({"message": "No file provided"}), content_type="application/json", status=400)
 
 response_deleted = Response(json.dumps({"message": "Deleted."}), content_type="application/json")
 
 
 def err_validation_failed(errs):
-    return current_app.response_class(json.dumps({
-        "message": "Object validation failed",
-        "errors": [str(e) for e in errs],
-    }), content_type="application/json", status=400)
+    return current_app.response_class(
+        json.dumps(
+            {
+                "message": "Object validation failed",
+                "errors": [str(e) for e in errs],
+            }
+        ),
+        content_type="application/json",
+        status=400,
+    )
 
 
 @api_v1.route("/info", methods=["GET"])
@@ -669,8 +676,9 @@ def releases() -> ResponseType:
 
 
 @api_v1.route("/releases/<int:version>", methods=["GET", "PUT"])
-@requires_auth(read_scopes=(SCOPE_READ_CONTENT, SCOPE_READ_RELEASES),
-               alter_scopes=(SCOPE_MANAGE_CONTENT, SCOPE_EDIT_RELEASES))
+@requires_auth(
+    read_scopes=(SCOPE_READ_CONTENT, SCOPE_READ_RELEASES), alter_scopes=(SCOPE_MANAGE_CONTENT, SCOPE_EDIT_RELEASES)
+)
 def releases_detail(version: int) -> ResponseType:
     r = db.get_release(version)
 
@@ -715,7 +723,8 @@ def releases_bundle(version: int) -> ResponseType:
         return {"message": f"Could not find release {version}"}, 404
 
     return send_file(
-        r["bundle_path"], mimetype="application/zip", as_attachment=True, download_name=f"version_{r['version']}.zip")
+        r["bundle_path"], mimetype="application/zip", as_attachment=True, download_name=f"version_{r['version']}.zip"
+    )
 
 
 @api_v1.route("/releases/latest", methods=["GET"])
@@ -724,7 +733,7 @@ def latest_release() -> ResponseType:
     r = db.get_latest_release()
 
     if r is None:
-        return {"message": f"No releases exist"}, 404
+        return {"message": "No releases exist"}, 404
 
     return jsonify(r)
 
@@ -786,7 +795,7 @@ def ott() -> ResponseType:
     t = {
         "token": new_token,
         "scope": SCOPE_READ_CONTENT,  # Currently: ignore Bearer scope
-        "expiry": (datetime.utcnow().replace(microsecond=0, tzinfo=timezone.utc) + timedelta(seconds=60)).isoformat()
+        "expiry": (datetime.utcnow().replace(microsecond=0, tzinfo=timezone.utc) + timedelta(seconds=60)).isoformat(),
     }
     return jsonify(db.set_ott(new_token, t)), 201
 
@@ -797,14 +806,16 @@ def asaa() -> ResponseType:
     return {
         "applinks": {
             "apps": [],
-            "details": [{
-                "appID": current_app.config["APPLE_APP_ID"],
-                "paths": [
-                    "/modals/*",
-                    "/pages/*",
-                    "/stations/detail/*",
-                ],
-            }],
+            "details": [
+                {
+                    "appID": current_app.config["APPLE_APP_ID"],
+                    "paths": [
+                        "/modals/*",
+                        "/pages/*",
+                        "/stations/detail/*",
+                    ],
+                }
+            ],
         },
     }
 
@@ -812,11 +823,15 @@ def asaa() -> ResponseType:
 # TODO: move this into app web distribution
 @well_known.route("/assetlinks.json")
 def android_asset_links() -> ResponseType:
-    return jsonify([{
-        "relation": ["delegate_permission/common.handle_all_urls"],
-        "target": {
-            "namespace": "android_app",
-            "package_name": current_app.config["ANDROID_PACKAGE_NAME"],
-            "sha256_cert_fingerprints": [current_app.config["ANDROID_CERT_FINGERPRINT"]],
-        },
-    }])
+    return jsonify(
+        [
+            {
+                "relation": ["delegate_permission/common.handle_all_urls"],
+                "target": {
+                    "namespace": "android_app",
+                    "package_name": current_app.config["ANDROID_PACKAGE_NAME"],
+                    "sha256_cert_fingerprints": [current_app.config["ANDROID_CERT_FINGERPRINT"]],
+                },
+            }
+        ]
+    )

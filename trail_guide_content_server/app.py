@@ -49,13 +49,15 @@ def handle_bad_request(e):
 
 @application.errorhandler(werkzeug.exceptions.RequestEntityTooLarge)
 def handle_too_large(e):
-    return jsonify({
-        "message": (
-            f"Request is too large. "
-            f"Maximum request size: {application.config['MAX_CONTENT_LENGTH'] / (1024 ** 2):.1f} MB"
-        ),
-        "errors": [str(e)],
-    }), 413
+    return jsonify(
+        {
+            "message": (
+                f"Request is too large. "
+                f"Maximum request size: {application.config['MAX_CONTENT_LENGTH'] / (1024**2):.1f} MB"
+            ),
+            "errors": [str(e)],
+        }
+    ), 413
 
 
 @application.errorhandler(werkzeug.exceptions.InternalServerError)
@@ -96,12 +98,15 @@ def _import_file(c: sqlite3.Cursor, file_path, file_match) -> str:
     new_id = str(uuid.uuid4())
     asset_type = detect_asset_type(new_file_path)
 
-    set_asset(new_id, {
-        "asset_type": asset_type,
-        "file_name": file_name,
-        "file_size": os.path.getsize(new_file_path),
-        "sha1_checksum": checksum,
-    })
+    set_asset(
+        new_id,
+        {
+            "asset_type": asset_type,
+            "file_name": file_name,
+            "file_size": os.path.getsize(new_file_path),
+            "sha1_checksum": checksum,
+        },
+    )
 
     return new_id
 
@@ -171,7 +176,8 @@ def import_stations(base_path, stations_json, manifest_json):
                         # Use a sort of multipurpose URL which resolves but can also be hijacked by the app
                         # TODO: This breaks when an asset has a name which is a subset of another one
                         string = string.replace(
-                            match, f"{application.config['BASE_URL']}/api/v1/assets/{asset_id}/bytes")
+                            match, f"{application.config['BASE_URL']}/api/v1/assets/{asset_id}/bytes"
+                        )
 
                 return string
 
@@ -198,12 +204,15 @@ def import_stations(base_path, stations_json, manifest_json):
 
                 contents.append(ci)
 
-            station_model.set_obj(str(uuid.uuid4()), {
-                **station,
-                "header_image": header_asset,
-                "contents": contents,
-                "section": section["id"],
-            })
+            station_model.set_obj(
+                str(uuid.uuid4()),
+                {
+                    **station,
+                    "header_image": header_asset,
+                    "contents": contents,
+                    "section": section["id"],
+                },
+            )
 
 
 # Initialize the DB on startup

@@ -36,30 +36,23 @@ _config_vars_and_defaults = {
     "ASSET_DIR": (str, DEFAULT_ASSET_DIR),
     "BUNDLE_DIR": (str, DEFAULT_BUNDLE_DIR),
     "DATABASE": (str, DEFAULT_DB),
-
-    "MAX_CONTENT_LENGTH": (int, 10 * (1024 ** 2)),  # 10 MB maximum upload size
-
+    # -------------------------------------------------------------------------
+    "MAX_CONTENT_LENGTH": (int, 10 * (1024**2)),  # 10 MB maximum upload size
+    # -------------------------------------------------------------------------
     "AUTH_AUDIENCE": (str, ""),
     "AUTH_ISSUER": (str, ""),
-
+    # -------------------------------------------------------------------------
     "BASE_URL": (str, "http://localhost:5000"),
-
+    # -------------------------------------------------------------------------
     "APP_BASE_URL": (str, "http://localhost:5000/app"),
     "APP_NAME": (str, "Trail Guide"),
     "APP_SLUG": (str, "trail-guide"),
-
+    # -------------------------------------------------------------------------
     "APPLE_APP_ID": (str, ""),
     "ANDROID_PACKAGE_NAME": (str, ""),
     "ANDROID_CERT_FINGERPRINT": (str, ""),
 }
 
-config = {
-    k: os.environ.get(f"{ENV_PREFIX}{k}", v[0](v[1]))
-    for k, v in _config_vars_and_defaults.items()
-}
+config = {k: os.environ.get(f"{ENV_PREFIX}{k}", v[0](v[1])) for k, v in _config_vars_and_defaults.items()}
 
-public_config = {
-    k: v
-    for k, v in config.items()
-    if k in _public_config_values
-}
+public_config = {k: v for k, v in config.items() if k in _public_config_values}
