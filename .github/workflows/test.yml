@@ -20,4 +20,4 @@ jobs:
 
       - run: pip install 'poetry<2'
       - run: poetry install
-      - run: ./test.bash
+      - run: FLASK_DEBUG="True" FLASK_ENVIRIONMENT="debug" ./test.bash
