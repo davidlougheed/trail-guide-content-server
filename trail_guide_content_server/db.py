@@ -470,6 +470,7 @@ def get_sections_with_stations(enabled_only: bool = False) -> list[dict]:
         SELECT 
             sc.id AS sc_id,
             sc.title AS sc_title,
+            sc.color AS sc_color,
             sc.rank AS sc_rank,
             
             st.id,
@@ -501,9 +502,11 @@ def get_sections_with_stations(enabled_only: bool = False) -> list[dict]:
     sections_of_stations: defaultdict[str, dict] = defaultdict(lambda: {"data": []})
 
     for r in q.fetchall():
-        sections_of_stations[r["sc_id"]]["title"] = r["sc_title"]
-        sections_of_stations[r["sc_id"]]["rank"] = r["sc_rank"]
-        sections_of_stations[r["sc_id"]]["data"].append({"id": r["id"], **_row_to_station(r)})
+        section_id = r["sc_id"]
+        sections_of_stations[section_id]["title"] = r["sc_title"]
+        sections_of_stations[section_id]["color"] = r["sc_color"]
+        sections_of_stations[section_id]["rank"] = r["sc_rank"]
+        sections_of_stations[section_id]["data"].append({"id": r["id"], **_row_to_station(r)})
 
     return [{"id": k, **v} for k, v in sections_of_stations.items()]
 
