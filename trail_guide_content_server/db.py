@@ -571,7 +571,7 @@ def get_asset_usage_query(only_enabled: bool) -> str:
                 INNER JOIN modals 
                     ON mau.obj = modals.id
                 INNER JOIN modals_current_revision AS cr 
-                    ON cr.id = modals.id AND cr.revision = modals.revision 
+                    ON cr.id = modals.id AND cr.revision = modals.revision AND cr.revision = mau.revision 
                 WHERE modals.deleted = 0
             )
             UNION ALL
@@ -581,7 +581,7 @@ def get_asset_usage_query(only_enabled: bool) -> str:
                 INNER JOIN pages 
                     ON pau.obj = pages.id
                 INNER JOIN pages_current_revision AS cr 
-                    ON cr.id = pages.id AND cr.revision = pages.revision
+                    ON cr.id = pages.id AND cr.revision = pages.revision AND cr.revision = pau.revision
                 WHERE pages.deleted = 0{pages_extra}
             )
             UNION ALL
@@ -591,7 +591,7 @@ def get_asset_usage_query(only_enabled: bool) -> str:
                 INNER JOIN stations 
                     ON sau.obj = stations.id
                 INNER JOIN stations_current_revision AS cr 
-                    ON cr.id = stations.id AND cr.revision = stations.revision
+                    ON cr.id = stations.id AND cr.revision = stations.revision AND cr.revision = sau.revision
                 WHERE stations.deleted = 0{stations_extra}
             )
         )
